@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# 临时文件
+tmp/
+temp/
+*.log
+
+# 本地私有配置
+.env
+.env.*
+!.env.example
+
+# 未来如进入开发阶段再启用
+node_modules/
+dist/
+coverage/
+outputs/
