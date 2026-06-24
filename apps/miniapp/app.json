@@ -1,6 +1,7 @@
 {
   "pages": [
-    "src/pages/withdraw/index"
+    "src/pages/withdraw/index",
+    "src/pages/register/index"
   ],
   "window": {
     "navigationBarTitleText": "嘉音提现",

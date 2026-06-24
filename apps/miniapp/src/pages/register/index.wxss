@@ -1,0 +1,124 @@
+.page {
+  background: #f4f6f8;
+  color: #1d2433;
+  min-height: 100vh;
+  padding: 28rpx;
+}
+
+.summary,
+.form-card,
+.result-card {
+  background: #ffffff;
+  border: 1rpx solid #d9dee8;
+  border-radius: 12rpx;
+}
+
+.summary {
+  margin-bottom: 20rpx;
+  padding: 24rpx;
+}
+
+.eyebrow {
+  color: #667085;
+  display: block;
+  font-size: 24rpx;
+}
+
+.title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 700;
+  margin-top: 8rpx;
+}
+
+.env-select {
+  background: #e8eef8;
+  border-radius: 10rpx;
+  color: #27364a;
+  display: grid;
+  gap: 4rpx;
+  margin-top: 16rpx;
+  padding: 12rpx 16rpx;
+}
+
+.env-url {
+  color: #667085;
+  font-size: 22rpx;
+  overflow-wrap: anywhere;
+}
+
+.error {
+  background: #fbe9e7;
+  border: 1rpx solid #f2b8b0;
+  border-radius: 10rpx;
+  color: #b5473b;
+  margin-bottom: 20rpx;
+  padding: 18rpx;
+}
+
+.form-card {
+  display: grid;
+  gap: 18rpx;
+  padding: 24rpx;
+}
+
+.field {
+  display: grid;
+  gap: 8rpx;
+}
+
+.field text {
+  color: #667085;
+  font-size: 24rpx;
+}
+
+.field input {
+  background: #f8fafc;
+  border: 1rpx solid #d9dee8;
+  border-radius: 10rpx;
+  min-height: 72rpx;
+  padding: 0 18rpx;
+}
+
+.actions {
+  display: grid;
+  gap: 12rpx;
+  grid-template-columns: 1fr 1fr;
+}
+
+.primary {
+  background: #1d7f5d;
+  border-radius: 10rpx;
+  color: #ffffff;
+  font-size: 26rpx;
+}
+
+.secondary {
+  background: #e8eef8;
+  border-radius: 10rpx;
+  color: #27364a;
+  font-size: 26rpx;
+}
+
+.result-card {
+  display: grid;
+  gap: 8rpx;
+  margin-top: 20rpx;
+  padding: 22rpx;
+}
+
+.record-id {
+  font-size: 28rpx;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.record-status {
+  color: #1d7f5d;
+  font-size: 24rpx;
+}
+
+.result-line {
+  color: #667085;
+  font-size: 24rpx;
+}

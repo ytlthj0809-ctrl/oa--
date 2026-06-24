@@ -4,6 +4,10 @@
     {
       "action": "allow",
       "page": "src/pages/withdraw/index"
+    },
+    {
+      "action": "allow",
+      "page": "src/pages/register/index"
     }
   ]
 }

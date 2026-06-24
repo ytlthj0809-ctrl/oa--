@@ -45,3 +45,12 @@ Status: real AppID is configured for local preview planning. No automatic previe
 - Run `npm run miniapp:preview-plan` from the repository root to check project structure, AppID, local WeChat Developer Tools CLI discovery, and the preview command plan.
 - If the WeChat Developer Tools CLI is not auto-detected, set `WECHAT_DEVTOOLS_CLI` to the local `cli` executable path and rerun the plan.
 - Upload remains blocked unless an operator intentionally runs the upload mode and confirms the action. Do not commit upload private keys; `apps/miniapp/private.*.key`, `project.private.config.json`, and preview/upload output files are ignored.
+
+## Q62 Anchor Registration Page
+
+Status: local registration source and API contract only. Q62 does not perform real WeChat OAuth or upload.
+
+- `app.json` keeps `src/pages/withdraw/index` first and adds `src/pages/register/index` for registration.
+- `POST /api/miniapp/anchor-registration-requests` creates a local pending registration request.
+- `GET /api/miniapp/anchor-registration-requests?mobile=...` lets the page refresh the latest request status.
+- Admin approval remains required before the request creates an anchor profile, platform account, and balance account.

@@ -1,0 +1,59 @@
+<view class="page" data-q62-miniapp-registration-page="true">
+  <view class="summary">
+    <view>
+      <text class="eyebrow">主播注册</text>
+      <text class="title">提交注册申请</text>
+      <picker mode="selector" range="{{environmentOptions}}" range-key="label" value="{{environmentIndex}}" bindchange="changeEnvironment">
+        <view class="env-select">
+          <text>{{environmentLabel}}</text>
+          <text class="env-url">{{apiBase}}</text>
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <view wx:if="{{error}}" class="error">
+    <text>{{error}}</text>
+  </view>
+
+  <view class="form-card">
+    <label class="field">
+      <text>主播编号</text>
+      <input value="{{form.anchorCode}}" data-field="anchorCode" bindinput="updateField" />
+    </label>
+    <label class="field">
+      <text>主播姓名</text>
+      <input value="{{form.displayName}}" data-field="displayName" bindinput="updateField" />
+    </label>
+    <label class="field">
+      <text>手机号</text>
+      <input value="{{form.mobile}}" data-field="mobile" bindinput="updateField" />
+    </label>
+    <label class="field">
+      <text>平台</text>
+      <input value="{{form.platform}}" data-field="platform" bindinput="updateField" />
+    </label>
+    <label class="field">
+      <text>平台账号</text>
+      <input value="{{form.accountNo}}" data-field="accountNo" bindinput="updateField" />
+    </label>
+    <label class="field">
+      <text>银行卡</text>
+      <input value="{{form.bankAccountNo}}" data-field="bankAccountNo" bindinput="updateField" />
+    </label>
+    <label class="field">
+      <text>证件号</text>
+      <input value="{{form.idCardNo}}" data-field="idCardNo" bindinput="updateField" />
+    </label>
+    <view class="actions">
+      <button class="primary" bindtap="submitRegistration" loading="{{submitting}}" disabled="{{submitting}}">提交申请</button>
+      <button class="secondary" bindtap="refreshRegistrationStatus" loading="{{loadingStatus}}" disabled="{{loadingStatus}}">刷新状态</button>
+    </view>
+  </view>
+
+  <view wx:if="{{latestRequest}}" class="result-card">
+    <text class="record-id">{{latestRequest.registrationId}}</text>
+    <text class="record-status">{{latestRequest.reviewStatus}}</text>
+    <text class="result-line">{{latestRequest.anchorCode}} · {{latestRequest.platform}}/{{latestRequest.accountNo}}</text>
+  </view>
+</view>
