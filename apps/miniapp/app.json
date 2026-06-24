@@ -1,0 +1,11 @@
+{
+  "pages": [
+    "src/pages/withdraw/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "嘉音提现",
+    "navigationBarBackgroundColor": "#27364a",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f4f6f8"
+  }
+}

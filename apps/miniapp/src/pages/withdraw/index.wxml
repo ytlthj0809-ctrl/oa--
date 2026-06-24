@@ -1,0 +1,55 @@
+<view class="page" data-q41-miniapp-withdraw-page="true">
+  <view class="summary">
+    <view>
+      <text class="eyebrow">提现记录</text>
+      <text class="title">可提现申请与进度</text>
+    </view>
+    <button class="primary" bindtap="submitSampleWithdraw" loading="{{loading}}">发起提现</button>
+  </view>
+
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+
+  <view class="record-list">
+    <view wx:for="{{records}}" wx:key="applyId" class="record" bindtap="loadWithdrawDetail" data-apply-id="{{item.applyId}}">
+      <view>
+        <text class="record-id">{{item.applyId}}</text>
+        <text class="record-status">{{item.statusText}}</text>
+      </view>
+      <view class="record-meta">
+        <text>{{item.amountCents}} 分</text>
+        <text>进度 {{item.progressStep}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{detail}}" class="detail">
+    <view class="detail-head">
+      <text class="record-id">{{detail.applyId}}</text>
+      <text class="record-status">{{detail.statusText}}</text>
+    </view>
+    <view class="detail-grid">
+      <view>
+        <text class="label">金额</text>
+        <text>{{detail.amountCents}} 分</text>
+      </view>
+      <view>
+        <text class="label">冻结</text>
+        <text>{{detail.frozenAmountCents}} 分</text>
+      </view>
+      <view>
+        <text class="label">批次</text>
+        <text>{{detail.batchId || '-'}}</text>
+      </view>
+      <view>
+        <text class="label">状态</text>
+        <text>{{detail.status}}</text>
+      </view>
+    </view>
+    <view class="timeline">
+      <view wx:for="{{detail.statusHistory}}" wx:key="sequence" class="timeline-item">
+        <text>{{item.sequence}}. {{item.statusText}}</text>
+        <text class="timeline-reason">{{item.reason}}</text>
+      </view>
+    </view>
+  </view>
+</view>
