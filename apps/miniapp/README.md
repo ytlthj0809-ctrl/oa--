@@ -28,3 +28,12 @@ Status: local miniapp source and API contract only. Q42 does not upload or publi
 - The page separates `loadingList`, `loadingDetail`, and `submitting` so list refresh, detail load, and submit do not overwrite each other.
 - Empty and error states are rendered in WXML with retry handling.
 - Server mode is a preproduction endpoint placeholder for later cloud verification; no server deployment is performed by this page source change.
+
+## Q43 Developer Tool Preflight
+
+Status: local WeChat Developer Tool project configuration only. Q43 does not upload, preview, or publish a real Mini Program.
+
+- `project.config.json` declares the project as a `miniprogram` with `miniprogramRoot` at the miniapp folder root.
+- `app.json` points to `sitemap.json`, and the sitemap allows the withdraw page.
+- `appid` remains `touristappid` until the real WeChat Mini Program appid is provided.
+- Upload readiness checks must pass project structure first, then block real upload until appid and operator confirmation are available.

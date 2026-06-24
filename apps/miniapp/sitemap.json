@@ -1,0 +1,9 @@
+{
+  "desc": "Q43 upload preflight sitemap for withdraw page",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "src/pages/withdraw/index"
+    }
+  ]
+}
