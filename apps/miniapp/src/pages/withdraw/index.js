@@ -1,6 +1,6 @@
 const environmentOptions = [
   { key: "local", label: "本地联调", apiBase: "http://127.0.0.1:3000" },
-  { key: "server", label: "云服预发", apiBase: "http://82.156.202.188:3000" },
+  { key: "server", label: "云服预发", apiBase: "http://82.156.202.188" },
 ];
 
 function formatMoney(cents = 0) {
