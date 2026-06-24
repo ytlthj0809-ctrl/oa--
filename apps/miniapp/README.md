@@ -19,3 +19,12 @@ Status: local page skeleton only. Q41 adds WeChat Mini Program source files unde
 - `index.js` uses `wx.request` for submit, record list, and detail APIs.
 - `index.wxml` renders withdraw records, status text, progress step, selected detail, and status history.
 - `index.wxss` keeps the page dense and operational for repeated withdraw checks.
+
+## Q42 Environment And State Surface
+
+Status: local miniapp source and API contract only. Q42 does not upload or publish a real WeChat Mini Program package.
+
+- The withdraw page exposes `environmentOptions` for local and server API base switching.
+- The page separates `loadingList`, `loadingDetail`, and `submitting` so list refresh, detail load, and submit do not overwrite each other.
+- Empty and error states are rendered in WXML with retry handling.
+- Server mode is a preproduction endpoint placeholder for later cloud verification; no server deployment is performed by this page source change.

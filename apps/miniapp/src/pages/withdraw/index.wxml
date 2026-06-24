@@ -1,28 +1,42 @@
-<view class="page" data-q41-miniapp-withdraw-page="true">
+<view class="page" data-q41-miniapp-withdraw-page="true" data-q42-miniapp-env-state-runtime="true">
   <view class="summary">
     <view>
       <text class="eyebrow">提现记录</text>
       <text class="title">可提现申请与进度</text>
+      <picker mode="selector" range="{{environmentOptions}}" range-key="label" value="{{environmentIndex}}" bindchange="changeEnvironment">
+        <view class="env-select">
+          <text>{{environmentLabel}}</text>
+          <text class="env-url">{{apiBase}}</text>
+        </view>
+      </picker>
     </view>
-    <button class="primary" bindtap="submitSampleWithdraw" loading="{{loading}}">发起提现</button>
+    <button class="primary" bindtap="submitSampleWithdraw" loading="{{submitting}}" disabled="{{submitting || loadingList}}">发起提现</button>
   </view>
 
-  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{error}}" class="error">
+    <text>{{error}}</text>
+    <button class="secondary small" bindtap="retryLoad">重试</button>
+  </view>
 
-  <view class="record-list">
-    <view wx:for="{{records}}" wx:key="applyId" class="record" bindtap="loadWithdrawDetail" data-apply-id="{{item.applyId}}">
+  <view wx:if="{{loadingList}}" class="state-card loading-state">加载中</view>
+  <view wx:elif="{{records.length === 0}}" class="state-card empty-state">{{emptyText}}</view>
+
+  <view wx:else class="record-list">
+    <view wx:for="{{records}}" wx:key="applyId" class="record" bindtap="loadWithdrawDetail" data-apply-id="{{item.applyId}}" data-progress-step="{{item.progressStep}}">
       <view>
         <text class="record-id">{{item.applyId}}</text>
         <text class="record-status">{{item.statusText}}</text>
       </view>
       <view class="record-meta">
-        <text>{{item.amountCents}} 分</text>
-        <text>进度 {{item.progressStep}}</text>
+        <text>{{item.amountText}}</text>
+        <text>{{item.progressText}}</text>
       </view>
     </view>
   </view>
 
-  <view wx:if="{{detail}}" class="detail">
+  <view wx:if="{{loadingDetail}}" class="state-card loading-state">详情加载中</view>
+
+  <view wx:elif="{{detail}}" class="detail">
     <view class="detail-head">
       <text class="record-id">{{detail.applyId}}</text>
       <text class="record-status">{{detail.statusText}}</text>
@@ -30,11 +44,11 @@
     <view class="detail-grid">
       <view>
         <text class="label">金额</text>
-        <text>{{detail.amountCents}} 分</text>
+        <text>{{detail.amountText}}</text>
       </view>
       <view>
         <text class="label">冻结</text>
-        <text>{{detail.frozenAmountCents}} 分</text>
+        <text>{{detail.frozenAmountText}}</text>
       </view>
       <view>
         <text class="label">批次</text>
