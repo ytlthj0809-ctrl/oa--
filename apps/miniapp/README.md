@@ -31,9 +31,17 @@ Status: local miniapp source and API contract only. Q42 does not upload or publi
 
 ## Q43 Developer Tool Preflight
 
-Status: local WeChat Developer Tool project configuration only. Q43 does not upload, preview, or publish a real Mini Program.
+Status: local WeChat Developer Tool project configuration only. Q43 did not upload, preview, or publish a real Mini Program.
 
 - `project.config.json` declares the project as a `miniprogram` with `miniprogramRoot` at the miniapp folder root.
 - `app.json` points to `sitemap.json`, and the sitemap allows the withdraw page.
-- `appid` remains `touristappid` until the real WeChat Mini Program appid is provided.
 - Upload readiness checks must pass project structure first, then block real upload until appid and operator confirmation are available.
+
+## Q44 Real AppID Preview Bridge
+
+Status: real AppID is configured for local preview planning. No automatic preview, upload, or publish is performed by repository scripts.
+
+- `project.config.json` now uses AppID `wx80cb7f54a22e6cfa`.
+- Run `npm run miniapp:preview-plan` from the repository root to check project structure, AppID, local WeChat Developer Tools CLI discovery, and the preview command plan.
+- If the WeChat Developer Tools CLI is not auto-detected, set `WECHAT_DEVTOOLS_CLI` to the local `cli` executable path and rerun the plan.
+- Upload remains blocked unless an operator intentionally runs the upload mode and confirms the action. Do not commit upload private keys; `apps/miniapp/private.*.key`, `project.private.config.json`, and preview/upload output files are ignored.

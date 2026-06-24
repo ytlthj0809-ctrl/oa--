@@ -10,6 +10,10 @@ temp/
 .env
 .env.*
 !.env.example
+apps/miniapp/project.private.config.json
+apps/miniapp/private.*.key
+apps/miniapp/upload-info*.json
+apps/miniapp/preview-info*.json
 
 # 未来如进入开发阶段再启用
 node_modules/
