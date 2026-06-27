@@ -3,12 +3,6 @@
     <view>
       <text class="eyebrow">主播注册</text>
       <text class="title">提交注册申请</text>
-      <picker mode="selector" range="{{environmentOptions}}" range-key="label" value="{{environmentIndex}}" bindchange="changeEnvironment">
-        <view class="env-select">
-          <text>{{environmentLabel}}</text>
-          <text class="env-url">{{apiBase}}</text>
-        </view>
-      </picker>
     </view>
   </view>
 
@@ -30,6 +24,14 @@
       <input value="{{form.mobile}}" data-field="mobile" bindinput="updateField" />
     </label>
     <label class="field">
+      <text>密码</text>
+      <input password value="{{form.password}}" data-field="password" bindinput="updateField" />
+    </label>
+    <label class="field">
+      <text>确认密码</text>
+      <input password value="{{form.confirmPassword}}" data-field="confirmPassword" bindinput="updateField" />
+    </label>
+    <label class="field">
       <text>平台</text>
       <input value="{{form.platform}}" data-field="platform" bindinput="updateField" />
     </label>
@@ -45,9 +47,15 @@
       <text>证件号</text>
       <input value="{{form.idCardNo}}" data-field="idCardNo" bindinput="updateField" />
     </label>
+    <view class="field">
+      <text>协议确认</text>
+      <switch checked="{{form.protocolChecked}}" bindchange="toggleProtocol" />
+      <text class="hint" bindtap="openProtocols">已阅读并同意《用户服务协议》和《隐私政策》</text>
+    </view>
     <view class="actions">
       <button class="primary" bindtap="submitRegistration" loading="{{submitting}}" disabled="{{submitting}}">提交申请</button>
       <button class="secondary" bindtap="refreshRegistrationStatus" loading="{{loadingStatus}}" disabled="{{loadingStatus}}">刷新状态</button>
+      <button class="secondary" bindtap="goLogin">返回登录</button>
     </view>
   </view>
 

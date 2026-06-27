@@ -1,0 +1,26 @@
+<view class="page" data-q70-miniapp-sign-page="true">
+  <view class="summary">
+    <view>
+      <text class="eyebrow">云账户</text>
+      <text class="title">签约状态</text>
+    </view>
+  </view>
+
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+
+  <view class="card">
+    <text class="label">当前状态</text>
+    <text class="value">{{signStatus.signStatus || 'UNSIGNED'}}</text>
+    <text class="meta">{{signStatus.eventStatusDetail || '未查询'}}</text>
+    <view class="actions">
+      <button class="primary" bindtap="createPresign" loading="{{submitting}}" disabled="{{submitting}}">发起签约</button>
+      <button class="secondary" bindtap="refreshSigned" loading="{{submitting}}" disabled="{{submitting}}">刷新状态</button>
+    </view>
+  </view>
+
+  <view wx:if="{{presign}}" class="card">
+    <text class="label">签约链接</text>
+    <text class="meta">{{presign.signUrl}}</text>
+    <text class="status">token {{presign.token}}</text>
+  </view>
+</view>

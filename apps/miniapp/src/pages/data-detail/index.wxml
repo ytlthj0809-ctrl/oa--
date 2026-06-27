@@ -1,0 +1,29 @@
+<view class="page">
+  <view class="summary">
+    <text class="eyebrow">数据</text>
+    <text class="title">收入与指标明细</text>
+  </view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{!detail}}" class="card empty">暂无明细</view>
+  <view wx:else class="card">
+    <text class="status">{{detail.month}} · {{detail.platform}}</text>
+    <view class="grid">
+      <view class="metric">
+        <text class="label">流水</text>
+        <text class="value">{{detail.incomeText}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">有效时长</text>
+        <text class="value">{{detail.validDurationMinutes}} 分钟</text>
+      </view>
+      <view class="metric">
+        <text class="label">有效天数</text>
+        <text class="value">{{detail.validDays}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">任务状态</text>
+        <text class="value">{{detail.taskStatus}}</text>
+      </view>
+    </view>
+  </view>
+</view>

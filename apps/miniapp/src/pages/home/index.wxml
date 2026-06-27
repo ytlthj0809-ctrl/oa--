@@ -1,0 +1,62 @@
+<view class="page" data-q70-miniapp-home-page="true">
+  <view class="summary">
+    <view>
+      <text class="eyebrow">首页</text>
+      <text class="title">余额与今日数据</text>
+    </view>
+  </view>
+
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{loading}}" class="card">加载中</view>
+
+  <view wx:if="{{home}}" class="card">
+    <view class="grid">
+      <view class="metric" bindtap="goPage" data-page="data">
+        <text class="label">可提现余额</text>
+        <text class="value">{{home.availableBalanceText}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">冻结余额</text>
+        <text class="value">{{home.frozenBalanceText}}</text>
+      </view>
+      <view class="metric" bindtap="goPage" data-page="data">
+        <text class="label">任务奖励</text>
+        <text class="value">{{home.rewardBalanceText}}</text>
+      </view>
+      <view class="metric" bindtap="goPage" data-page="notifications">
+        <text class="label">未读通知</text>
+        <text class="value">{{home.unreadNotificationCount}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{home}}" class="card">
+    <text class="label">今日数据</text>
+    <view class="grid">
+      <view class="metric">
+        <text class="label">流水</text>
+        <text class="value">{{home.todayIncomeText}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">有效时长</text>
+        <text class="value">{{home.todayMetrics.validDurationMinutes}} 分钟</text>
+      </view>
+      <view class="metric">
+        <text class="label">有效天数</text>
+        <text class="value">{{home.todayMetrics.validDays}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">签约状态</text>
+        <text class="value">{{home.signStatus}}</text>
+      </view>
+    </view>
+    <view class="actions">
+      <button class="primary" bindtap="goPage" data-page="withdraw">提现</button>
+      <button class="secondary" bindtap="goPage" data-page="withdraw-records">提现记录</button>
+      <button class="secondary" bindtap="goPage" data-page="rewards">任务奖励</button>
+      <button class="secondary" bindtap="goPage" data-page="payment-info">打款信息</button>
+      <button class="secondary" bindtap="goPage" data-page="sign">云账户签约</button>
+      <button class="secondary" bindtap="goPage" data-page="profile">我的</button>
+    </view>
+  </view>
+</view>

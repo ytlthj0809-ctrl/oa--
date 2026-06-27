@@ -1,0 +1,21 @@
+<view class="page" data-q70-miniapp-notifications-page="true">
+  <view class="summary">
+    <view>
+      <text class="eyebrow">通知</text>
+      <text class="title">业务消息</text>
+    </view>
+  </view>
+
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{notifications.length === 0}}" class="card empty">暂无通知</view>
+
+  <view wx:for="{{notifications}}" wx:key="notificationId" class="card">
+    <text class="status">{{item.noticeTitle}}</text>
+    <text class="meta">{{item.noticeType}} · {{item.readStatus}}</text>
+    <text>{{item.body}}</text>
+    <view class="actions">
+      <button class="secondary" bindtap="openDetail" data-id="{{item.notificationId}}">详情</button>
+      <button class="secondary" bindtap="markRead" data-id="{{item.notificationId}}">标记已读</button>
+    </view>
+  </view>
+</view>

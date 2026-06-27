@@ -1,0 +1,36 @@
+.rule-guide {
+  display: grid;
+  gap: 18rpx;
+}
+
+.rule-guide-head {
+  display: grid;
+  gap: 4rpx;
+}
+
+.rule-guide-list {
+  display: grid;
+  gap: 14rpx;
+}
+
+.rule-guide-item {
+  background: #f8fafc;
+  border: 1rpx solid #e4e7ec;
+  border-radius: 14rpx;
+  display: grid;
+  gap: 8rpx;
+  padding: 18rpx;
+}
+
+.rule-guide-title {
+  color: #1d2433;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.rule-guide-detail {
+  color: #667085;
+  font-size: 24rpx;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}

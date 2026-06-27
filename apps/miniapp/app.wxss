@@ -1,0 +1,7 @@
+@import "src/styles/common.wxss";
+
+page {
+  background: #f4f6f8;
+  color: #1d2433;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}

@@ -1,0 +1,62 @@
+<view class="page" data-q70-miniapp-payment-info-page="true">
+  <view class="summary">
+    <view>
+      <text class="eyebrow">打款信息</text>
+      <text class="title">实名与银行卡</text>
+    </view>
+  </view>
+
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+
+  <view wx:if="{{paymentInfo}}" class="card">
+    <text class="status">{{paymentInfo.paymentInfoStatus}} · {{paymentInfo.signStatus}}</text>
+    <view class="grid">
+      <view class="metric">
+        <text class="label">姓名</text>
+        <text>{{paymentInfo.realNameMasked || '-'}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">银行卡</text>
+        <text>{{paymentInfo.bankCardNoMasked || '-'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <label class="field">
+      <text>姓名</text>
+      <input value="{{form.realName}}" data-field="realName" bindinput="updateField" />
+    </label>
+    <label class="field">
+      <text>身份证号</text>
+      <input value="{{form.idCardNo}}" data-field="idCardNo" bindinput="updateField" />
+    </label>
+    <label class="field">
+      <text>手机号</text>
+      <input value="{{form.paymentMobile}}" data-field="paymentMobile" bindinput="updateField" />
+    </label>
+    <label class="field">
+      <text>银行卡号</text>
+      <input value="{{form.bankCardNo}}" data-field="bankCardNo" bindinput="updateField" />
+    </label>
+    <label class="field">
+      <text>修改原因</text>
+      <textarea value="{{form.modifyReason}}" data-field="modifyReason" bindinput="updateField" />
+    </label>
+    <view class="actions">
+      <button class="primary" bindtap="saveFirstInfo" loading="{{submitting}}" disabled="{{submitting}}">首次保存</button>
+      <button class="secondary" bindtap="submitChange" loading="{{submitting}}" disabled="{{submitting}}">提交修改申请</button>
+      <button class="secondary" bindtap="openForm">填写页</button>
+      <button class="secondary" bindtap="openChange">修改申请页</button>
+    </view>
+  </view>
+
+  <view class="card">
+    <text class="label">修改申请</text>
+    <view wx:if="{{changeRequests.length === 0}}" class="empty">暂无申请</view>
+    <view wx:for="{{changeRequests}}" wx:key="changeRequestId" class="list-item">
+      <text>{{item.changeRequestId}}</text>
+      <text class="meta">{{item.reviewStatus}} · 需重签 {{item.requireResign}}</text>
+    </view>
+  </view>
+</view>

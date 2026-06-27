@@ -1,16 +1,66 @@
-<view class="page" data-q41-miniapp-withdraw-page="true" data-q42-miniapp-env-state-runtime="true">
+<view class="page" data-q41-miniapp-withdraw-page="true">
   <view class="summary">
     <view>
-      <text class="eyebrow">提现记录</text>
-      <text class="title">可提现申请与进度</text>
-      <picker mode="selector" range="{{environmentOptions}}" range-key="label" value="{{environmentIndex}}" bindchange="changeEnvironment">
-        <view class="env-select">
-          <text>{{environmentLabel}}</text>
-          <text class="env-url">{{apiBase}}</text>
-        </view>
-      </picker>
+      <text class="eyebrow">提现</text>
+      <text class="title">提交提现申请</text>
     </view>
-    <button class="primary" bindtap="submitSampleWithdraw" loading="{{submitting}}" disabled="{{submitting || loadingList}}">发起提现</button>
+  </view>
+
+  <view class="card">
+    <view class="grid">
+      <view class="metric">
+        <text class="label">可提现余额</text>
+        <text class="value">{{home.availableBalanceText || '加载中'}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">冻结余额</text>
+        <text class="value">{{home.frozenBalanceText || '-'}}</text>
+      </view>
+    </view>
+    <label class="field">
+      <text>提现金额</text>
+      <input type="digit" value="{{amountYuan}}" bindinput="updateAmount" placeholder="请输入金额，单位元" />
+    </label>
+    <text class="meta">请先阅读下方提现规则，再提交提现申请。</text>
+    <view class="actions">
+      <button class="primary" bindtap="submitWithdraw" loading="{{submitting}}" disabled="{{submitting || loadingList}}">提交提现</button>
+      <button class="secondary" bindtap="openRecords">提现记录</button>
+    </view>
+  </view>
+
+  <view class="rule-card" data-q121-miniapp-withdraw-rules="visible">
+    <view class="rule-head">
+      <view>
+        <text class="eyebrow">提现规则</text>
+        <text class="title">额度、次数、时间和到账说明</text>
+      </view>
+      <button class="secondary small" bindtap="openGuide">完整规则</button>
+    </view>
+    <view class="rule-grid">
+      <view class="rule-item">
+        <text class="label">可提现额度</text>
+        <text class="rule-value">{{home.availableBalanceText || '加载中'}}</text>
+      </view>
+      <view class="rule-item">
+        <text class="label">每日提现次数</text>
+        <text class="rule-value">{{dailyRemainText}}</text>
+      </view>
+      <view class="rule-item">
+        <text class="label">提现时间</text>
+        <text>{{submitWindowText}}</text>
+      </view>
+      <view class="rule-item">
+        <text class="label">到账时间</text>
+        <text>{{arrivalText}}</text>
+      </view>
+    </view>
+    <view class="rule-list">
+      <text>单笔限额：{{withdrawRuleSnapshot.amountRangeText}}</text>
+      <text>手续费：{{withdrawRuleSnapshot.feeText}}</text>
+      <text>余额冻结：{{withdrawRuleSnapshot.frozenText}}</text>
+      <text>审核流程：{{withdrawRuleSnapshot.auditText}}</text>
+      <text>异常限制：{{withdrawRuleSnapshot.exceptionText}}</text>
+    </view>
   </view>
 
   <view wx:if="{{error}}" class="error">
@@ -22,7 +72,7 @@
   <view wx:elif="{{records.length === 0}}" class="state-card empty-state">{{emptyText}}</view>
 
   <view wx:else class="record-list">
-    <view wx:for="{{records}}" wx:key="applyId" class="record" bindtap="loadWithdrawDetail" data-apply-id="{{item.applyId}}" data-progress-step="{{item.progressStep}}">
+    <view wx:for="{{records}}" wx:key="applyId" class="record" bindtap="openDetail" data-apply-id="{{item.applyId}}">
       <view>
         <text class="record-id">{{item.applyId}}</text>
         <text class="record-status">{{item.statusText}}</text>

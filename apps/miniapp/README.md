@@ -34,6 +34,7 @@ Status: local miniapp source and API contract only. Q42 does not upload or publi
 Status: local WeChat Developer Tool project configuration only. Q43 did not upload, preview, or publish a real Mini Program.
 
 - `project.config.json` declares the project as a `miniprogram` with `miniprogramRoot` at the miniapp folder root.
+- `app.js` and `app.wxss` are present at the miniapp root, so Developer Tools upload has the required global entry files.
 - `app.json` points to `sitemap.json`, and the sitemap allows the withdraw page.
 - Upload readiness checks must pass project structure first, then block real upload until appid and operator confirmation are available.
 

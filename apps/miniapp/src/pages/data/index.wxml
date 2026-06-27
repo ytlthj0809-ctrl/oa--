@@ -1,0 +1,63 @@
+<view class="page" data-q70-miniapp-data-page="true">
+  <view class="summary">
+    <view>
+      <text class="eyebrow">数据</text>
+      <text class="title">月度收入与任务</text>
+    </view>
+  </view>
+
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+
+  <view class="card">
+    <label class="field">
+      <text>月份</text>
+      <input value="{{month}}" bindinput="updateMonth" />
+    </label>
+    <button class="primary" bindtap="loadData" loading="{{loading}}" disabled="{{loading}}">刷新数据</button>
+  </view>
+
+  <view wx:if="{{snapshots.length === 0}}" class="card empty">暂无数据</view>
+  <view wx:for="{{snapshots}}" wx:key="snapshotId" class="card" bindtap="goPage" data-page="data-detail" data-month="{{item.month}}" data-platform="{{item.platform}}">
+    <text class="status">{{item.month}} · {{item.platform}}</text>
+    <view class="grid">
+      <view class="metric">
+        <text class="label">流水</text>
+        <text class="value">{{item.incomeText}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">有效时长</text>
+        <text class="value">{{item.durationText}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">有效天数</text>
+        <text class="value">{{item.validDays}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">任务状态</text>
+        <text class="value">{{item.taskStatus}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <text class="label">余额明细</text>
+    <view class="actions">
+      <button class="secondary" bindtap="goPage" data-page="balance">查看全部</button>
+    </view>
+    <view wx:for="{{flows}}" wx:key="flowId" class="list-item">
+      <text>{{item.direction}} · {{item.amountText}}</text>
+      <text class="meta">{{item.status}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <text class="label">任务奖励</text>
+    <view class="actions">
+      <button class="secondary" bindtap="goPage" data-page="rewards">查看全部</button>
+    </view>
+    <view wx:for="{{rewards}}" wx:key="rewardResultId" class="list-item">
+      <text>{{item.ruleCode || item.metricCode}} · {{item.rewardText}}</text>
+      <text class="meta">{{item.status}}</text>
+    </view>
+  </view>
+</view>

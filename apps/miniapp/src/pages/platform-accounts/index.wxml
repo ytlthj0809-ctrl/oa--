@@ -1,0 +1,37 @@
+<view class="page" data-q70-miniapp-platform-page="true">
+  <view class="summary">
+    <view>
+      <text class="eyebrow">平台账号</text>
+      <text class="title">绑定与追加申请</text>
+    </view>
+  </view>
+
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+
+  <view class="card">
+    <text class="label">已绑定账号</text>
+    <view wx:if="{{accounts.length === 0}}" class="empty">暂无账号</view>
+    <view wx:for="{{accounts}}" wx:key="platformAccountId" class="list-item">
+      <text>{{item.platform}} / {{item.accountNo}}</text>
+      <text class="meta">{{item.bindStatus || item.status}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <label class="field">
+      <text>平台</text>
+      <input value="{{form.platform}}" data-field="platform" bindinput="updateField" />
+    </label>
+    <label class="field">
+      <text>平台 ID</text>
+      <input value="{{form.accountNo}}" data-field="accountNo" bindinput="updateField" />
+    </label>
+    <button class="primary" bindtap="submitBindRequest" loading="{{submitting}}" disabled="{{submitting}}">提交追加绑定</button>
+    <button class="secondary" bindtap="openBindRequest">进入申请页</button>
+  </view>
+
+  <view wx:if="{{requestResult}}" class="card">
+    <text class="status">{{requestResult.requestId}}</text>
+    <text class="meta">{{requestResult.reviewStatus || requestResult.status}}</text>
+  </view>
+</view>

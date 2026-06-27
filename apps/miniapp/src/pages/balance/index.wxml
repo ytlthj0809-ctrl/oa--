@@ -1,0 +1,13 @@
+<view class="page">
+  <view class="summary">
+    <text class="eyebrow">余额</text>
+    <text class="title">余额明细</text>
+  </view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{flows.length === 0}}" class="card empty">暂无余额流水</view>
+  <view wx:for="{{flows}}" wx:key="flowId" class="card">
+    <text class="status">{{item.direction}} · {{item.amountText}}</text>
+    <text class="meta">{{item.flowType}} · {{item.status}}</text>
+    <text>{{item.visibleReason || item.reason || '-'}}</text>
+  </view>
+</view>

@@ -1,0 +1,18 @@
+<view class="page">
+  <view class="summary">
+    <text class="eyebrow">提现</text>
+    <text class="title">提现记录</text>
+  </view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{legacy}}" class="card">
+    <text class="label">旧系统历史提现摘要</text>
+    <text>旧提现 {{legacy.oldWithdrawCount}} 条 · 旧余额流水 {{legacy.oldBalanceFlowCount}} 条</text>
+    <text class="meta">历史来源只读保留，上线观察期内用于对账核验</text>
+  </view>
+  <view wx:if="{{records.length === 0}}" class="card empty">暂无提现记录</view>
+  <view wx:for="{{records}}" wx:key="applyId" class="card" bindtap="openDetail" data-apply-id="{{item.applyId}}">
+    <text class="status">{{item.applyId}}</text>
+    <text class="meta">{{item.statusText}} · {{item.amountText}}</text>
+    <text>{{item.visibleReason || item.rejectReason || '-'}}</text>
+  </view>
+</view>

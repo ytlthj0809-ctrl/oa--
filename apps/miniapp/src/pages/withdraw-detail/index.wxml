@@ -1,0 +1,35 @@
+<view class="page">
+  <view class="summary">
+    <text class="eyebrow">提现</text>
+    <text class="title">提现记录详情</text>
+  </view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{detail}}" class="card">
+    <text class="status">{{detail.applyId}} · {{detail.statusText}}</text>
+    <view class="grid">
+      <view class="metric">
+        <text class="label">提现金额</text>
+        <text class="value">{{detail.amountText}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">冻结金额</text>
+        <text class="value">{{detail.frozenAmountText}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">批次</text>
+        <text>{{detail.batchId || '-'}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">状态</text>
+        <text>{{detail.status}}</text>
+      </view>
+    </view>
+  </view>
+  <view wx:if="{{detail}}" class="card">
+    <text class="label">状态轨迹</text>
+    <view wx:for="{{detail.statusHistory}}" wx:key="sequence" class="list-item">
+      <text>{{item.sequence}}. {{item.statusText}}</text>
+      <text class="meta">{{item.reason || '-'}}</text>
+    </view>
+  </view>
+</view>

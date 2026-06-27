@@ -1,0 +1,68 @@
+<view class="page" data-q70-miniapp-profile-page="true">
+  <view class="summary">
+    <view>
+      <text class="eyebrow">我的</text>
+      <text class="title">{{profile.displayName || '本地主播'}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+
+  <view wx:if="{{profile}}" class="card">
+    <view class="grid">
+      <view class="metric">
+        <text class="label">主播状态</text>
+        <text class="value">{{profile.anchorStatus}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">签约状态</text>
+        <text class="value">{{profile.signStatus}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">手机号</text>
+        <text>{{profile.mobileMasked}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">平台账号</text>
+        <text>{{profile.platformAccountCount}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="actions">
+      <button class="secondary" bindtap="goPage" data-page="payment-info">打款信息</button>
+      <button class="secondary" bindtap="goPage" data-page="sign">云账户签约</button>
+      <button class="secondary" bindtap="goPage" data-page="platform-accounts">平台账号</button>
+      <button class="secondary" bindtap="goPage" data-page="notifications">通知中心</button>
+      <button class="secondary" bindtap="goPage" data-page="profile-detail">个人资料</button>
+      <button class="secondary" bindtap="goPage" data-page="protocols">协议隐私</button>
+      <button class="secondary" bindtap="goPage" data-page="contact">联系客服</button>
+      <button class="secondary" bindtap="goPage" data-page="settings">设置</button>
+    </view>
+  </view>
+
+  <view wx:if="{{protocols}}" class="card">
+    <text class="label">协议与隐私</text>
+    <view class="list-item">
+      <text>{{protocols.userAgreement.title}} {{protocols.userAgreement.versionNo}}</text>
+      <button class="secondary" bindtap="agreeProtocol" data-type="{{protocols.userAgreement.protocolType}}" data-version="{{protocols.userAgreement.versionNo}}">同意</button>
+    </view>
+    <view class="list-item">
+      <text>{{protocols.privacyPolicy.title}} {{protocols.privacyPolicy.versionNo}}</text>
+      <button class="secondary" bindtap="agreeProtocol" data-type="{{protocols.privacyPolicy.protocolType}}" data-version="{{protocols.privacyPolicy.versionNo}}">同意</button>
+    </view>
+  </view>
+
+  <view wx:if="{{contact}}" class="card">
+    <text class="label">联系客服</text>
+    <text>{{contact.phone}} · {{contact.wechat}}</text>
+    <text class="meta">{{contact.workTime}}</text>
+  </view>
+
+  <view wx:if="{{legacy}}" class="card">
+    <text class="label">旧系统历史摘要</text>
+    <text>旧提现 {{legacy.oldWithdrawCount}} 条 · 旧流水 {{legacy.oldBalanceFlowCount}} 条</text>
+    <text class="meta">只读归档 {{legacy.readonlyArchiveEnforced}}</text>
+  </view>
+</view>

@@ -1,0 +1,14 @@
+<view class="page">
+  <view class="summary">
+    <text class="eyebrow">我的</text>
+    <text class="title">设置</text>
+  </view>
+  <view class="card">
+    <view class="list-item"><text class="label">当前版本</text><text>{{version}}</text></view>
+    <view class="actions">
+      <button class="secondary" bindtap="openProtocols">协议隐私</button>
+      <button class="secondary" bindtap="openContact">联系客服</button>
+      <button class="danger" bindtap="logout">退出登录</button>
+    </view>
+  </view>
+</view>

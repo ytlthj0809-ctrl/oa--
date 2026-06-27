@@ -1,0 +1,13 @@
+<view class="page">
+  <view class="summary">
+    <text class="eyebrow">云账户</text>
+    <text class="title">签约返回处理</text>
+  </view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view class="card">
+    <text class="label">签约状态</text>
+    <text class="value">{{signStatus.signStatus || '刷新中'}}</text>
+    <text class="meta">{{signStatus.eventStatusDetail || '-'}}</text>
+    <button class="secondary" bindtap="goSign">返回签约页</button>
+  </view>
+</view>

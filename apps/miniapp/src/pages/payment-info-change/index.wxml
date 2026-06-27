@@ -1,0 +1,19 @@
+<view class="page">
+  <view class="summary">
+    <text class="eyebrow">打款信息</text>
+    <text class="title">修改申请</text>
+  </view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view class="card">
+    <label class="field"><text>姓名</text><input value="{{form.realName}}" data-field="realName" bindinput="updateField" /></label>
+    <label class="field"><text>身份证号</text><input value="{{form.idCardNo}}" data-field="idCardNo" bindinput="updateField" /></label>
+    <label class="field"><text>手机号</text><input value="{{form.paymentMobile}}" data-field="paymentMobile" bindinput="updateField" /></label>
+    <label class="field"><text>银行卡号</text><input value="{{form.bankCardNo}}" data-field="bankCardNo" bindinput="updateField" /></label>
+    <label class="field"><text>修改原因</text><textarea value="{{form.modifyReason}}" data-field="modifyReason" bindinput="updateField" /></label>
+    <button class="primary" bindtap="submitChange" loading="{{submitting}}" disabled="{{submitting}}">提交申请</button>
+  </view>
+  <view wx:if="{{result}}" class="card">
+    <text class="status">{{result.changeRequestId || result.requestId}}</text>
+    <text class="meta">{{result.reviewStatus || result.status}}</text>
+  </view>
+</view>

@@ -1,0 +1,13 @@
+<view class="page">
+  <view class="summary">
+    <text class="eyebrow">任务奖励</text>
+    <text class="title">达标与释放记录</text>
+  </view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{rewards.length === 0}}" class="card empty">暂无任务奖励</view>
+  <view wx:for="{{rewards}}" wx:key="rewardResultId" class="card">
+    <text class="status">{{item.ruleCode || item.metricCode}} · {{item.rewardText}}</text>
+    <text class="meta">{{item.status}} · 预计释放 {{item.releaseDate || '-'}}</text>
+    <text>{{item.visibleReason || item.reason || '-'}}</text>
+  </view>
+</view>
