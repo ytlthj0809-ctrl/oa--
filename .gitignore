@@ -10,6 +10,7 @@ temp/
 .env
 .env.*
 !.env.example
+.workbuddy/
 apps/miniapp/project.private.config.json
 apps/miniapp/private.*.key
 apps/miniapp/upload-info*.json
