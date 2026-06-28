@@ -29,13 +29,13 @@
   ],
   "window": {
     "navigationBarTitleText": "嘉音提现",
-    "navigationBarBackgroundColor": "#27364a",
+    "navigationBarBackgroundColor": "#231815",
     "navigationBarTextStyle": "white",
     "backgroundColor": "#f4f6f8"
   },
   "tabBar": {
     "color": "#667085",
-    "selectedColor": "#1d7f5d",
+    "selectedColor": "#231815",
     "backgroundColor": "#ffffff",
     "borderStyle": "black",
     "list": [

@@ -1,6 +1,6 @@
 .page {
-  background: linear-gradient(180deg, #edf5f8 0rpx, #f4f6f8 280rpx, #f4f6f8 100%);
-  color: #1d2433;
+  background: linear-gradient(180deg, #231815 0rpx, #231815 248rpx, #f4f6f8 248rpx, #f4f6f8 100%);
+  color: #231815;
   min-height: 100vh;
   padding: 28rpx 28rpx calc(36rpx + env(safe-area-inset-bottom));
 }
@@ -10,8 +10,9 @@
 .detail {
   background: #ffffff;
   border: 1rpx solid #d9dee8;
+  border-top: 8rpx solid #ffda01;
   border-radius: 16rpx;
-  box-shadow: 0 10rpx 28rpx rgba(31, 45, 61, 0.06);
+  box-shadow: 0 14rpx 34rpx rgba(35, 24, 21, 0.08);
   min-width: 0;
 }
 
@@ -59,16 +60,17 @@ button::after {
 }
 
 .primary {
-  background: #1d7f5d;
+  background: #ffda01;
   border-radius: 14rpx;
-  color: #ffffff;
+  box-shadow: 0 8rpx 18rpx rgba(255, 218, 1, 0.22);
+  color: #231815;
   font-size: 26rpx;
 }
 
 .secondary {
-  background: #e8eef8;
+  background: #eef2f6;
   border-radius: 14rpx;
-  color: #27364a;
+  color: #231815;
   font-size: 24rpx;
 }
 
@@ -112,8 +114,9 @@ button::after {
 .rule-card {
   background: #ffffff;
   border: 1rpx solid #d9dee8;
+  border-top: 8rpx solid #ffda01;
   border-radius: 16rpx;
-  box-shadow: 0 10rpx 28rpx rgba(31, 45, 61, 0.06);
+  box-shadow: 0 14rpx 34rpx rgba(35, 24, 21, 0.08);
   margin-bottom: 20rpx;
   min-width: 0;
   padding: 24rpx;
@@ -140,7 +143,7 @@ button::after {
 }
 
 .rule-item {
-  background: #f8fafc;
+  background: #fffdf3;
   border: 1rpx solid #e4e7ec;
   border-radius: 14rpx;
   min-height: 104rpx;
@@ -153,17 +156,17 @@ button::after {
 }
 
 .rule-value {
-  color: #1d7f5d;
+  color: #231815;
   font-size: 28rpx;
   font-weight: 700;
   margin-top: 6rpx;
 }
 
 .rule-list {
-  background: #f3f7f6;
-  border: 1rpx solid #d7e7e2;
+  background: #fff8cf;
+  border: 1rpx solid #f2df7a;
   border-radius: 14rpx;
-  color: #27364a;
+  color: #231815;
   display: grid;
   font-size: 24rpx;
   gap: 10rpx;
@@ -177,7 +180,7 @@ button::after {
 }
 
 .loading-state {
-  color: #27364a;
+  color: #231815;
 }
 
 .empty-state {
@@ -193,7 +196,7 @@ button::after {
 }
 
 .record {
-  box-shadow: 0 1rpx 0 rgba(31, 45, 61, 0.03);
+  box-shadow: 0 1rpx 0 rgba(35, 24, 21, 0.03);
   padding: 22rpx;
 }
 
@@ -250,6 +253,6 @@ button::after {
 }
 
 .timeline-item {
-  border-left: 6rpx solid #1d7f5d;
+  border-left: 6rpx solid #ffda01;
   padding-left: 14rpx;
 }

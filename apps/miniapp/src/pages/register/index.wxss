@@ -1,6 +1,6 @@
 .page {
-  background: linear-gradient(180deg, #edf5f8 0rpx, #f4f6f8 280rpx, #f4f6f8 100%);
-  color: #1d2433;
+  background: linear-gradient(180deg, #231815 0rpx, #231815 248rpx, #f4f6f8 248rpx, #f4f6f8 100%);
+  color: #231815;
   min-height: 100vh;
   padding: 28rpx 28rpx calc(36rpx + env(safe-area-inset-bottom));
 }
@@ -10,8 +10,9 @@
 .result-card {
   background: #ffffff;
   border: 1rpx solid #d9dee8;
+  border-top: 8rpx solid #ffda01;
   border-radius: 16rpx;
-  box-shadow: 0 10rpx 28rpx rgba(31, 45, 61, 0.06);
+  box-shadow: 0 14rpx 34rpx rgba(35, 24, 21, 0.08);
   min-width: 0;
 }
 
@@ -60,7 +61,7 @@
 }
 
 .field input {
-  background: #f8fafc;
+  background: #ffffff;
   border: 1rpx solid #d9dee8;
   border-radius: 14rpx;
   min-height: 72rpx;
@@ -97,16 +98,17 @@ button::after {
 }
 
 .primary {
-  background: #1d7f5d;
+  background: #ffda01;
   border-radius: 14rpx;
-  color: #ffffff;
+  box-shadow: 0 8rpx 18rpx rgba(255, 218, 1, 0.22);
+  color: #231815;
   font-size: 26rpx;
 }
 
 .secondary {
-  background: #e8eef8;
+  background: #eef2f6;
   border-radius: 14rpx;
-  color: #27364a;
+  color: #231815;
   font-size: 26rpx;
 }
 

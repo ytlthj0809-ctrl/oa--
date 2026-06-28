@@ -1,1 +1,22 @@
+@import "../../styles/common.wxss";
 
+.login-hero {
+  padding-bottom: 30rpx;
+}
+
+.login-card {
+  margin-top: 8rpx;
+}
+
+.login-card .primary {
+  margin-top: 10rpx;
+}
+
+.login-note {
+  color: #8a6a00;
+  display: block;
+  font-size: 23rpx;
+  line-height: 1.45;
+  margin-top: 18rpx;
+  text-align: center;
+}

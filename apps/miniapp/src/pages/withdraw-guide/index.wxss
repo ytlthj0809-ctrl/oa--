@@ -14,7 +14,7 @@
 }
 
 .rule-guide-item {
-  background: #f8fafc;
+  background: #fffdf3;
   border: 1rpx solid #e4e7ec;
   border-radius: 14rpx;
   display: grid;
@@ -23,7 +23,7 @@
 }
 
 .rule-guide-title {
-  color: #1d2433;
+  color: #231815;
   font-size: 28rpx;
   font-weight: 700;
 }

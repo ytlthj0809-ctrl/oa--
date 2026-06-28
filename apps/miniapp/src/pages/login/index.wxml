@@ -1,13 +1,14 @@
 <view class="page">
-  <view class="summary">
-    <text class="eyebrow">嘉音提现</text>
-    <text class="title">主播登录</text>
-    <text class="meta">使用旧手机号、主播编号或平台账号进入本人账户。</text>
+  <view class="summary login-hero">
+    <image class="brand-logo" src="../../assets/brand/jiayin-logo-horizontal-official.png" mode="aspectFit" />
+    <text class="eyebrow">主播账户</text>
+    <text class="title">欢迎回到嘉音提现</text>
+    <text class="meta">旧手机号、主播编号或平台账号均可登录，余额与提现记录已同步。</text>
   </view>
 
   <view wx:if="{{error}}" class="error">{{error}}</view>
 
-  <view class="card">
+  <view class="card login-card">
     <label class="field">
       <text>手机号/账号</text>
       <input value="{{form.mobile}}" data-field="mobile" bindinput="updateField" placeholder="请输入手机号或账号" />
@@ -22,5 +23,6 @@
       <button class="secondary" bindtap="openProtocols">协议隐私</button>
       <button class="secondary" bindtap="openContact">联系客服</button>
     </view>
+    <text class="login-note">首次迁移登录请使用旧系统手机号或主播编号。</text>
   </view>
 </view>
