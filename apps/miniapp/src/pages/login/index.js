@@ -18,7 +18,7 @@ Page({
   async submitLogin() {
     this.setData({ submitting: true, error: "" });
     try {
-      if (!this.data.form.mobile) throw new Error("请输入手机号");
+      if (!this.data.form.mobile) throw new Error("请输入手机号或账号");
       if (!this.data.form.password) throw new Error("请输入密码");
       const session = await request("/api/miniapp/auth/login", {
         method: "POST",

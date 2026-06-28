@@ -2,15 +2,15 @@
   <view class="summary">
     <text class="eyebrow">嘉音提现</text>
     <text class="title">主播登录</text>
-    <text class="meta">使用手机号和密码进入本人账户。</text>
+    <text class="meta">使用旧手机号、主播编号或平台账号进入本人账户。</text>
   </view>
 
   <view wx:if="{{error}}" class="error">{{error}}</view>
 
   <view class="card">
     <label class="field">
-      <text>手机号</text>
-      <input value="{{form.mobile}}" data-field="mobile" bindinput="updateField" placeholder="请输入手机号" />
+      <text>手机号/账号</text>
+      <input value="{{form.mobile}}" data-field="mobile" bindinput="updateField" placeholder="请输入手机号或账号" />
     </label>
     <label class="field">
       <text>密码</text>
