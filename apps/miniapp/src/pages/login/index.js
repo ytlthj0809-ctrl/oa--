@@ -6,6 +6,11 @@ Page({
       mobile: "",
       password: "",
     },
+    reviewAccount: {
+      account: "jy-review-demo",
+      mobile: "13900009999",
+      password: "JYreview2026",
+    },
     submitting: false,
     error: "",
   },
@@ -16,6 +21,31 @@ Page({
   },
 
   async submitLogin() {
+    return this.loginWithCurrentForm({ reviewMode: false });
+  },
+
+  fillReviewAccount() {
+    this.setData({
+      error: "",
+      form: {
+        mobile: this.data.reviewAccount.account,
+        password: this.data.reviewAccount.password,
+      },
+    });
+    wx.showToast({ title: "审核账号已填入", icon: "none" });
+  },
+
+  async submitReviewLogin() {
+    this.setData({
+      form: {
+        mobile: this.data.reviewAccount.account,
+        password: this.data.reviewAccount.password,
+      },
+    });
+    return this.loginWithCurrentForm({ reviewMode: true });
+  },
+
+  async loginWithCurrentForm({ reviewMode }) {
     this.setData({ submitting: true, error: "" });
     try {
       if (!this.data.form.mobile) throw new Error("请输入手机号或账号");
@@ -23,8 +53,10 @@ Page({
       const session = await request("/api/miniapp/auth/login", {
         method: "POST",
         data: {
+          loginAccount: this.data.form.mobile,
           mobile: this.data.form.mobile,
           password: this.data.form.password,
+          reviewMode,
         },
       });
       setSession(session);

@@ -20,3 +20,89 @@
   margin-top: 18rpx;
   text-align: center;
 }
+
+.review-card {
+  border-color: #f4d33f;
+  margin-top: 24rpx;
+}
+
+.review-head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.review-title {
+  color: #22130f;
+  font-size: 32rpx;
+  font-weight: 800;
+}
+
+.review-badge {
+  background: #fff3c5;
+  border: 1rpx solid #f4d33f;
+  border-radius: 999rpx;
+  color: #6e4c00;
+  flex-shrink: 0;
+  font-size: 22rpx;
+  font-weight: 700;
+  padding: 6rpx 16rpx;
+}
+
+.review-desc {
+  color: #5f5a52;
+  display: block;
+  font-size: 25rpx;
+  line-height: 1.55;
+  margin-top: 16rpx;
+}
+
+.review-account {
+  background: #fffaf0;
+  border: 1rpx solid #f2df9b;
+  border-radius: 12rpx;
+  margin-top: 18rpx;
+  overflow: hidden;
+}
+
+.review-row {
+  align-items: center;
+  border-bottom: 1rpx solid #f2df9b;
+  display: flex;
+  justify-content: space-between;
+  min-height: 74rpx;
+  padding: 0 18rpx;
+}
+
+.review-row:last-child {
+  border-bottom: 0;
+}
+
+.review-label {
+  color: #7b6c55;
+  flex-shrink: 0;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.review-value {
+  color: #22130f;
+  font-size: 25rpx;
+  font-weight: 700;
+  max-width: 390rpx;
+  text-align: right;
+  word-break: break-all;
+}
+
+.review-actions {
+  display: grid;
+  gap: 14rpx;
+  grid-template-columns: 1fr;
+  margin-top: 18rpx;
+}
+
+.review-login {
+  background: #ffda01;
+  color: #22130f;
+}
