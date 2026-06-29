@@ -6,12 +6,8 @@ Page({
       mobile: "",
       password: "",
     },
-    reviewAccount: {
-      account: "jy-review-demo",
-      mobile: "13900009999",
-      password: "JYreview2026",
-    },
     submitting: false,
+    wechatSubmitting: false,
     error: "",
   },
 
@@ -21,31 +17,10 @@ Page({
   },
 
   async submitLogin() {
-    return this.loginWithCurrentForm({ reviewMode: false });
+    return this.loginWithCurrentForm();
   },
 
-  fillReviewAccount() {
-    this.setData({
-      error: "",
-      form: {
-        mobile: this.data.reviewAccount.account,
-        password: this.data.reviewAccount.password,
-      },
-    });
-    wx.showToast({ title: "审核账号已填入", icon: "none" });
-  },
-
-  async submitReviewLogin() {
-    this.setData({
-      form: {
-        mobile: this.data.reviewAccount.account,
-        password: this.data.reviewAccount.password,
-      },
-    });
-    return this.loginWithCurrentForm({ reviewMode: true });
-  },
-
-  async loginWithCurrentForm({ reviewMode }) {
+  async loginWithCurrentForm() {
     this.setData({ submitting: true, error: "" });
     try {
       if (!this.data.form.mobile) throw new Error("请输入手机号或账号");
@@ -56,7 +31,6 @@ Page({
           loginAccount: this.data.form.mobile,
           mobile: this.data.form.mobile,
           password: this.data.form.password,
-          reviewMode,
         },
       });
       setSession(session);
@@ -70,6 +44,37 @@ Page({
     } finally {
       this.setData({ submitting: false });
     }
+  },
+
+  loginByWechat() {
+    this.setData({ wechatSubmitting: true, error: "" });
+    wx.login({
+      success: async ({ code }) => {
+        try {
+          const result = await request("/api/miniapp/auth/wechat-login", {
+            method: "POST",
+            data: { jsCode: code },
+          });
+          if (result.bindingRequired) {
+            if (result.wechatBindToken) {
+              wx.setStorageSync("jy-miniapp-wechat-bind-token", result.wechatBindToken);
+            }
+            wx.showToast({ title: "请先提交主播注册申请", icon: "none" });
+            wx.navigateTo({ url: "/src/pages/register/index?from=wechatLogin" });
+            return;
+          }
+          setSession(result);
+          wx.switchTab({ url: "/src/pages/home/index" });
+        } catch (error) {
+          this.setData({ error: error.message });
+        } finally {
+          this.setData({ wechatSubmitting: false });
+        }
+      },
+      fail: (error) => {
+        this.setData({ error: error.errMsg || "微信登录失败", wechatSubmitting: false });
+      },
+    });
   },
 
   goRegister() {

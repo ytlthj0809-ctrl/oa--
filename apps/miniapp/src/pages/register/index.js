@@ -9,8 +9,6 @@ function buildDefaultForm() {
     confirmPassword: "",
     platform: "",
     accountNo: "",
-    bankAccountNo: "",
-    idCardNo: "",
     protocolChecked: false,
   };
 }
@@ -22,6 +20,13 @@ Page({
     loadingStatus: false,
     error: "",
     latestRequest: null,
+    sourceText: "注册后由后台审核，打款信息在提现前单独填写。",
+  },
+
+  onLoad(options = {}) {
+    if (options.from === "wechatLogin") {
+      this.setData({ sourceText: "当前微信尚未绑定主播账号，请先提交注册申请。审核通过后可直接登录。" });
+    }
   },
 
   updateField(event) {
@@ -52,14 +57,18 @@ Page({
       if (!this.data.form.protocolChecked) {
         throw new Error("请先同意协议和隐私政策");
       }
+      const wechatBindToken = wx.getStorageSync("jy-miniapp-wechat-bind-token") || "";
       const result = await request("/api/miniapp/anchor-registration-requests", {
         method: "POST",
         data: {
           ...this.data.form,
-          openId: `local-openid-${this.data.form.mobile}`,
+          openId: wechatBindToken || `local-openid-${this.data.form.mobile}`,
           operatorId: "MINIAPP",
         },
       });
+      if (wechatBindToken) {
+        wx.removeStorageSync("jy-miniapp-wechat-bind-token");
+      }
       this.setData({ latestRequest: result });
     } catch (error) {
       this.setData({ error: error.message });

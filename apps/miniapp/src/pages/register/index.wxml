@@ -3,6 +3,7 @@
     <view>
       <text class="eyebrow">主播注册</text>
       <text class="title">提交注册申请</text>
+      <text class="summary-desc">{{sourceText}}</text>
     </view>
   </view>
 
@@ -39,14 +40,7 @@
       <text>平台账号</text>
       <input value="{{form.accountNo}}" data-field="accountNo" bindinput="updateField" />
     </label>
-    <label class="field">
-      <text>银行卡</text>
-      <input value="{{form.bankAccountNo}}" data-field="bankAccountNo" bindinput="updateField" />
-    </label>
-    <label class="field">
-      <text>证件号</text>
-      <input value="{{form.idCardNo}}" data-field="idCardNo" bindinput="updateField" />
-    </label>
+    <view class="privacy-note">注册阶段不收集银行卡号。提现前请在“打款信息”中补充实名、身份证和银行卡。</view>
     <view class="field">
       <text>协议确认</text>
       <switch checked="{{form.protocolChecked}}" bindchange="toggleProtocol" />
