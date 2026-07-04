@@ -211,6 +211,35 @@ button::after {
   color: #667085;
 }
 
+.field-head {
+  align-items: center;
+  display: flex;
+  gap: 12rpx;
+  justify-content: space-between;
+}
+
+.field-head text {
+  color: #231815;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.inline-action {
+  background: #fff8cf;
+  border-radius: 999rpx;
+  color: #6f5200;
+  font-size: 22rpx;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+  min-height: 48rpx;
+  padding: 0 18rpx;
+}
+
+.inline-action::after {
+  border: 0;
+}
+
 .record-list {
   display: grid;
   gap: 16rpx;

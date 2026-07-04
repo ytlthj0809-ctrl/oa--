@@ -153,6 +153,19 @@ Page({
     });
   },
 
+  fillFullAmount() {
+    const availableBalanceCents = Number(this.data.home && this.data.home.availableBalanceCents || 0);
+    if (availableBalanceCents <= 0) {
+      wx.showToast({ title: "当前无可提现余额", icon: "none" });
+      return;
+    }
+    const amountYuan = (availableBalanceCents / 100).toFixed(2);
+    this.setData({
+      amountYuan,
+      ...buildAmountFeedback({ amountYuan, availableBalanceCents }),
+    });
+  },
+
   async loadWithdrawList() {
     this.setData({ loadingList: true, error: "", errorSource: "" });
     try {

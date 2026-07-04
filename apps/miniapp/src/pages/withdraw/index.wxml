@@ -26,13 +26,16 @@
       </view>
     </view>
     <label class="field">
-      <text>提现金额</text>
+      <view class="field-head">
+        <text>提现金额</text>
+        <button class="inline-action" bindtap="fillFullAmount">全部提现</button>
+      </view>
       <input type="digit" value="{{amountYuan}}" bindinput="updateAmount" placeholder="请输入金额，单位元" />
     </label>
     <text wx:if="{{amountFeedbackText}}" class="amount-feedback {{amountFeedbackTone}}">{{amountFeedbackText}}</text>
     <text class="meta">请先阅读下方提现规则，再提交提现申请。</text>
     <view class="actions">
-      <button class="primary" bindtap="submitWithdraw" loading="{{submitting}}" disabled="{{submitting}}">提交提现</button>
+      <button class="primary" bindtap="submitWithdraw" loading="{{submitting}}" disabled="{{submitting || !canSubmitAmount}}">提交提现</button>
       <button class="secondary" bindtap="openRecords">提现记录</button>
     </view>
   </view>
