@@ -6,8 +6,11 @@
   <view wx:if="{{error}}" class="error">{{error}}</view>
   <view wx:if="{{!notification}}" class="card empty">通知不存在或已失效</view>
   <view wx:else class="card">
-    <text class="status">{{notification.noticeTitle}}</text>
-    <text class="meta">{{notification.noticeType}} · {{notification.readStatus}}</text>
+    <view class="section-head">
+      <text class="row-title">{{notification.noticeTitle}}</text>
+      <text class="badge {{notification.readStatusTone}}">{{notification.readStatusText}}</text>
+    </view>
+    <text class="meta">{{notification.noticeTypeText}}</text>
     <text>{{notification.body}}</text>
     <button class="secondary" bindtap="openBusiness">查看关联业务</button>
   </view>

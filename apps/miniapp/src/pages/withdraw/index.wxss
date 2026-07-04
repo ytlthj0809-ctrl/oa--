@@ -1,3 +1,5 @@
+@import "../../styles/common.wxss";
+
 .page {
   background: linear-gradient(180deg, #231815 0rpx, #231815 248rpx, #f4f6f8 248rpx, #f4f6f8 100%);
   color: #231815;
@@ -190,6 +192,25 @@ button::after {
   color: #667085;
 }
 
+.amount-feedback {
+  display: block;
+  font-size: 24rpx;
+  line-height: 1.45;
+  margin-top: -4rpx;
+}
+
+.amount-feedback.success {
+  color: #1d7f5d;
+}
+
+.amount-feedback.danger {
+  color: #d92d20;
+}
+
+.amount-feedback.neutral {
+  color: #667085;
+}
+
 .record-list {
   display: grid;
   gap: 16rpx;
@@ -208,10 +229,25 @@ button::after {
 }
 
 .record-status {
-  color: #1d7f5d;
   display: block;
   font-size: 24rpx;
   margin-top: 8rpx;
+}
+
+.record-status.success {
+  color: #1d7f5d;
+}
+
+.record-status.pending {
+  color: #b54708;
+}
+
+.record-status.danger {
+  color: #d92d20;
+}
+
+.record-status.neutral {
+  color: #667085;
 }
 
 .record-meta {

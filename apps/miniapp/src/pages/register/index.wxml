@@ -13,39 +13,25 @@
 
   <view class="form-card">
     <label class="field">
-      <text>主播编号</text>
-      <input value="{{form.anchorCode}}" data-field="anchorCode" bindinput="updateField" />
+      <text>主播ID</text>
+      <input value="{{form.anchorId}}" data-field="anchorId" bindinput="updateField" placeholder="请输入公司分配的主播ID" />
     </label>
     <label class="field">
       <text>主播姓名</text>
-      <input value="{{form.displayName}}" data-field="displayName" bindinput="updateField" />
+      <input value="{{form.displayName}}" data-field="displayName" bindinput="updateField" placeholder="请输入主播姓名或昵称" />
     </label>
     <label class="field">
       <text>手机号</text>
-      <input value="{{form.mobile}}" data-field="mobile" bindinput="updateField" />
+      <input value="{{form.mobile}}" data-field="mobile" bindinput="updateField" type="number" maxlength="11" placeholder="请输入本人手机号" />
     </label>
-    <label class="field">
-      <text>密码</text>
-      <input password value="{{form.password}}" data-field="password" bindinput="updateField" />
-    </label>
-    <label class="field">
-      <text>确认密码</text>
-      <input password value="{{form.confirmPassword}}" data-field="confirmPassword" bindinput="updateField" />
-    </label>
-    <label class="field">
-      <text>平台</text>
-      <input value="{{form.platform}}" data-field="platform" bindinput="updateField" />
-    </label>
-    <label class="field">
-      <text>平台账号</text>
-      <input value="{{form.accountNo}}" data-field="accountNo" bindinput="updateField" />
-    </label>
-    <view class="privacy-note">注册阶段不收集银行卡号。提现前请在“打款信息”中补充实名、身份证和银行卡。</view>
-    <view class="field">
+    <view class="privacy-note">注册阶段只用于确认主播ID和手机号，不收集平台账号、银行卡号或身份证号。提现前请在“打款信息”中补充实名、身份证和银行卡。</view>
+    <checkbox-group class="field" bindchange="toggleProtocol">
       <text>协议确认</text>
-      <switch checked="{{form.protocolChecked}}" bindchange="toggleProtocol" />
-      <text class="hint" bindtap="openProtocols">已阅读并同意《用户服务协议》和《隐私政策》</text>
-    </view>
+      <label class="checkbox-line">
+        <checkbox value="agreed" checked="{{form.protocolChecked}}" />
+        <text class="hint" bindtap="openProtocols">已阅读并同意《用户服务协议》和《隐私政策》</text>
+      </label>
+    </checkbox-group>
     <view class="actions">
       <button class="primary" bindtap="submitRegistration" loading="{{submitting}}" disabled="{{submitting}}">提交申请</button>
       <button class="secondary" bindtap="refreshRegistrationStatus" loading="{{loadingStatus}}" disabled="{{loadingStatus}}">刷新状态</button>
@@ -55,7 +41,8 @@
 
   <view wx:if="{{latestRequest}}" class="result-card">
     <text class="record-id">{{latestRequest.registrationId}}</text>
-    <text class="record-status">{{latestRequest.reviewStatus}}</text>
-    <text class="result-line">{{latestRequest.anchorCode}} · {{latestRequest.platform}}/{{latestRequest.accountNo}}</text>
+    <text class="badge {{latestRequest.reviewStatusTone}}">{{latestRequest.reviewStatusText}}</text>
+    <text class="result-line">主播ID {{latestRequest.anchorId || '-'}} · {{latestRequest.mobile}}</text>
+    <text class="helper-text">{{latestRequest.nextStepText}}</text>
   </view>
 </view>

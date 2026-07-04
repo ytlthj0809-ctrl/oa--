@@ -1,4 +1,5 @@
-const { formatMoney, request } = require("../../utils/api");
+const { appendQuery, formatMoney, openPage, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const { statusLabel, statusTone } = require("../../utils/formatters");
 
 function decorate(detail) {
   if (!detail) return null;
@@ -6,6 +7,8 @@ function decorate(detail) {
     ...detail,
     amountText: formatMoney(detail.amountCents),
     frozenAmountText: formatMoney(detail.frozenAmountCents),
+    displayStatusText: detail.statusText || statusLabel(detail.status),
+    displayStatusTone: statusTone(detail.status),
     statusHistory: detail.statusHistory || [],
   };
 }
@@ -30,12 +33,18 @@ Page({
     }
     this.setData({ loading: true, error: "" });
     try {
-      const detail = await request(`/api/miniapp/withdraw-applies/${this.data.applyId}`);
+      const anchorId = requireAnchorId();
+      const detail = await request(appendQuery(`/api/miniapp/withdraw-applies/${this.data.applyId}`, { anchorId }));
       this.setData({ detail: decorate(detail) });
     } catch (error) {
+      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
       this.setData({ error: error.message });
     } finally {
-      this.setData({ loading: false });
+      if (!this.__authRedirecting) this.setData({ loading: false });
     }
+  },
+
+  goRecords() {
+    openPage("withdraw-records");
   },
 });

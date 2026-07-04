@@ -1,15 +1,37 @@
-const { appendQuery, openPage, request } = require("../../utils/api");
+const { appendQuery, clearWechatBindToken, getWechatBindToken, openPage, request } = require("../../utils/api");
+const { statusLabel, statusTone } = require("../../utils/formatters");
 
 function buildDefaultForm() {
   return {
-    anchorCode: "",
+    anchorId: "",
     displayName: "",
     mobile: "",
-    password: "",
-    confirmPassword: "",
-    platform: "",
-    accountNo: "",
     protocolChecked: false,
+  };
+}
+
+function normalizeMobile(value) {
+  return String(value || "").replace(/[^\d]/g, "");
+}
+
+function normalizeRegistrationForm(form) {
+  return {
+    anchorId: String(form.anchorId || "").trim(),
+    displayName: String(form.displayName || "").trim(),
+    mobile: normalizeMobile(form.mobile),
+  };
+}
+
+function decorateRegistrationRequest(requestRecord) {
+  if (!requestRecord) return null;
+  const reviewStatus = requestRecord.reviewStatus || requestRecord.status;
+  return {
+    ...requestRecord,
+    reviewStatusText: statusLabel(reviewStatus),
+    reviewStatusTone: statusTone(reviewStatus),
+    nextStepText: reviewStatus === "APPROVED"
+      ? "审核已通过，请返回登录页使用微信登录。"
+      : "申请已提交，请等待后台审核。审核通过后可直接微信登录。",
   };
 }
 
@@ -40,10 +62,11 @@ Page({
   },
 
   toggleProtocol(event) {
+    const values = event.detail && event.detail.value ? event.detail.value : [];
     this.setData({
       form: {
         ...this.data.form,
-        protocolChecked: Boolean(event.detail.value),
+        protocolChecked: values.includes("agreed"),
       },
     });
   },
@@ -51,25 +74,27 @@ Page({
   async submitRegistration() {
     this.setData({ submitting: true, error: "" });
     try {
-      if (this.data.form.password !== this.data.form.confirmPassword) {
-        throw new Error("两次密码不一致");
-      }
+      const form = this.data.form;
+      const normalizedForm = normalizeRegistrationForm(form);
+      if (!normalizedForm.anchorId) throw new Error("请输入主播ID");
+      if (!normalizedForm.displayName) throw new Error("请输入主播姓名或昵称");
+      if (!/^1[3-9]\d{9}$/.test(normalizedForm.mobile)) throw new Error("请输入正确的手机号");
       if (!this.data.form.protocolChecked) {
         throw new Error("请先同意协议和隐私政策");
       }
-      const wechatBindToken = wx.getStorageSync("jy-miniapp-wechat-bind-token") || "";
+      const wechatBindToken = getWechatBindToken();
       const result = await request("/api/miniapp/anchor-registration-requests", {
         method: "POST",
         data: {
-          ...this.data.form,
-          openId: wechatBindToken || `local-openid-${this.data.form.mobile}`,
+          ...normalizedForm,
+          ...(wechatBindToken ? { openId: wechatBindToken } : {}),
           operatorId: "MINIAPP",
         },
       });
       if (wechatBindToken) {
-        wx.removeStorageSync("jy-miniapp-wechat-bind-token");
+        clearWechatBindToken();
       }
-      this.setData({ latestRequest: result });
+      this.setData({ latestRequest: decorateRegistrationRequest(result) });
     } catch (error) {
       this.setData({ error: error.message });
     } finally {
@@ -80,8 +105,13 @@ Page({
   async refreshRegistrationStatus() {
     this.setData({ loadingStatus: true, error: "" });
     try {
-      const records = await request(appendQuery("/api/miniapp/anchor-registration-requests", { mobile: this.data.form.mobile }));
-      this.setData({ latestRequest: records[0] || null });
+      const form = normalizeRegistrationForm(this.data.form);
+      if (!form.anchorId && !form.mobile) throw new Error("请先输入主播ID或手机号");
+      const records = await request(appendQuery("/api/miniapp/anchor-registration-requests", {
+        anchorId: form.anchorId,
+        mobile: form.mobile,
+      }));
+      this.setData({ latestRequest: decorateRegistrationRequest(records[0] || null) });
     } catch (error) {
       this.setData({ error: error.message });
     } finally {

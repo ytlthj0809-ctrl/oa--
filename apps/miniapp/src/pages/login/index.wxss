@@ -21,6 +21,15 @@
   text-align: center;
 }
 
+.login-cooldown {
+  color: #b54708;
+  display: block;
+  font-size: 24rpx;
+  line-height: 1.45;
+  margin: 8rpx 0 14rpx;
+  text-align: center;
+}
+
 .wechat-login-card {
   border-color: #f4d33f;
   margin-top: 24rpx;

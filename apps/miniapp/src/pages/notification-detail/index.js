@@ -1,4 +1,5 @@
-const { appendQuery, openPage, request, requireAnchorId } = require("../../utils/api");
+const { appendQuery, openPage, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const { statusLabel, statusTone, typeLabel } = require("../../utils/formatters");
 
 Page({
   data: {
@@ -17,13 +18,20 @@ Page({
     this.setData({ loading: true, error: "" });
     try {
       const anchorId = requireAnchorId();
-      const notifications = await request(appendQuery("/api/miniapp/notifications", { anchorId }));
-      const notification = (notifications || []).find((item) => item.notificationId === this.data.notificationId) || null;
-      this.setData({ notification });
+      const notification = await request(appendQuery(`/api/miniapp/notifications/${this.data.notificationId}`, { anchorId }));
+      this.setData({
+        notification: notification ? {
+          ...notification,
+          noticeTypeText: typeLabel(notification.noticeType),
+          readStatusText: statusLabel(notification.readStatus),
+          readStatusTone: statusTone(notification.readStatus),
+        } : null,
+      });
     } catch (error) {
+      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
       this.setData({ error: error.message });
     } finally {
-      this.setData({ loading: false });
+      if (!this.__authRedirecting) this.setData({ loading: false });
     }
   },
 

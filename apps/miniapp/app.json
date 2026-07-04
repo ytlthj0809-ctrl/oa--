@@ -41,21 +41,35 @@
     "list": [
       {
         "pagePath": "src/pages/home/index",
-        "text": "首页"
+        "text": "首页",
+        "iconPath": "src/assets/tab/home.png",
+        "selectedIconPath": "src/assets/tab/home-selected.png"
       },
       {
         "pagePath": "src/pages/data/index",
-        "text": "数据"
+        "text": "数据",
+        "iconPath": "src/assets/tab/data.png",
+        "selectedIconPath": "src/assets/tab/data-selected.png"
       },
       {
         "pagePath": "src/pages/withdraw/index",
-        "text": "提现"
+        "text": "提现",
+        "iconPath": "src/assets/tab/withdraw.png",
+        "selectedIconPath": "src/assets/tab/withdraw-selected.png"
       },
       {
         "pagePath": "src/pages/profile/index",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "src/assets/tab/profile.png",
+        "selectedIconPath": "src/assets/tab/profile-selected.png"
       }
     ]
   },
-  "sitemapLocation": "sitemap.json"
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "networkTimeout": {
+    "request": 15000,
+    "uploadFile": 30000,
+    "downloadFile": 30000
+  }
 }

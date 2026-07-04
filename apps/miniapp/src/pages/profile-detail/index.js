@@ -1,4 +1,5 @@
-const { appendQuery, request, requireAnchorId } = require("../../utils/api");
+const { appendQuery, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const { statusLabel, statusTone } = require("../../utils/formatters");
 
 Page({
   data: {
@@ -20,11 +21,19 @@ Page({
         request(appendQuery("/api/miniapp/profile", { anchorId })),
         request(appendQuery("/api/miniapp/legacy-history", { anchorId })),
       ]);
-      this.setData({ profile, legacy });
+      this.setData({
+        profile: profile ? {
+          ...profile,
+          anchorStatusText: statusLabel(profile.anchorStatus),
+          anchorStatusTone: statusTone(profile.anchorStatus),
+        } : null,
+        legacy,
+      });
     } catch (error) {
+      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
       this.setData({ error: error.message });
     } finally {
-      this.setData({ loading: false });
+      if (!this.__authRedirecting) this.setData({ loading: false });
     }
   },
 });

@@ -7,7 +7,7 @@
   </view>
 
   <view wx:if="{{error}}" class="error">{{error}}</view>
-  <view wx:if="{{loading}}" class="card">加载中</view>
+  <view wx:if="{{loading}}" class="card page-loading">加载中</view>
 
   <view wx:if="{{home}}" class="card">
     <view class="grid">
@@ -31,6 +31,15 @@
   </view>
 
   <view wx:if="{{home}}" class="card">
+    <view class="section-head">
+      <text class="label">当前进度</text>
+      <text class="badge {{home.signStatusTone}}">{{home.signStatusText}}</text>
+    </view>
+    <text class="helper-text">{{home.nextAction.text}}</text>
+    <button class="primary" bindtap="goNextAction">{{home.nextAction.text}}</button>
+  </view>
+
+  <view wx:if="{{home}}" class="card">
     <text class="label">今日数据</text>
     <view class="grid">
       <view class="metric">
@@ -47,7 +56,11 @@
       </view>
       <view class="metric">
         <text class="label">签约状态</text>
-        <text class="value">{{home.signStatus}}</text>
+        <text class="value">{{home.signStatusText}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">打款信息</text>
+        <text class="value">{{home.paymentInfoStatusText}}</text>
       </view>
     </view>
     <view class="actions">

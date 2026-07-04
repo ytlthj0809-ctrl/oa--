@@ -16,14 +16,23 @@
         <text class="label">冻结余额</text>
         <text class="value">{{home.frozenBalanceText || '-'}}</text>
       </view>
+      <view class="metric">
+        <text class="label">打款信息</text>
+        <text class="badge {{home.paymentInfoStatusTone || 'neutral'}}">{{home.paymentInfoStatusText || '-'}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">签约状态</text>
+        <text class="badge {{home.signStatusTone || 'neutral'}}">{{home.signStatusText || '-'}}</text>
+      </view>
     </view>
     <label class="field">
       <text>提现金额</text>
       <input type="digit" value="{{amountYuan}}" bindinput="updateAmount" placeholder="请输入金额，单位元" />
     </label>
+    <text wx:if="{{amountFeedbackText}}" class="amount-feedback {{amountFeedbackTone}}">{{amountFeedbackText}}</text>
     <text class="meta">请先阅读下方提现规则，再提交提现申请。</text>
     <view class="actions">
-      <button class="primary" bindtap="submitWithdraw" loading="{{submitting}}" disabled="{{submitting || loadingList}}">提交提现</button>
+      <button class="primary" bindtap="submitWithdraw" loading="{{submitting}}" disabled="{{submitting}}">提交提现</button>
       <button class="secondary" bindtap="openRecords">提现记录</button>
     </view>
   </view>
@@ -65,17 +74,18 @@
 
   <view wx:if="{{error}}" class="error">
     <text>{{error}}</text>
-    <button class="secondary small" bindtap="retryLoad">重试</button>
+    <button class="secondary small" bindtap="retryLoad">{{errorSource === 'submit' ? '重新提交' : '重新加载'}}</button>
   </view>
+  <view wx:if="{{successText}}" class="success-card">{{successText}}</view>
 
-  <view wx:if="{{loadingList}}" class="state-card loading-state">加载中</view>
-  <view wx:elif="{{records.length === 0}}" class="state-card empty-state">{{emptyText}}</view>
+  <view wx:if="{{loadingList}}" class="state-card loading-state page-loading">加载中</view>
+  <view wx:elif="{{records.length === 0}}" class="state-card empty-state empty">{{emptyText}}</view>
 
   <view wx:else class="record-list">
-    <view wx:for="{{records}}" wx:key="applyId" class="record" bindtap="openDetail" data-apply-id="{{item.applyId}}">
+    <view wx:for="{{records}}" wx:key="applyId" class="record" hover-class="tap-target-hover" bindtap="openDetail" data-apply-id="{{item.applyId}}">
       <view>
         <text class="record-id">{{item.applyId}}</text>
-        <text class="record-status">{{item.statusText}}</text>
+        <text class="record-status {{item.statusTone || 'neutral'}}">{{item.statusText}}</text>
       </view>
       <view class="record-meta">
         <text>{{item.amountText}}</text>
@@ -84,36 +94,4 @@
     </view>
   </view>
 
-  <view wx:if="{{loadingDetail}}" class="state-card loading-state">详情加载中</view>
-
-  <view wx:elif="{{detail}}" class="detail">
-    <view class="detail-head">
-      <text class="record-id">{{detail.applyId}}</text>
-      <text class="record-status">{{detail.statusText}}</text>
-    </view>
-    <view class="detail-grid">
-      <view>
-        <text class="label">金额</text>
-        <text>{{detail.amountText}}</text>
-      </view>
-      <view>
-        <text class="label">冻结</text>
-        <text>{{detail.frozenAmountText}}</text>
-      </view>
-      <view>
-        <text class="label">批次</text>
-        <text>{{detail.batchId || '-'}}</text>
-      </view>
-      <view>
-        <text class="label">状态</text>
-        <text>{{detail.status}}</text>
-      </view>
-    </view>
-    <view class="timeline">
-      <view wx:for="{{detail.statusHistory}}" wx:key="sequence" class="timeline-item">
-        <text>{{item.sequence}}. {{item.statusText}}</text>
-        <text class="timeline-reason">{{item.reason}}</text>
-      </view>
-    </view>
-  </view>
 </view>

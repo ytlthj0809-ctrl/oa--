@@ -1,32 +1,37 @@
-const { appendQuery, openPage, request, requireAnchorId } = require("../../utils/api");
+const { appendQuery, openPage, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const { statusLabel, statusTone, yesNo } = require("../../utils/formatters");
 
-function defaultForm() {
+function decoratePaymentInfo(paymentInfo) {
+  if (!paymentInfo) return null;
   return {
-    realName: "",
-    idCardNo: "",
-    paymentMobile: "",
-    bankCardNo: "",
-    modifyReason: "",
+    ...paymentInfo,
+    paymentInfoStatusText: statusLabel(paymentInfo.paymentInfoStatus || "MISSING"),
+    paymentInfoStatusTone: statusTone(paymentInfo.paymentInfoStatus || "MISSING"),
+    signStatusText: statusLabel(paymentInfo.signStatus || "UNSIGNED"),
+    signStatusTone: statusTone(paymentInfo.signStatus || "UNSIGNED"),
+  };
+}
+
+function decorateChangeRequest(item) {
+  return {
+    ...item,
+    reviewStatusText: statusLabel(item.reviewStatus || item.status),
+    reviewStatusTone: statusTone(item.reviewStatus || item.status),
+    requireResignText: yesNo(item.requireResign),
   };
 }
 
 Page({
   data: {
-    form: defaultForm(),
     loading: false,
-    submitting: false,
     error: "",
     paymentInfo: null,
     changeRequests: [],
+    canCreatePaymentInfo: true,
   },
 
-  onLoad() {
+  onShow() {
     this.loadPaymentInfo();
-  },
-
-  updateField(event) {
-    const field = event.currentTarget.dataset.field;
-    this.setData({ form: { ...this.data.form, [field]: event.detail.value } });
   },
 
   async loadPaymentInfo() {
@@ -37,59 +42,23 @@ Page({
         request(appendQuery("/api/miniapp/payment-info", { anchorId })),
         request(appendQuery("/api/miniapp/payment-info/change-requests", { anchorId })),
       ]);
-      this.setData({ paymentInfo, changeRequests });
-    } catch (error) {
-      this.setData({ error: error.message });
-    } finally {
-      this.setData({ loading: false });
-    }
-  },
-
-  async saveFirstInfo() {
-    this.setData({ submitting: true, error: "" });
-    try {
-      const anchorId = requireAnchorId();
-      const paymentInfo = await request("/api/miniapp/payment-info", {
-        method: "POST",
-        data: { anchorId, ...this.data.form, operatorId: "MINIAPP" },
+      const paymentInfoStatus = paymentInfo && paymentInfo.paymentInfoStatus;
+      const canCreatePaymentInfo = !paymentInfo || ["MISSING", "REJECTED", "RETURNED", "FAILED"].includes(paymentInfoStatus);
+      this.setData({
+        paymentInfo: decoratePaymentInfo(paymentInfo),
+        changeRequests: (changeRequests || []).map(decorateChangeRequest),
+        canCreatePaymentInfo,
       });
-      this.setData({ paymentInfo });
     } catch (error) {
+      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
       this.setData({ error: error.message });
     } finally {
-      this.setData({ submitting: false });
-    }
-  },
-
-  async submitChange() {
-    this.setData({ submitting: true, error: "" });
-    try {
-      const anchorId = requireAnchorId();
-      const requestBody = {
-        anchorId,
-        patch: {
-          realName: this.data.form.realName,
-          idCardNo: this.data.form.idCardNo,
-          paymentMobile: this.data.form.paymentMobile,
-          bankCardNo: this.data.form.bankCardNo,
-        },
-        modifyReason: this.data.form.modifyReason,
-        voucherFileName: "payment_info_change_voucher.csv",
-        operatorId: "MINIAPP",
-      };
-      await request("/api/miniapp/payment-info/change-requests", {
-        method: "POST",
-        data: requestBody,
-      });
-      this.loadPaymentInfo();
-    } catch (error) {
-      this.setData({ error: error.message });
-    } finally {
-      this.setData({ submitting: false });
+      if (!this.__authRedirecting) this.setData({ loading: false });
     }
   },
 
   openForm() {
+    if (!this.data.canCreatePaymentInfo) return;
     openPage("payment-info-form");
   },
 

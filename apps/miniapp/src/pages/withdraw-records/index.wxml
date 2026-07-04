@@ -9,10 +9,14 @@
     <text>旧提现 {{legacy.oldWithdrawCount}} 条 · 旧余额流水 {{legacy.oldBalanceFlowCount}} 条</text>
     <text class="meta">历史来源只读保留，上线观察期内用于对账核验</text>
   </view>
-  <view wx:if="{{records.length === 0}}" class="card empty">暂无提现记录</view>
+  <view wx:if="{{loading}}" class="card page-loading">加载中</view>
+  <view wx:if="{{!loading && records.length === 0}}" class="card empty">暂无提现记录</view>
   <view wx:for="{{records}}" wx:key="applyId" class="card" bindtap="openDetail" data-apply-id="{{item.applyId}}">
-    <text class="status">{{item.applyId}}</text>
-    <text class="meta">{{item.statusText}} · {{item.amountText}}</text>
+    <view class="section-head">
+      <text class="row-title">{{item.applyId}}</text>
+      <text class="badge {{item.displayStatusTone}}">{{item.displayStatusText}}</text>
+    </view>
+    <text class="meta">{{item.amountText}}</text>
     <text>{{item.visibleReason || item.rejectReason || '-'}}</text>
   </view>
 </view>

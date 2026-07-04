@@ -4,7 +4,8 @@
     <text class="title">收入与指标明细</text>
   </view>
   <view wx:if="{{error}}" class="error">{{error}}</view>
-  <view wx:if="{{!detail}}" class="card empty">暂无明细</view>
+  <view wx:if="{{loading}}" class="card page-loading">加载中</view>
+  <view wx:elif="{{!detail}}" class="card empty">暂无明细</view>
   <view wx:else class="card">
     <text class="status">{{detail.month}} · {{detail.platform}}</text>
     <view class="grid">
@@ -22,7 +23,7 @@
       </view>
       <view class="metric">
         <text class="label">任务状态</text>
-        <text class="value">{{detail.taskStatus}}</text>
+        <text class="badge {{detail.taskStatusTone}}">{{detail.taskStatusText}}</text>
       </view>
     </view>
   </view>

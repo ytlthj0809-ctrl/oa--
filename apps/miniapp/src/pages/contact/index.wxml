@@ -4,10 +4,15 @@
     <text class="title">联系客服</text>
   </view>
   <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{loading}}" class="card page-loading">加载中</view>
   <view wx:if="{{contact}}" class="card">
     <view class="list-item"><text class="label">电话</text><text>{{contact.phone}}</text></view>
     <view class="list-item"><text class="label">微信</text><text>{{contact.wechat}}</text></view>
     <view class="list-item"><text class="label">工作时间</text><text>{{contact.workTime}}</text></view>
+    <view class="actions">
+      <button class="primary" bindtap="callPhone">拨打电话</button>
+      <button class="secondary" bindtap="copyWechat">复制微信</button>
+    </view>
     <text class="meta">二维码文件：{{contact.qrcodeFileId}}</text>
   </view>
 </view>

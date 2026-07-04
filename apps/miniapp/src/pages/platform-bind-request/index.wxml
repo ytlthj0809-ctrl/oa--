@@ -6,11 +6,12 @@
   <view wx:if="{{error}}" class="error">{{error}}</view>
   <view class="card">
     <label class="field"><text>平台</text><input value="{{form.platform}}" data-field="platform" bindinput="updateField" /></label>
-    <label class="field"><text>平台 ID</text><input value="{{form.accountNo}}" data-field="accountNo" bindinput="updateField" /></label>
+    <label class="field"><text>平台账号</text><input value="{{form.accountNo}}" data-field="accountNo" bindinput="updateField" placeholder="请输入平台账号" /></label>
     <button class="primary" bindtap="submitRequest" loading="{{submitting}}" disabled="{{submitting}}">提交申请</button>
   </view>
   <view wx:if="{{result}}" class="card">
-    <text class="status">{{result.requestId}}</text>
-    <text class="meta">{{result.reviewStatus || result.status}}</text>
+    <text class="row-title">{{result.requestId}}</text>
+    <text class="badge {{result.reviewStatusTone}}">{{result.reviewStatusText}}</text>
+    <text class="helper-text">绑定申请已提交，请等待后台审核。</text>
   </view>
 </view>

@@ -4,12 +4,20 @@
     <text class="title">首次填写</text>
   </view>
   <view wx:if="{{error}}" class="error">{{error}}</view>
-  <view wx:if="{{saved}}" class="card status">保存成功</view>
+  <view class="notice">打款信息仅用于云账户签约核验和线下打款登记，提交后页面会脱敏展示。注册主播时不会要求填写银行卡。</view>
+  <view wx:if="{{saved}}" class="success-card">
+    <text>保存成功</text>
+    <text class="helper-text">下一步请完成云账户签约；签约完成后即可回到提现页提交申请。</text>
+    <view class="actions">
+      <button class="primary" bindtap="goSign">去签约</button>
+      <button class="secondary" bindtap="goPaymentInfo">查看打款信息</button>
+    </view>
+  </view>
   <view class="card">
-    <label class="field"><text>姓名</text><input value="{{form.realName}}" data-field="realName" bindinput="updateField" /></label>
-    <label class="field"><text>身份证号</text><input value="{{form.idCardNo}}" data-field="idCardNo" bindinput="updateField" /></label>
-    <label class="field"><text>手机号</text><input value="{{form.paymentMobile}}" data-field="paymentMobile" bindinput="updateField" /></label>
-    <label class="field"><text>银行卡号</text><input value="{{form.bankCardNo}}" data-field="bankCardNo" bindinput="updateField" /></label>
+    <label class="field"><text>姓名</text><input value="{{form.realName}}" data-field="realName" bindinput="updateField" placeholder="请输入真实姓名" /></label>
+    <label class="field"><text>身份证号</text><input type="idcard" maxlength="18" value="{{form.idCardNo}}" data-field="idCardNo" bindinput="updateField" placeholder="请输入 18 位身份证号" /></label>
+    <label class="field"><text>手机号</text><input type="number" maxlength="11" value="{{form.paymentMobile}}" data-field="paymentMobile" bindinput="updateField" placeholder="请输入收款手机号" /></label>
+    <label class="field"><text>银行卡号</text><input type="number" maxlength="19" value="{{form.bankCardNo}}" data-field="bankCardNo" bindinput="updateField" placeholder="请输入本人银行卡号" /></label>
     <button class="primary" bindtap="submitForm" loading="{{submitting}}" disabled="{{submitting}}">保存</button>
   </view>
 </view>

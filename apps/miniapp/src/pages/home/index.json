@@ -1,3 +1,4 @@
 {
-  "navigationBarTitleText": "嘉音首页"
+  "navigationBarTitleText": "嘉音首页",
+  "enablePullDownRefresh": true
 }

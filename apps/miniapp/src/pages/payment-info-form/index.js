@@ -1,4 +1,5 @@
-const { request, requireAnchorId } = require("../../utils/api");
+const { markMiniappDataDirty, openPage, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const { normalizePaymentInfoForm, validatePaymentInfoForm } = require("../../utils/validators");
 
 Page({
   data: {
@@ -19,18 +20,31 @@ Page({
   },
 
   async submitForm() {
+    if (this.data.submitting) return;
     this.setData({ submitting: true, error: "", saved: false });
     try {
       const anchorId = requireAnchorId();
+      const form = normalizePaymentInfoForm(this.data.form);
+      validatePaymentInfoForm(form);
       await request("/api/miniapp/payment-info", {
         method: "POST",
-        data: { anchorId, ...this.data.form, operatorId: "MINIAPP" },
+        data: { anchorId, ...form, operatorId: "MINIAPP" },
       });
-      this.setData({ saved: true });
+      markMiniappDataDirty();
+      this.setData({ form, saved: true });
     } catch (error) {
+      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
       this.setData({ error: error.message });
     } finally {
-      this.setData({ submitting: false });
+      if (!this.__authRedirecting) this.setData({ submitting: false });
     }
+  },
+
+  goPaymentInfo() {
+    openPage("payment-info");
+  },
+
+  goSign() {
+    openPage("sign");
   },
 });

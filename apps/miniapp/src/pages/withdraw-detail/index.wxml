@@ -3,9 +3,15 @@
     <text class="eyebrow">提现</text>
     <text class="title">提现记录详情</text>
   </view>
-  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{error}}" class="error">
+    <text>{{error}}</text>
+    <button class="secondary small" bindtap="goRecords">返回提现记录</button>
+  </view>
   <view wx:if="{{detail}}" class="card">
-    <text class="status">{{detail.applyId}} · {{detail.statusText}}</text>
+    <view class="section-head">
+      <text class="row-title">{{detail.applyId}}</text>
+      <text class="badge {{detail.displayStatusTone}}">{{detail.displayStatusText}}</text>
+    </view>
     <view class="grid">
       <view class="metric">
         <text class="label">提现金额</text>
@@ -21,7 +27,7 @@
       </view>
       <view class="metric">
         <text class="label">状态</text>
-        <text>{{detail.status}}</text>
+        <text>{{detail.displayStatusText}}</text>
       </view>
     </view>
   </view>

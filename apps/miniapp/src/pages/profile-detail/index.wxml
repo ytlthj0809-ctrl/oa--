@@ -6,7 +6,7 @@
   <view wx:if="{{error}}" class="error">{{error}}</view>
   <view wx:if="{{profile}}" class="card">
     <view class="list-item"><text class="label">主播姓名</text><text>{{profile.displayName || '-'}}</text></view>
-    <view class="list-item"><text class="label">主播状态</text><text>{{profile.anchorStatus || '-'}}</text></view>
+    <view class="list-item"><text class="label">主播状态</text><text class="badge {{profile.anchorStatusTone}}">{{profile.anchorStatusText || '-'}}</text></view>
     <view class="list-item"><text class="label">手机号</text><text>{{profile.mobileMasked || '-'}}</text></view>
     <view class="list-item"><text class="label">经纪人</text><text>{{profile.managerName || '-'}}</text></view>
     <view class="list-item"><text class="label">注册时间</text><text>{{profile.registeredAt || '-'}}</text></view>

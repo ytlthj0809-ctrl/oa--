@@ -1,4 +1,9 @@
-const { appendQuery, formatMoney, request, requireAnchorId } = require("../../utils/api");
+const { appendQuery, formatMoney, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const { statusLabel, statusTone } = require("../../utils/formatters");
+
+function getCurrentChinaMonth() {
+  return new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 7);
+}
 
 Page({
   data: {
@@ -10,7 +15,7 @@ Page({
   },
 
   onLoad(options = {}) {
-    this.setData({ month: options.month || "2026-06", platform: options.platform || "ALL" });
+    this.setData({ month: options.month || getCurrentChinaMonth(), platform: options.platform || "ALL" });
     this.loadDetail();
   },
 
@@ -25,12 +30,18 @@ Page({
       }));
       const detail = (list || [])[0] || null;
       this.setData({
-        detail: detail ? { ...detail, incomeText: formatMoney(detail.incomeCents) } : null,
+        detail: detail ? {
+          ...detail,
+          incomeText: formatMoney(detail.incomeCents),
+          taskStatusText: statusLabel(detail.taskStatus),
+          taskStatusTone: statusTone(detail.taskStatus),
+        } : null,
       });
     } catch (error) {
+      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
       this.setData({ error: error.message });
     } finally {
-      this.setData({ loading: false });
+      if (!this.__authRedirecting) this.setData({ loading: false });
     }
   },
 });

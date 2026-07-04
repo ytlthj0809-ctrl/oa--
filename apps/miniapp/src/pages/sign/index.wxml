@@ -9,18 +9,34 @@
   <view wx:if="{{error}}" class="error">{{error}}</view>
 
   <view class="card">
-    <text class="label">当前状态</text>
-    <text class="value">{{signStatus.signStatus || 'UNSIGNED'}}</text>
+    <view class="section-head">
+      <text class="label">当前状态</text>
+      <text class="badge {{signStatus.signStatusTone || 'neutral'}}">{{signStatus.signStatusText || '未签约'}}</text>
+    </view>
     <text class="meta">{{signStatus.eventStatusDetail || '未查询'}}</text>
+    <text class="helper-text">{{signStatus.actionHint}}</text>
+    <view wx:if="{{!signStatus.isSigned}}" class="form">
+      <label class="field">
+        <text>签约姓名</text>
+        <input value="{{form.realName}}" data-field="realName" bindinput="updateField" placeholder="请输入本人姓名" />
+      </label>
+      <label class="field">
+        <text>身份证号</text>
+        <input type="idcard" maxlength="18" value="{{form.idCardNo}}" data-field="idCardNo" bindinput="updateField" placeholder="请输入本人身份证号" />
+      </label>
+      <text class="meta">仅用于生成云账户签约入口，不作为注册信息保存。</text>
+    </view>
     <view class="actions">
-      <button class="primary" bindtap="createPresign" loading="{{submitting}}" disabled="{{submitting}}">发起签约</button>
-      <button class="secondary" bindtap="refreshSigned" loading="{{submitting}}" disabled="{{submitting}}">刷新状态</button>
+      <button wx:if="{{!signStatus.isSigned}}" class="primary" bindtap="createPresign" loading="{{presigning}}" disabled="{{presigning}}">去云账户签约</button>
+      <button wx:else class="primary" bindtap="goWithdraw">返回提现</button>
+      <button class="secondary" bindtap="refreshSigned" loading="{{refreshing}}" disabled="{{refreshing}}">刷新状态</button>
     </view>
   </view>
 
-  <view wx:if="{{presign}}" class="card">
-    <text class="label">签约链接</text>
-    <text class="meta">{{presign.signUrl}}</text>
-    <text class="status">token {{presign.token}}</text>
+  <view wx:if="{{presign && !signStatus.isSigned}}" class="card">
+    <text class="label">签约入口</text>
+    <text class="meta">已生成云账户签约入口。若没有自动打开，可重新打开或复制链接处理。</text>
+    <button class="primary" bindtap="openYzhSignMiniProgram">打开云账户签约</button>
+    <button class="secondary" bindtap="copyPresignUrl">复制签约链接</button>
   </view>
 </view>

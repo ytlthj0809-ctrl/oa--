@@ -1,4 +1,15 @@
-const { appendQuery, openPage, request, requireAnchorId } = require("../../utils/api");
+const { finishPageLoading, handlePageRequestError, openPage, requireAnchorId, stopPullDownRefresh } = require("../../utils/api");
+const { statusLabel, statusTone, typeLabel } = require("../../utils/formatters");
+const { listNotifications, markNotificationRead } = require("../../services/miniapp-api");
+
+function decorateNotification(notification) {
+  return {
+    ...notification,
+    noticeTypeText: typeLabel(notification.noticeType),
+    readStatusText: statusLabel(notification.readStatus),
+    readStatusTone: statusTone(notification.readStatus),
+  };
+}
 
 Page({
   data: {
@@ -7,20 +18,24 @@ Page({
     notifications: [],
   },
 
-  onLoad() {
+  onShow() {
     this.loadNotifications();
+  },
+
+  onPullDownRefresh() {
+    this.loadNotifications().finally(stopPullDownRefresh);
   },
 
   async loadNotifications() {
     this.setData({ loading: true, error: "" });
     try {
       const anchorId = requireAnchorId();
-      const notifications = await request(appendQuery("/api/miniapp/notifications", { anchorId }));
-      this.setData({ notifications });
+      const notifications = await listNotifications(anchorId);
+      this.setData({ notifications: (notifications || []).map(decorateNotification) });
     } catch (error) {
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      this.setData({ loading: false });
+      finishPageLoading(this);
     }
   },
 
@@ -28,15 +43,24 @@ Page({
     const notificationId = event.currentTarget.dataset.id;
     if (!notificationId) return;
     this.setData({ error: "" });
+    let anchorId = "";
     try {
-      const anchorId = requireAnchorId();
-      await request(`/api/miniapp/notifications/${notificationId}/read`, {
-        method: "POST",
-        data: { anchorId, operatorId: "MINIAPP" },
-      });
-      this.loadNotifications();
+      anchorId = requireAnchorId();
     } catch (error) {
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
+      return;
+    }
+    const previousNotifications = this.data.notifications;
+    this.setData({
+      notifications: previousNotifications.map((item) => item.notificationId === notificationId
+        ? decorateNotification({ ...item, readStatus: "READ" })
+        : item),
+    });
+    try {
+      await markNotificationRead({ anchorId, notificationId });
+    } catch (error) {
+      if (handlePageRequestError(this, error)) return;
+      this.setData({ notifications: previousNotifications, error: error.message });
     }
   },
 

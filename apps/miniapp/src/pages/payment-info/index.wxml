@@ -7,9 +7,14 @@
   </view>
 
   <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{loading}}" class="card page-loading">加载中</view>
 
   <view wx:if="{{paymentInfo}}" class="card">
-    <text class="status">{{paymentInfo.paymentInfoStatus}} · {{paymentInfo.signStatus}}</text>
+    <view class="section-head">
+      <text class="label">资料状态</text>
+      <text class="badge {{paymentInfo.paymentInfoStatusTone}}">{{paymentInfo.paymentInfoStatusText}}</text>
+    </view>
+    <text class="badge {{paymentInfo.signStatusTone}}">{{paymentInfo.signStatusText}}</text>
     <view class="grid">
       <view class="metric">
         <text class="label">姓名</text>
@@ -23,31 +28,12 @@
   </view>
 
   <view class="card">
-    <label class="field">
-      <text>姓名</text>
-      <input value="{{form.realName}}" data-field="realName" bindinput="updateField" />
-    </label>
-    <label class="field">
-      <text>身份证号</text>
-      <input value="{{form.idCardNo}}" data-field="idCardNo" bindinput="updateField" />
-    </label>
-    <label class="field">
-      <text>手机号</text>
-      <input value="{{form.paymentMobile}}" data-field="paymentMobile" bindinput="updateField" />
-    </label>
-    <label class="field">
-      <text>银行卡号</text>
-      <input value="{{form.bankCardNo}}" data-field="bankCardNo" bindinput="updateField" />
-    </label>
-    <label class="field">
-      <text>修改原因</text>
-      <textarea value="{{form.modifyReason}}" data-field="modifyReason" bindinput="updateField" />
-    </label>
+    <text class="label">办理入口</text>
+    <text class="meta">首次填写与修改申请分开处理，避免误提交。</text>
     <view class="actions">
-      <button class="primary" bindtap="saveFirstInfo" loading="{{submitting}}" disabled="{{submitting}}">首次保存</button>
-      <button class="secondary" bindtap="submitChange" loading="{{submitting}}" disabled="{{submitting}}">提交修改申请</button>
-      <button class="secondary" bindtap="openForm">填写页</button>
-      <button class="secondary" bindtap="openChange">修改申请页</button>
+      <button wx:if="{{canCreatePaymentInfo}}" class="primary" bindtap="openForm">首次填写</button>
+      <button wx:else class="secondary" disabled>资料已提交</button>
+      <button class="secondary" bindtap="openChange">申请修改</button>
     </view>
   </view>
 
@@ -55,8 +41,9 @@
     <text class="label">修改申请</text>
     <view wx:if="{{changeRequests.length === 0}}" class="empty">暂无申请</view>
     <view wx:for="{{changeRequests}}" wx:key="changeRequestId" class="list-item">
-      <text>{{item.changeRequestId}}</text>
-      <text class="meta">{{item.reviewStatus}} · 需重签 {{item.requireResign}}</text>
+      <text class="row-title">{{item.changeRequestId}}</text>
+      <text class="badge {{item.reviewStatusTone}}">{{item.reviewStatusText}}</text>
+      <text class="row-subtitle">需重签 {{item.requireResignText}}</text>
     </view>
   </view>
 </view>

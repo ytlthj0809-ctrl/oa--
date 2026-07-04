@@ -165,6 +165,128 @@ button::after {
   font-weight: 700;
 }
 
+.badge {
+  align-items: center;
+  border-radius: 999rpx;
+  display: inline-flex;
+  font-size: 22rpx;
+  font-weight: 700;
+  line-height: 1.2;
+  min-height: 44rpx;
+  padding: 0 18rpx;
+  max-width: 100%;
+}
+
+.badge.success {
+  background: #e8f6ee;
+  color: #1d7f5d;
+}
+
+.badge.pending {
+  background: #fff6d7;
+  color: #9a6a00;
+}
+
+.badge.danger {
+  background: #fbe9e7;
+  color: #b5473b;
+}
+
+.badge.neutral {
+  background: #eef2f6;
+  color: #475467;
+}
+
+.helper-text {
+  color: #667085;
+  display: block;
+  font-size: 24rpx;
+  line-height: 1.55;
+  margin-top: 12rpx;
+}
+
+.notice {
+  background: #fffbea;
+  border: 1rpx solid #ffe58a;
+  border-radius: 14rpx;
+  color: #6f5200;
+  font-size: 24rpx;
+  line-height: 1.55;
+  margin-bottom: 20rpx;
+  padding: 18rpx;
+}
+
+.success-card {
+  background: #e8f6ee;
+  border: 1rpx solid #b9e7c9;
+  border-radius: 14rpx;
+  color: #1d7f5d;
+  margin-bottom: 20rpx;
+  padding: 18rpx;
+}
+
+.page-loading {
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+  background: linear-gradient(90deg, #f2f4f7 0%, #ffffff 48%, #f2f4f7 100%);
+  color: #667085;
+  min-height: 112rpx;
+  text-align: center;
+}
+
+@keyframes skeletonPulse {
+  0% {
+    opacity: 0.72;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.72;
+  }
+}
+
+.tap-target-hover {
+  opacity: 0.82;
+  transform: scale(0.992);
+}
+
+.row-title {
+  color: #231815;
+  display: block;
+  font-size: 28rpx;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.row-subtitle {
+  color: #667085;
+  display: block;
+  font-size: 24rpx;
+  line-height: 1.45;
+  margin-top: 8rpx;
+  overflow-wrap: anywhere;
+}
+
+.section-head {
+  align-items: center;
+  display: flex;
+  gap: 16rpx;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.section-head .label {
+  color: #231815;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.section-head .badge {
+  flex: 0 0 auto;
+}
+
 .empty {
   align-items: center;
   background: #fbfcfd;

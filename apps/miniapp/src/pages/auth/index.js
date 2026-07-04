@@ -1,10 +1,6 @@
 const { getSession } = require("../../utils/api");
 
 Page({
-  data: {
-    checking: true,
-  },
-
   onLoad() {
     const session = getSession();
     if (session && session.anchorId) {

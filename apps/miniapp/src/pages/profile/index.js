@@ -1,4 +1,21 @@
-const { appendQuery, openPage, request, requireAnchorId } = require("../../utils/api");
+const {
+  finishPageLoading,
+  getMiniappDataDirtyAt,
+  handlePageRequestError,
+  markMiniappDataDirty,
+  openPage,
+  requireAnchorId,
+  stopPullDownRefresh,
+} = require("../../utils/api");
+const { PROFILE_CACHE_TTL_MS } = require("../../utils/constants");
+const { statusLabel, statusTone } = require("../../utils/formatters");
+const {
+  agreeProtocol: agreeProtocolRequest,
+  getContact,
+  getLegacyHistory,
+  getProfile,
+  getProtocols,
+} = require("../../services/miniapp-api");
 
 Page({
   data: {
@@ -8,27 +25,53 @@ Page({
     protocols: null,
     contact: null,
     legacy: null,
+    loadedAt: 0,
   },
 
-  onLoad() {
+  onShow() {
     this.loadProfile();
   },
 
-  async loadProfile() {
+  onPullDownRefresh() {
+    this.loadProfile({ force: true }).finally(stopPullDownRefresh);
+  },
+
+  async loadProfile(options = {}) {
+    const dirtyAt = getMiniappDataDirtyAt();
+    if (
+      !options.force
+      && this.data.profile
+      && this.data.loadedAt >= dirtyAt
+      && Date.now() - this.data.loadedAt < PROFILE_CACHE_TTL_MS
+    ) {
+      return;
+    }
     this.setData({ loading: true, error: "" });
     try {
       const anchorId = requireAnchorId();
       const [profile, protocols, contact, legacy] = await Promise.all([
-        request(appendQuery("/api/miniapp/profile", { anchorId })),
-        request(appendQuery("/api/miniapp/protocols", { anchorId })),
-        request("/api/miniapp/contact"),
-        request(appendQuery("/api/miniapp/legacy-history", { anchorId })),
+        getProfile(anchorId),
+        getProtocols(anchorId),
+        getContact({ auth: false, skipAuthRedirect: true }),
+        getLegacyHistory(anchorId),
       ]);
-      this.setData({ profile, protocols, contact, legacy });
+      this.setData({
+        profile: profile ? {
+          ...profile,
+          anchorStatusText: statusLabel(profile.anchorStatus),
+          anchorStatusTone: statusTone(profile.anchorStatus),
+          signStatusText: statusLabel(profile.signStatus),
+          signStatusTone: statusTone(profile.signStatus),
+        } : null,
+        protocols,
+        contact,
+        legacy,
+        loadedAt: Date.now(),
+      });
     } catch (error) {
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      this.setData({ loading: false });
+      finishPageLoading(this);
     }
   },
 
@@ -37,13 +80,11 @@ Page({
     const versionNo = event.currentTarget.dataset.version;
     try {
       const anchorId = requireAnchorId();
-      await request("/api/miniapp/protocols/agree", {
-        method: "POST",
-        data: { anchorId, protocolType, versionNo },
-      });
-      this.loadProfile();
+      await agreeProtocolRequest({ anchorId, protocolType, versionNo });
+      markMiniappDataDirty();
+      this.loadProfile({ force: true });
     } catch (error) {
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     }
   },
 

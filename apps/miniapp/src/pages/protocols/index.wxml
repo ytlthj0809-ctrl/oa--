@@ -5,15 +5,15 @@
   </view>
 
   <view wx:if="{{error}}" class="error">{{error}}</view>
-  <view wx:if="{{loading}}" class="card">加载中</view>
+  <view wx:if="{{loading}}" class="card page-loading">加载中</view>
 
   <view wx:if="{{protocols}}" class="card">
-    <view class="list-item">
+    <view wx:if="{{protocols.userAgreement}}" class="list-item">
       <text class="status">{{protocols.userAgreement.title}}</text>
       <text class="meta">版本 {{protocols.userAgreement.versionNo}}</text>
       <text>请确认已阅读并理解服务规则、账户使用、提现、资料保护与争议处理说明。</text>
     </view>
-    <view class="list-item">
+    <view wx:if="{{protocols.privacyPolicy}}" class="list-item">
       <text class="status">{{protocols.privacyPolicy.title}}</text>
       <text class="meta">版本 {{protocols.privacyPolicy.versionNo}}</text>
       <text>请确认已阅读并理解个人信息收集、使用、保存和脱敏展示规则。</text>

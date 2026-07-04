@@ -1,3 +1,5 @@
+@import "../../styles/common.wxss";
+
 .page {
   background: linear-gradient(180deg, #231815 0rpx, #231815 248rpx, #f4f6f8 248rpx, #f4f6f8 100%);
   color: #231815;

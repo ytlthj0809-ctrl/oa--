@@ -1,4 +1,6 @@
-const { appendQuery, formatMoney, request, requireAnchorId } = require("../../utils/api");
+const { finishPageLoading, handlePageRequestError, requireAnchorId, stopPullDownRefresh } = require("../../utils/api");
+const { decorateReward } = require("../../utils/decorators");
+const { listTaskRewards } = require("../../services/miniapp-api");
 
 Page({
   data: {
@@ -11,21 +13,22 @@ Page({
     this.loadRewards();
   },
 
+  onPullDownRefresh() {
+    this.loadRewards().finally(stopPullDownRefresh);
+  },
+
   async loadRewards() {
     this.setData({ loading: true, error: "" });
     try {
       const anchorId = requireAnchorId();
-      const rewards = await request(appendQuery("/api/miniapp/task-rewards", { anchorId }));
+      const rewards = await listTaskRewards({ anchorId });
       this.setData({
-        rewards: (rewards || []).map((item) => ({
-          ...item,
-          rewardText: formatMoney(item.rewardCents || item.rewardAmountCents),
-        })),
+        rewards: (rewards || []).map(decorateReward),
       });
     } catch (error) {
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      this.setData({ loading: false });
+      finishPageLoading(this);
     }
   },
 });

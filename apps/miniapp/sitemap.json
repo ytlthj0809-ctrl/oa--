@@ -1,13 +1,29 @@
 {
-  "desc": "Q43 upload preflight sitemap for withdraw page",
+  "desc": "JiaYin miniapp sitemap",
   "rules": [
     {
       "action": "allow",
-      "page": "src/pages/withdraw/index"
+      "page": "src/pages/auth/index"
+    },
+    {
+      "action": "allow",
+      "page": "src/pages/login/index"
     },
     {
       "action": "allow",
       "page": "src/pages/register/index"
+    },
+    {
+      "action": "allow",
+      "page": "src/pages/protocols/index"
+    },
+    {
+      "action": "allow",
+      "page": "src/pages/contact/index"
+    },
+    {
+      "action": "disallow",
+      "page": "*"
     }
   ]
 }

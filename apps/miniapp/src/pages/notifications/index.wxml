@@ -7,15 +7,19 @@
   </view>
 
   <view wx:if="{{error}}" class="error">{{error}}</view>
-  <view wx:if="{{notifications.length === 0}}" class="card empty">暂无通知</view>
+  <view wx:if="{{loading}}" class="card page-loading">加载中</view>
+  <view wx:if="{{!loading && notifications.length === 0}}" class="card empty">暂无通知</view>
 
-  <view wx:for="{{notifications}}" wx:key="notificationId" class="card">
-    <text class="status">{{item.noticeTitle}}</text>
-    <text class="meta">{{item.noticeType}} · {{item.readStatus}}</text>
+  <view wx:for="{{notifications}}" wx:key="notificationId" class="card" bindtap="openDetail" data-id="{{item.notificationId}}">
+    <view class="section-head">
+      <text class="row-title">{{item.noticeTitle}}</text>
+      <text class="badge {{item.readStatusTone}}">{{item.readStatusText}}</text>
+    </view>
+    <text class="meta">{{item.noticeTypeText}}</text>
     <text>{{item.body}}</text>
     <view class="actions">
-      <button class="secondary" bindtap="openDetail" data-id="{{item.notificationId}}">详情</button>
-      <button class="secondary" bindtap="markRead" data-id="{{item.notificationId}}">标记已读</button>
+      <button class="secondary" catchtap="openDetail" data-id="{{item.notificationId}}">详情</button>
+      <button class="secondary" catchtap="markRead" data-id="{{item.notificationId}}">标记已读</button>
     </view>
   </view>
 </view>

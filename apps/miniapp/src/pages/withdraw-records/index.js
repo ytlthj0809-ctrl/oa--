@@ -1,4 +1,6 @@
-const { appendQuery, formatMoney, openPage, request, requireAnchorId } = require("../../utils/api");
+const { finishPageLoading, handlePageRequestError, openPage, requireAnchorId, stopPullDownRefresh } = require("../../utils/api");
+const { decorateWithdrawRecord } = require("../../utils/decorators");
+const { getLegacyHistory, listWithdrawApplies } = require("../../services/miniapp-api");
 
 Page({
   data: {
@@ -12,22 +14,26 @@ Page({
     this.loadRecords();
   },
 
+  onPullDownRefresh() {
+    this.loadRecords().finally(stopPullDownRefresh);
+  },
+
   async loadRecords() {
     this.setData({ loading: true, error: "" });
     try {
       const anchorId = requireAnchorId();
       const [records, legacy] = await Promise.all([
-        request(appendQuery("/api/miniapp/withdraw-applies", { anchorId })),
-        request(appendQuery("/api/miniapp/legacy-history", { anchorId })),
+        listWithdrawApplies(anchorId),
+        getLegacyHistory(anchorId),
       ]);
       this.setData({
-        records: (records || []).map((item) => ({ ...item, amountText: formatMoney(item.amountCents) })),
+        records: (records || []).map(decorateWithdrawRecord),
         legacy,
       });
     } catch (error) {
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      this.setData({ loading: false });
+      finishPageLoading(this);
     }
   },
 

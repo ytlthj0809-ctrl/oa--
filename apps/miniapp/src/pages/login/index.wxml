@@ -3,12 +3,20 @@
     <image class="brand-logo" src="../../assets/brand/jiayin-logo-horizontal-official.png" mode="aspectFit" />
     <text class="eyebrow">主播账户</text>
     <text class="title">欢迎回到嘉音提现</text>
-    <text class="meta">旧手机号、主播编号或平台账号均可登录，余额与提现记录已同步。</text>
+    <text class="meta">已绑定微信的主播可直接登录；旧手机号、主播编号或平台账号可作为迁移兼容入口。</text>
   </view>
 
   <view wx:if="{{error}}" class="error">{{error}}</view>
 
+  <view class="card wechat-login-card" data-q124-miniapp-formal-login="true">
+    <text class="wechat-title">微信登录与账号绑定</text>
+    <text class="wechat-desc">已绑定主播可直接进入；未绑定时提交主播注册申请，审核通过后再登录提现。</text>
+    <button class="primary wechat-login" bindtap="loginByWechat" loading="{{wechatSubmitting}}" disabled="{{wechatSubmitting || submitting}}">微信登录/绑定</button>
+  </view>
+
   <view class="card login-card">
+    <text class="wechat-title">旧账号迁移登录</text>
+    <text class="meta">仅用于旧系统主播迁移兼容。登录后建议绑定微信，后续打开更方便。</text>
     <label class="field">
       <text>手机号/账号</text>
       <input value="{{form.mobile}}" data-field="mobile" bindinput="updateField" placeholder="请输入手机号或账号" />
@@ -17,7 +25,8 @@
       <text>密码</text>
       <input password value="{{form.password}}" data-field="password" bindinput="updateField" placeholder="请输入密码" />
     </label>
-    <button class="primary" bindtap="submitLogin" loading="{{submitting}}" disabled="{{submitting}}">登录</button>
+    <text wx:if="{{cooldownText}}" class="login-cooldown">{{cooldownText}}</text>
+    <button class="primary" bindtap="loginWithCurrentForm" loading="{{submitting}}" disabled="{{submitting || cooldownText}}">登录</button>
     <view class="actions">
       <button class="secondary" bindtap="goRegister">注册</button>
       <button class="secondary" bindtap="openProtocols">协议隐私</button>
@@ -26,9 +35,5 @@
     <text class="login-note">首次迁移登录请使用旧系统手机号或主播编号。</text>
   </view>
 
-  <view class="card wechat-login-card" data-q124-miniapp-formal-login="true">
-    <text class="wechat-title">微信登录与账号绑定</text>
-    <text class="wechat-desc">已绑定主播可直接进入；未绑定时提交主播注册申请，审核通过后再登录提现。</text>
-    <button class="primary wechat-login" bindtap="loginByWechat" loading="{{wechatSubmitting}}" disabled="{{wechatSubmitting || submitting}}">微信登录/绑定</button>
-  </view>
+  <view class="notice">旧系统迁移主播可继续使用旧手机号、主播编号或平台账号登录；登录后建议绑定微信，后续打开更方便。</view>
 </view>

@@ -1,3 +1,4 @@
 {
-  "navigationBarTitleText": "嘉音数据"
+  "navigationBarTitleText": "嘉音数据",
+  "enablePullDownRefresh": true
 }
