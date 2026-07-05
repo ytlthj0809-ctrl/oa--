@@ -13,21 +13,21 @@ Status: local engineering contract only. No real WeChat Mini Program package is 
 
 ## Q41 Withdraw Page Skeleton
 
-Status: local page skeleton only. Q41 adds WeChat Mini Program source files under `src/pages/withdraw`.
+Status: miniapp withdraw source is wired through the production API service layer and the formal withdraw detail page.
 
 - `app.json` registers `src/pages/withdraw/index` as the first miniapp page.
-- `index.js` uses `wx.request` for submit, record list, and detail APIs.
-- `index.wxml` renders withdraw records, status text, progress step, selected detail, and status history.
+- `index.js` uses `src/services/miniapp-api.js` for submit and record list APIs.
+- `index.wxml` renders withdraw records, status text, progress step, and opens `src/pages/withdraw-detail/index` for status history.
 - `index.wxss` keeps the page dense and operational for repeated withdraw checks.
 
-## Q42 Environment And State Surface
+## Q42 Production Api And State Surface
 
 Status: local miniapp source and API contract only. Q42 does not upload or publish a real WeChat Mini Program package.
 
-- The withdraw page exposes `environmentOptions` for local and server API base switching.
-- The page separates `loadingList`, `loadingDetail`, and `submitting` so list refresh, detail load, and submit do not overwrite each other.
+- The miniapp API utility keeps a single production `environmentOptions` entry pointing to the formal service origin `https://api.jiayin.site`（正式域名）.
+- The withdraw page separates `loadingList` and `submitting` so list refresh and submit do not overwrite each other; withdraw detail loading is handled by `src/pages/withdraw-detail/index`.
 - Empty and error states are rendered in WXML with retry handling.
-- Server mode is a preproduction endpoint placeholder for later cloud verification; no server deployment is performed by this page source change.
+- The production app no longer exposes a visible environment switcher to anchors.
 
 ## Q43 Developer Tool Preflight
 
@@ -35,7 +35,7 @@ Status: local WeChat Developer Tool project configuration only. Q43 did not uplo
 
 - `project.config.json` declares the project as a `miniprogram` with `miniprogramRoot` at the miniapp folder root.
 - `app.js` and `app.wxss` are present at the miniapp root, so Developer Tools upload has the required global entry files.
-- `app.json` points to `sitemap.json`, and the sitemap allows the withdraw page.
+- `app.json` points to `sitemap.json`; public login/register/help pages are allowed for search indexing, while authenticated business pages remain registered in `app.json` but are not exposed through sitemap search.
 - Upload readiness checks must pass project structure first, then block real upload until appid and operator confirmation are available.
 
 ## Q44 Real AppID Preview Bridge
