@@ -8,62 +8,75 @@
 
   <view wx:if="{{error}}" class="error">{{error}}</view>
 
-  <view class="card">
-    <label class="field">
-      <text>月份</text>
-      <picker mode="date" fields="month" value="{{month}}" bindchange="changeMonth">
-        <view class="picker-value">{{month}}</view>
-      </picker>
-    </label>
-    <button class="primary" bindtap="loadData" loading="{{loading}}" disabled="{{loading}}">刷新数据</button>
+  <view class="segment-control">
+    <text class="segment-tab {{activeSegment === 'monthly' ? 'active' : ''}}" bindtap="switchSegment" data-segment="monthly">月度数据</text>
+    <text class="segment-tab {{activeSegment === 'flows' ? 'active' : ''}}" bindtap="switchSegment" data-segment="flows">余额明细</text>
+    <text class="segment-tab {{activeSegment === 'rewards' ? 'active' : ''}}" bindtap="switchSegment" data-segment="rewards">任务奖励</text>
   </view>
 
-  <view wx:if="{{loading}}" class="card page-loading">加载中</view>
-  <view wx:if="{{!loading && snapshots.length === 0}}" class="card empty">暂无数据</view>
-  <view wx:for="{{snapshots}}" wx:key="snapshotId" class="card" hover-class="tap-target-hover" bindtap="goPage" data-page="data-detail" data-month="{{item.month}}" data-platform="{{item.platform}}">
-    <text class="status">{{item.month}} · {{item.platform}}</text>
-    <view class="grid">
-      <view class="metric">
-        <text class="label">流水</text>
-        <text class="value">{{item.incomeText}}</text>
-      </view>
-      <view class="metric">
-        <text class="label">有效时长</text>
-        <text class="value">{{item.durationText}}</text>
-      </view>
-      <view class="metric">
-        <text class="label">有效天数</text>
-        <text class="value">{{item.validDays}}</text>
-      </view>
-      <view class="metric">
-        <text class="label">任务状态</text>
-        <text class="badge {{item.taskStatusTone}}">{{item.taskStatusText}}</text>
+  <!-- Monthly data segment -->
+  <view wx:if="{{activeSegment === 'monthly'}}">
+    <view class="card">
+      <label class="field">
+        <text>月份</text>
+        <picker mode="date" fields="month" value="{{month}}" bindchange="changeMonth">
+          <view class="picker-value">{{month}}</view>
+        </picker>
+      </label>
+      <button class="primary" bindtap="loadData" loading="{{loading}}" disabled="{{loading}}">刷新数据</button>
+    </view>
+
+    <view wx:if="{{loading}}" class="card page-loading">加载中</view>
+    <view wx:if="{{!loading && snapshots.length === 0}}" class="card empty">暂无数据</view>
+    <view wx:for="{{snapshots}}" wx:key="snapshotId" class="card" hover-class="tap-target-hover" bindtap="goPage" data-page="data-detail" data-month="{{item.month}}" data-platform="{{item.platform}}">
+      <text class="status">{{item.month}} · {{item.platform}}</text>
+      <view class="grid">
+        <view class="metric">
+          <text class="label">流水</text>
+          <text class="value">{{item.incomeText}}</text>
+        </view>
+        <view class="metric">
+          <text class="label">有效时长</text>
+          <text class="value">{{item.durationText}}</text>
+        </view>
+        <view class="metric">
+          <text class="label">有效天数</text>
+          <text class="value">{{item.validDays}}</text>
+        </view>
+        <view class="metric">
+          <text class="label">任务状态</text>
+          <text class="badge {{item.taskStatusTone}}">{{item.taskStatusText}}</text>
+        </view>
       </view>
     </view>
   </view>
 
-  <view class="card">
-    <text class="label">余额明细</text>
-    <view class="actions">
-      <button class="secondary" bindtap="goPage" data-page="balance">查看全部</button>
-    </view>
-    <view wx:for="{{visibleFlows}}" wx:key="flowId" class="list-item">
-      <text class="row-title">{{item.directionText}} · {{item.amountText}}</text>
-      <text class="badge {{item.statusTone}}">{{item.statusText}}</text>
+  <!-- Balance flows segment -->
+  <view wx:if="{{activeSegment === 'flows'}}">
+    <view wx:if="{{loading}}" class="card page-loading">加载中</view>
+    <view wx:if="{{!loading && visibleFlows.length === 0}}" class="card empty">暂无余额流水</view>
+    <view wx:for="{{visibleFlows}}" wx:key="flowId" class="card">
+      <view class="section-head">
+        <text class="row-title">{{item.directionText}} · {{item.amountText}}</text>
+        <text class="badge {{item.statusTone}}">{{item.statusText}}</text>
+      </view>
+      <text class="meta">{{item.flowTypeText}}{{item.createdAtText ? ' · ' + item.createdAtText : ''}}</text>
     </view>
     <button wx:if="{{visibleFlows.length < flows.length}}" class="secondary" bindtap="loadMoreFlows">
       查看更多（{{visibleFlows.length}}/{{flows.length}}）
     </button>
   </view>
 
-  <view class="card">
-    <text class="label">任务奖励</text>
-    <view class="actions">
-      <button class="secondary" bindtap="goPage" data-page="rewards">查看全部</button>
-    </view>
-    <view wx:for="{{visibleRewards}}" wx:key="rewardResultId" class="list-item">
-      <text class="row-title">{{item.ruleCode || item.metricCode}} · {{item.rewardText}}</text>
-      <text class="badge {{item.statusTone}}">{{item.statusText}}</text>
+  <!-- Rewards segment -->
+  <view wx:if="{{activeSegment === 'rewards'}}">
+    <view wx:if="{{loading}}" class="card page-loading">加载中</view>
+    <view wx:if="{{!loading && visibleRewards.length === 0}}" class="card empty">暂无任务奖励</view>
+    <view wx:for="{{visibleRewards}}" wx:key="rewardResultId" class="card">
+      <view class="section-head">
+        <text class="row-title">{{item.ruleCodeLabelText || item.ruleCode || item.metricCode}}</text>
+        <text class="badge {{item.statusTone}}">{{item.statusText}}</text>
+      </view>
+      <text class="meta">{{item.rewardText}}</text>
     </view>
     <button wx:if="{{visibleRewards.length < rewards.length}}" class="secondary" bindtap="loadMoreRewards">
       查看更多（{{visibleRewards.length}}/{{rewards.length}}）

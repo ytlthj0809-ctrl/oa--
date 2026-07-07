@@ -124,6 +124,7 @@ Page({
     successText: "",
     records: [],
     emptyText: "暂无提现记录",
+    rulesExpanded: true,
   },
 
   onShow() {
@@ -246,6 +247,7 @@ Page({
         operatorId: "MINIAPP",
       });
       markMiniappDataDirty();
+      try { wx.vibrateShort({ type: "medium" }); } catch (_) {}
       this.setData({
         amountYuan: "",
         amountFeedbackText: "",
@@ -287,6 +289,10 @@ Page({
 
   openRecords() {
     openPage("withdraw-records");
+  },
+
+  toggleRules() {
+    this.setData({ rulesExpanded: !this.data.rulesExpanded });
   },
 
   openGuide() {

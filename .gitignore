@@ -5,6 +5,8 @@
 tmp/
 temp/
 *.log
+*.bak
+.qoder/
 
 # 本地私有配置
 .env

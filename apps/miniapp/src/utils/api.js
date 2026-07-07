@@ -142,42 +142,55 @@ function createClientRequestId(prefix = "miniapp") {
 }
 
 function request(route, options = {}) {
-  return new Promise((resolve, reject) => {
-    const session = getSession();
-    const includeAuth = options.auth !== false;
-    wx.request({
-      url: `${getServiceOrigin()}${route}`,
-      method: options.method || "GET",
-      data: options.data || {},
-      header: {
-        "content-type": "application/json",
-        ...(includeAuth && session && session.token ? { "x-miniapp-token": session.token } : {}),
-      },
-      success(response) {
-        const payload = response.data || {};
-        if (response.statusCode === 401) {
-          if (options.skipAuthRedirect) {
-            reject(new Error("当前暂时无法获取公开信息，请稍后再试"));
+  const maxRetries = options.method && options.method !== "GET" ? 0 : (options.retries || 1);
+  let attempt = 0;
+
+  function doRequest() {
+    return new Promise((resolve, reject) => {
+      const session = getSession();
+      const includeAuth = options.auth !== false;
+      wx.request({
+        url: `${getServiceOrigin()}${route}`,
+        method: options.method || "GET",
+        data: options.data || {},
+        header: {
+          "content-type": "application/json",
+          ...(includeAuth && session && session.token ? { "x-miniapp-token": session.token } : {}),
+        },
+        success(response) {
+          const payload = response.data || {};
+          if (response.statusCode === 401) {
+            if (options.skipAuthRedirect) {
+              reject(new Error("当前暂时无法获取公开信息，请稍后再试"));
+              return;
+            }
+            clearSession();
+            redirectToLogin();
+            reject(createAuthRequiredError("登录已过期，请重新登录"));
             return;
           }
-          clearSession();
-          redirectToLogin();
-          reject(createAuthRequiredError("登录已过期，请重新登录"));
-          return;
-        }
-        if (response.statusCode >= 400 || payload.ok === false) {
-          reject(new Error((payload.error && payload.error.message) || `request failed: ${route}`));
-          return;
-        }
-        resolve(payload.data);
-      },
-      fail(error) {
-        const message = error && error.errMsg && error.errMsg.includes("timeout")
-          ? "网络请求超时，请稍后重试"
-          : "网络连接失败，请检查网络后重试";
-        reject(new Error(message));
-      },
+          if (response.statusCode >= 400 || payload.ok === false) {
+            reject(new Error((payload.error && payload.error.message) || `request failed: ${route}`));
+            return;
+          }
+          resolve(payload.data);
+        },
+        fail(error) {
+          const message = error && error.errMsg && error.errMsg.includes("timeout")
+            ? "网络请求超时，请稍后重试"
+            : "网络连接失败，请检查网络后重试";
+          reject(new Error(message));
+        },
+      });
     });
+  }
+
+  return doRequest().catch((err) => {
+    if (attempt < maxRetries && !err.code) {
+      attempt++;
+      return new Promise((resolve) => setTimeout(resolve, 500 * attempt)).then(doRequest);
+    }
+    throw err;
   });
 }
 

@@ -17,6 +17,7 @@ Page({
     loading: false,
     error: "",
     home: null,
+    todayDataExpanded: false,
   },
 
   onShow() {
@@ -40,17 +41,32 @@ Page({
         && Date.now() - homeCache.loadedAt < HOME_CACHE_TTL_MS
       ) {
         this.setData({ home: homeCache.data });
+        this.updateTabBarBadge(homeCache.data);
         return;
       }
       const home = await getHome(anchorId);
       const decorated = decorateHome(home);
       homeCache = { anchorId, data: decorated, loadedAt: Date.now() };
       this.setData({ home: decorated });
+      this.updateTabBarBadge(decorated);
     } catch (error) {
       handlePageRequestError(this, error);
     } finally {
       finishPageLoading(this);
     }
+  },
+
+  updateTabBarBadge(home) {
+    const count = home && home.unreadNotificationCount;
+    if (count && count > 0) {
+      wx.setTabBarBadge({ index: 3, text: String(count) });
+    } else {
+      wx.removeTabBarBadge({ index: 3 });
+    }
+  },
+
+  toggleTodayData() {
+    this.setData({ todayDataExpanded: !this.data.todayDataExpanded });
   },
 
   goPage(event) {

@@ -4,8 +4,9 @@
     <text class="title">通知详情</text>
   </view>
   <view wx:if="{{error}}" class="error">{{error}}</view>
-  <view wx:if="{{!notification}}" class="card empty">通知不存在或已失效</view>
-  <view wx:else class="card">
+  <view wx:if="{{loading}}" class="card page-loading">加载中</view>
+  <view wx:if="{{!loading && !notification}}" class="card empty">通知不存在或已失效</view>
+  <view wx:if="{{notification}}" class="card">
     <view class="section-head">
       <text class="row-title">{{notification.noticeTitle}}</text>
       <text class="badge {{notification.readStatusTone}}">{{notification.readStatusText}}</text>

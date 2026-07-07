@@ -22,6 +22,7 @@ function getCurrentChinaMonth() {
 
 Page({
   data: {
+    activeSegment: "monthly",
     month: getCurrentChinaMonth(),
     platform: "ALL",
     loading: false,
@@ -54,6 +55,13 @@ Page({
 
   onPullDownRefresh() {
     this.loadData({ force: true }).finally(stopPullDownRefresh);
+  },
+
+  switchSegment(event) {
+    const segment = event.currentTarget.dataset.segment;
+    if (segment && segment !== this.data.activeSegment) {
+      this.setData({ activeSegment: segment });
+    }
   },
 
   async loadData(options = {}) {

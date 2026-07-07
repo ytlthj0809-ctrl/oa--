@@ -7,6 +7,7 @@
     <text>{{error}}</text>
     <button class="secondary small" bindtap="goRecords">返回提现记录</button>
   </view>
+  <view wx:if="{{loading}}" class="card page-loading">加载中</view>
   <view wx:if="{{detail}}" class="card">
     <view class="section-head">
       <text class="row-title">{{detail.applyId}}</text>
@@ -22,20 +23,34 @@
         <text class="value">{{detail.frozenAmountText}}</text>
       </view>
       <view class="metric">
-        <text class="label">批次</text>
+        <text class="label">处理批次</text>
         <text>{{detail.batchId || '-'}}</text>
       </view>
       <view class="metric">
-        <text class="label">状态</text>
-        <text>{{detail.displayStatusText}}</text>
+        <text class="label">提交时间</text>
+        <text>{{detail.createdAtText || '-'}}</text>
       </view>
     </view>
   </view>
   <view wx:if="{{detail}}" class="card">
     <text class="label">状态轨迹</text>
-    <view wx:for="{{detail.statusHistory}}" wx:key="sequence" class="list-item">
-      <text>{{item.sequence}}. {{item.statusText}}</text>
-      <text class="meta">{{item.reason || '-'}}</text>
+    <view wx:if="{{detail.statusHistory.length > 0}}" class="timeline">
+      <view wx:for="{{detail.statusHistory}}" wx:key="sequence" class="timeline-item">
+        <view class="timeline-dot {{index === 0 ? 'active' : ''}}"></view>
+        <view class="timeline-body">
+          <text>{{item.statusText}}</text>
+          <text wx:if="{{item.createdAtText}}" class="timeline-time">{{item.createdAtText}}</text>
+          <text wx:if="{{item.reason}}" class="timeline-reason">{{item.reason}}</text>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="empty">暂无状态更新</view>
+  </view>
+  <view wx:if="{{detail && isRejected}}" class="card">
+    <text class="label">操作</text>
+    <view class="actions">
+      <button class="primary" bindtap="resubmit">重新提交</button>
+      <button class="secondary" bindtap="openContact">联系客服</button>
     </view>
   </view>
 </view>

@@ -14,10 +14,26 @@
     </view>
   </view>
   <view class="card">
-    <label class="field"><text>姓名</text><input value="{{form.realName}}" data-field="realName" bindinput="updateField" placeholder="请输入真实姓名" /></label>
-    <label class="field"><text>身份证号</text><input type="idcard" maxlength="18" value="{{form.idCardNo}}" data-field="idCardNo" bindinput="updateField" placeholder="请输入 18 位身份证号" /></label>
-    <label class="field"><text>手机号</text><input type="number" maxlength="11" value="{{form.paymentMobile}}" data-field="paymentMobile" bindinput="updateField" placeholder="请输入收款手机号" /></label>
-    <label class="field"><text>银行卡号</text><input type="number" maxlength="19" value="{{form.bankCardNo}}" data-field="bankCardNo" bindinput="updateField" placeholder="请输入本人银行卡号" /></label>
+    <label class="field {{fieldTones.realName || ''}}">
+      <text>姓名</text>
+      <input value="{{form.realName}}" data-field="realName" bindinput="updateField" bindblur="validateField" placeholder="请输入真实姓名" />
+      <text wx:if="{{fieldErrors.realName}}" class="field-error-hint">{{fieldErrors.realName}}</text>
+    </label>
+    <label class="field {{fieldTones.idCardNo || ''}}">
+      <text>身份证号</text>
+      <input type="idcard" maxlength="18" value="{{form.idCardNo}}" data-field="idCardNo" bindinput="updateField" bindblur="validateField" placeholder="请输入 18 位身份证号" />
+      <text wx:if="{{fieldErrors.idCardNo}}" class="field-error-hint">{{fieldErrors.idCardNo}}</text>
+    </label>
+    <label class="field {{fieldTones.paymentMobile || ''}}">
+      <text>手机号</text>
+      <input type="number" maxlength="11" value="{{form.paymentMobile}}" data-field="paymentMobile" bindinput="updateField" bindblur="validateField" placeholder="请输入收款手机号" />
+      <text wx:if="{{fieldErrors.paymentMobile}}" class="field-error-hint">{{fieldErrors.paymentMobile}}</text>
+    </label>
+    <label class="field {{fieldTones.bankCardNo || ''}}">
+      <text>银行卡号</text>
+      <input type="number" maxlength="19" value="{{form.bankCardNo}}" data-field="bankCardNo" bindinput="updateField" bindblur="validateField" placeholder="请输入本人银行卡号" />
+      <text wx:if="{{fieldErrors.bankCardNo}}" class="field-error-hint">{{fieldErrors.bankCardNo}}</text>
+    </label>
     <button class="primary" bindtap="submitForm" loading="{{submitting}}" disabled="{{submitting}}">保存</button>
   </view>
 </view>

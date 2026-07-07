@@ -299,3 +299,243 @@ button::after {
   padding: 20rpx;
   text-align: center;
 }
+
+/* ---- Inline form validation ---- */
+.field-error input,
+.field-error textarea {
+  border-color: #f2b8b0;
+  background: #fef7f6;
+}
+
+.field-error-hint {
+  color: #b5473b;
+  display: block;
+  font-size: 22rpx;
+  margin-top: 4rpx;
+}
+
+.field-success input,
+.field-success textarea {
+  border-color: #b9e7c9;
+}
+
+/* ---- Hero balance (home page) ---- */
+.hero-balance {
+  align-items: baseline;
+  display: flex;
+  gap: 12rpx;
+  padding: 8rpx 0 4rpx;
+}
+
+.hero-balance .label {
+  color: #667085;
+  font-size: 24rpx;
+}
+
+.hero-balance .value {
+  color: #231815;
+  font-size: 52rpx;
+  font-weight: 800;
+  letter-spacing: -1rpx;
+}
+
+/* ---- Step indicator (withdrawal wizard) ---- */
+.step-bar {
+  align-items: center;
+  display: flex;
+  gap: 8rpx;
+  margin-bottom: 18rpx;
+}
+
+.step-dot {
+  align-items: center;
+  background: #eef2f6;
+  border-radius: 999rpx;
+  color: #667085;
+  display: inline-flex;
+  font-size: 20rpx;
+  font-weight: 700;
+  height: 44rpx;
+  justify-content: center;
+  min-width: 44rpx;
+  padding: 0 14rpx;
+}
+
+.step-dot.done {
+  background: #e8f6ee;
+  color: #1d7f5d;
+}
+
+.step-dot.current {
+  background: #ffda01;
+  color: #231815;
+}
+
+.step-line {
+  background: #d9dee8;
+  flex: 1;
+  height: 4rpx;
+}
+
+.step-line.done {
+  background: #b9e7c9;
+}
+
+/* ---- Timeline (withdraw detail) ---- */
+.timeline {
+  padding-left: 8rpx;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 16rpx;
+  padding-bottom: 24rpx;
+  position: relative;
+}
+
+.timeline-item::before {
+  background: #d9dee8;
+  content: "";
+  height: 100%;
+  left: 14rpx;
+  position: absolute;
+  top: 20rpx;
+  width: 2rpx;
+}
+
+.timeline-item:last-child::before {
+  display: none;
+}
+
+.timeline-dot {
+  background: #d9dee8;
+  border-radius: 50%;
+  flex: 0 0 28rpx;
+  height: 28rpx;
+  margin-top: 6rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.timeline-dot.active {
+  background: #ffda01;
+}
+
+.timeline-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.timeline-body text {
+  display: block;
+}
+
+.timeline-time {
+  color: #667085;
+  font-size: 22rpx;
+  margin-top: 4rpx;
+}
+
+.timeline-reason {
+  color: #667085;
+  font-size: 22rpx;
+  margin-top: 4rpx;
+}
+
+/* ---- Clickable arrow ---- */
+.arrow-right::after {
+  color: #cbd5dc;
+  content: ">";
+  font-size: 28rpx;
+  margin-left: auto;
+  padding-left: 12rpx;
+}
+
+.row-clickable {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ---- Network banner ---- */
+.network-banner {
+  background: #fff6d7;
+  border: 1rpx solid #ffe58a;
+  border-radius: 14rpx;
+  color: #9a6a00;
+  font-size: 24rpx;
+  margin-bottom: 20rpx;
+  padding: 14rpx 18rpx;
+  text-align: center;
+}
+
+/* ---- Segment control (data page) ---- */
+.segment-control {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20rpx;
+  border: 1rpx solid #d9dee8;
+  border-radius: 14rpx;
+  overflow: hidden;
+}
+
+.segment-tab {
+  align-items: center;
+  background: #ffffff;
+  color: #667085;
+  display: flex;
+  flex: 1;
+  font-size: 24rpx;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 72rpx;
+  padding: 0 12rpx;
+  text-align: center;
+}
+
+.segment-tab.active {
+  background: #231815;
+  color: #ffffff;
+}
+
+/* ---- Empty state with action ---- */
+.empty-action {
+  margin-top: 16rpx;
+}
+
+.empty-action button {
+  font-size: 24rpx;
+  min-height: 60rpx;
+  padding: 0 24rpx;
+}
+
+/* ---- Greeting ---- */
+.greeting {
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 600;
+  margin-bottom: 4rpx;
+}
+
+/* ---- Collapsible section ---- */
+.collapse-toggle {
+  align-items: center;
+  color: #667085;
+  display: flex;
+  font-size: 24rpx;
+  gap: 6rpx;
+  justify-content: center;
+  padding: 12rpx 0 0;
+}
+
+/* ---- Inline-action enhancement ---- */
+.inline-action.enhanced {
+  background: #ffda01;
+  border-radius: 14rpx;
+  color: #231815;
+  font-size: 26rpx;
+  font-weight: 700;
+  min-height: 60rpx;
+  min-width: 160rpx;
+  padding: 0 20rpx;
+}

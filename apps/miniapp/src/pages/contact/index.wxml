@@ -13,6 +13,6 @@
       <button class="primary" bindtap="callPhone">拨打电话</button>
       <button class="secondary" bindtap="copyWechat">复制微信</button>
     </view>
-    <text class="meta">二维码文件：{{contact.qrcodeFileId}}</text>
+    <text class="meta">如需二维码请联系客服获取</text>
   </view>
 </view>

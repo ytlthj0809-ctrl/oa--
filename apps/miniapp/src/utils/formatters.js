@@ -122,11 +122,36 @@ function formatChinaDateTime(value) {
   return `${iso.slice(0, 10)} ${iso.slice(11, 16)}`;
 }
 
+const ruleCodeLabels = {
+  DAILY_VALID_DAYS: "月度有效天数达标",
+  DAILY_VALID_DURATION: "月度有效时长达标",
+  MONTHLY_INCOME_TARGET: "月度收入目标达标",
+  PLATFORM_BIND_COUNT: "平台绑定数量达标",
+  SIGN_COMPLETION: "签约完成奖励",
+  WITHDRAW_FREQUENCY: "提现频率达标",
+};
+
+function ruleCodeLabel(value) {
+  const text = String(value || "").trim();
+  return ruleCodeLabels[text] || prettifyUnknown(value);
+}
+
+function formatDateShort(value) {
+  if (!value) return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "";
+  const chinaDate = new Date(parsed.getTime() + 8 * 60 * 60 * 1000);
+  const iso = chinaDate.toISOString();
+  return `${iso.slice(5, 10)} ${iso.slice(11, 16)}`;
+}
+
 module.exports = {
   directionLabel,
+  formatDateShort,
   formatChinaDateTime,
   isSigned,
   normalizeStatus,
+  ruleCodeLabel,
   statusLabel,
   statusTone,
   typeLabel,

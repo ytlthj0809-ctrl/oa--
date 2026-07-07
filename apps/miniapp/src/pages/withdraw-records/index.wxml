@@ -11,12 +11,15 @@
   </view>
   <view wx:if="{{loading}}" class="card page-loading">加载中</view>
   <view wx:if="{{!loading && records.length === 0}}" class="card empty">暂无提现记录</view>
-  <view wx:for="{{records}}" wx:key="applyId" class="card" bindtap="openDetail" data-apply-id="{{item.applyId}}">
+  <view wx:for="{{records}}" wx:key="applyId" class="card arrow-right row-clickable" hover-class="tap-target-hover" bindtap="openDetail" data-apply-id="{{item.applyId}}">
     <view class="section-head">
       <text class="row-title">{{item.applyId}}</text>
       <text class="badge {{item.displayStatusTone}}">{{item.displayStatusText}}</text>
     </view>
-    <text class="meta">{{item.amountText}}</text>
+    <view class="record-meta">
+      <text class="meta">{{item.amountText}}</text>
+      <text class="meta">{{item.createdAtText || '-'}}</text>
+    </view>
     <text>{{item.visibleReason || item.rejectReason || '-'}}</text>
   </view>
 </view>

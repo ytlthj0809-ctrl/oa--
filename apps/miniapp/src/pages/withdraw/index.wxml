@@ -6,6 +6,12 @@
     </view>
   </view>
 
+  <view wx:if="{{error}}" class="error">
+    <text>{{error}}</text>
+    <button class="secondary small" bindtap="retryLoad">{{errorSource === 'submit' ? '重新提交' : '重新加载'}}</button>
+  </view>
+  <view wx:if="{{successText}}" class="success-card">{{successText}}</view>
+
   <view class="card">
     <view class="grid">
       <view class="metric">
@@ -28,7 +34,7 @@
     <label class="field">
       <view class="field-head">
         <text>提现金额</text>
-        <button class="inline-action" bindtap="fillFullAmount">全部提现</button>
+        <button class="inline-action enhanced" bindtap="fillFullAmount">全部提现</button>
       </view>
       <input type="digit" value="{{amountYuan}}" bindinput="updateAmount" placeholder="请输入金额，单位元" />
     </label>
@@ -41,58 +47,57 @@
   </view>
 
   <view class="rule-card" data-q121-miniapp-withdraw-rules="visible">
-    <view class="rule-head">
+    <view class="rule-head" bindtap="toggleRules">
       <view>
         <text class="eyebrow">提现规则</text>
         <text class="title">额度、次数、时间和到账说明</text>
       </view>
+      <text class="collapse-toggle">{{rulesExpanded ? '收起' : '展开'}}</text>
+    </view>
+    <view wx:if="{{rulesExpanded}}">
+      <view class="rule-grid">
+        <view class="rule-item">
+          <text class="label">可提现额度</text>
+          <text class="rule-value">{{home.availableBalanceText || '加载中'}}</text>
+        </view>
+        <view class="rule-item">
+          <text class="label">每日提现次数</text>
+          <text class="rule-value">{{dailyRemainText}}</text>
+        </view>
+        <view class="rule-item">
+          <text class="label">提现时间</text>
+          <text>{{submitWindowText}}</text>
+        </view>
+        <view class="rule-item">
+          <text class="label">到账时间</text>
+          <text>{{arrivalText}}</text>
+        </view>
+      </view>
+      <view class="rule-list">
+        <text>单笔限额：{{withdrawRuleSnapshot.amountRangeText}}</text>
+        <text>手续费：{{withdrawRuleSnapshot.feeText}}</text>
+        <text>余额冻结：{{withdrawRuleSnapshot.frozenText}}</text>
+        <text>审核流程：{{withdrawRuleSnapshot.auditText}}</text>
+        <text>异常限制：{{withdrawRuleSnapshot.exceptionText}}</text>
+      </view>
+    </view>
+    <view wx:if="{{!rulesExpanded}}" class="actions">
       <button class="secondary small" bindtap="openGuide">完整规则</button>
     </view>
-    <view class="rule-grid">
-      <view class="rule-item">
-        <text class="label">可提现额度</text>
-        <text class="rule-value">{{home.availableBalanceText || '加载中'}}</text>
-      </view>
-      <view class="rule-item">
-        <text class="label">每日提现次数</text>
-        <text class="rule-value">{{dailyRemainText}}</text>
-      </view>
-      <view class="rule-item">
-        <text class="label">提现时间</text>
-        <text>{{submitWindowText}}</text>
-      </view>
-      <view class="rule-item">
-        <text class="label">到账时间</text>
-        <text>{{arrivalText}}</text>
-      </view>
-    </view>
-    <view class="rule-list">
-      <text>单笔限额：{{withdrawRuleSnapshot.amountRangeText}}</text>
-      <text>手续费：{{withdrawRuleSnapshot.feeText}}</text>
-      <text>余额冻结：{{withdrawRuleSnapshot.frozenText}}</text>
-      <text>审核流程：{{withdrawRuleSnapshot.auditText}}</text>
-      <text>异常限制：{{withdrawRuleSnapshot.exceptionText}}</text>
-    </view>
   </view>
-
-  <view wx:if="{{error}}" class="error">
-    <text>{{error}}</text>
-    <button class="secondary small" bindtap="retryLoad">{{errorSource === 'submit' ? '重新提交' : '重新加载'}}</button>
-  </view>
-  <view wx:if="{{successText}}" class="success-card">{{successText}}</view>
 
   <view wx:if="{{loadingList}}" class="state-card loading-state page-loading">加载中</view>
   <view wx:elif="{{records.length === 0}}" class="state-card empty-state empty">{{emptyText}}</view>
 
   <view wx:else class="record-list">
-    <view wx:for="{{records}}" wx:key="applyId" class="record" hover-class="tap-target-hover" bindtap="openDetail" data-apply-id="{{item.applyId}}">
+    <view wx:for="{{records}}" wx:key="applyId" class="record arrow-right row-clickable" hover-class="tap-target-hover" bindtap="openDetail" data-apply-id="{{item.applyId}}">
       <view>
         <text class="record-id">{{item.applyId}}</text>
         <text class="record-status {{item.statusTone || 'neutral'}}">{{item.statusText}}</text>
       </view>
       <view class="record-meta">
         <text>{{item.amountText}}</text>
-        <text>{{item.progressText}}</text>
+        <text>{{item.createdAtText || item.progressText}}</text>
       </view>
     </view>
   </view>

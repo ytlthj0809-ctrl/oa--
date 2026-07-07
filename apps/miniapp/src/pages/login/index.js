@@ -39,6 +39,8 @@ Page({
     wechatSubmitting: false,
     error: "",
     cooldownText: "",
+    legacyLoginExpanded: false,
+    passwordVisible: false,
   },
 
   onShow() {
@@ -143,6 +145,14 @@ Page({
         this.setData({ error: error.errMsg || "微信登录失败", wechatSubmitting: false });
       },
     });
+  },
+
+  toggleLegacyLogin() {
+    this.setData({ legacyLoginExpanded: !this.data.legacyLoginExpanded });
+  },
+
+  togglePasswordVisibility() {
+    this.setData({ passwordVisible: !this.data.passwordVisible });
   },
 
   goRegister() {
