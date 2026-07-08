@@ -10,10 +10,9 @@ const {
 } = require("../../utils/api");
 const {
   CHINA_TIME_OFFSET_MS,
-  WITHDRAW_DAILY_LIMIT,
   WITHDRAW_MIN_AMOUNT_CENTS,
-  WITHDRAW_SUBMIT_END_HOUR,
-  WITHDRAW_SUBMIT_START_HOUR,
+  WITHDRAW_SUBMIT_END_MINUTE_OF_DAY,
+  WITHDRAW_SUBMIT_START_MINUTE_OF_DAY,
 } = require("../../utils/constants");
 const { decorateHome, decorateWithdrawRecord } = require("../../utils/decorators");
 const { isSigned } = require("../../utils/formatters");
@@ -21,14 +20,14 @@ const { parseAmountYuanToCents } = require("../../utils/validators");
 const { createWithdrawApply, getHome, listWithdrawApplies } = require("../../services/miniapp-api");
 
 const withdrawRuleSnapshot = {
-  dailyLimitText: "每日最多 1 次",
-  windowText: "每日 09:00-18:00 可提交",
-  arrivalText: "预计次日到账，节假日或银行处理可能顺延",
-  amountRangeText: "单笔最低 1 元，最高不超过可提现余额",
-  feeText: "当前不收取提现手续费；后续如有调整以平台公示和财务规则为准",
+  dailyLimitText: "不限次数",
+  windowText: "每日 08:00-16:30 可提交，后台可调整不可提现时段",
+  arrivalText: "预计当日到账",
+  amountRangeText: "单笔最低 100 元，无固定上限，最高不超过可提现余额",
+  feeText: "不扣平台服务费和银行/第三方手续费；税费由云账户代扣代缴",
   frozenText: "提交后冻结对应余额，失败或驳回自动退回",
-  auditText: "申请需通过初审、财务复核、成批和打款确认",
-  exceptionText: "资料缺失、未签约或余额不足时不可提交",
+  auditText: "申请需通过财务经理初审、管理员财审、超管终审和线下付款登记",
+  exceptionText: "资料缺失、未签约、余额不足或处于不可提现时段时不可提交",
 };
 
 function getChinaDateKey(date = new Date()) {
@@ -41,12 +40,31 @@ function getChinaDateKeyFromValue(value) {
   return String(value || "").slice(0, 10);
 }
 
-function getChinaHour(date = new Date()) {
-  return Number(new Date(date.getTime() + CHINA_TIME_OFFSET_MS).toISOString().slice(11, 13));
+function getChinaMinuteOfDay(date = new Date()) {
+  const [hour, minute] = new Date(date.getTime() + CHINA_TIME_OFFSET_MS)
+    .toISOString()
+    .slice(11, 16)
+    .split(":")
+    .map(Number);
+  return hour * 60 + minute;
+}
+
+function isWithdrawSubmitWindowOpen(date = new Date()) {
+  const minuteOfDay = getChinaMinuteOfDay(date);
+  return minuteOfDay >= WITHDRAW_SUBMIT_START_MINUTE_OF_DAY && minuteOfDay < WITHDRAW_SUBMIT_END_MINUTE_OF_DAY;
+}
+
+function buildDailySubmitMeta(records = []) {
+  const today = getChinaDateKey();
+  const todayCount = records.filter((record) => getChinaDateKeyFromValue(record.createdAt) === today).length;
+  return {
+    dailyRemain: null,
+    dailyRemainText: `今日已提交 ${todayCount} 次，不限次数`,
+  };
 }
 
 function confirmWithdrawSubmit({ amountText, availableBalanceText, dailyRemainText }) {
-  const remainText = dailyRemainText || "请确认今日次数";
+  const remainText = dailyRemainText || "今日不限提交次数";
   return new Promise((resolve) => {
     wx.showModal({
       title: "确认提交提现",
@@ -113,8 +131,8 @@ Page({
     canSubmitAmount: false,
     home: null,
     withdrawRuleSnapshot,
-    dailyRemain: 1,
-    dailyRemainText: "今日剩余 1 次",
+    dailyRemain: null,
+    dailyRemainText: "今日不限提交次数",
     submitWindowText: withdrawRuleSnapshot.windowText,
     arrivalText: withdrawRuleSnapshot.arrivalText,
     loadingList: false,
@@ -177,13 +195,9 @@ Page({
       ]);
       const decoratedHome = decorateHome(home);
       const records = (recordsRaw || []).map(decorateWithdrawRecord);
-      const today = getChinaDateKey();
-      const todayCount = records.filter((record) => getChinaDateKeyFromValue(record.createdAt) === today).length;
-      const dailyRemain = Math.max(0, WITHDRAW_DAILY_LIMIT - todayCount);
       this.setData({
         home: decoratedHome,
-        dailyRemain,
-        dailyRemainText: `今日剩余 ${dailyRemain} 次`,
+        ...buildDailySubmitMeta(records),
         records,
         emptyText: records.length ? "" : "暂无提现记录",
         ...buildAmountFeedback({
@@ -205,17 +219,14 @@ Page({
     try {
       const anchorId = requireAnchorId();
       const amountCents = parseAmountYuanToCents(this.data.amountYuan);
-      if (!Number.isFinite(amountCents) || amountCents < 100) {
-        throw new Error("单笔提现最低 1 元");
+      if (!Number.isFinite(amountCents) || amountCents < WITHDRAW_MIN_AMOUNT_CENTS) {
+        throw new Error("单笔提现最低 100 元");
       }
       if (!this.data.home) {
         throw new Error("余额和提现条件未加载，请刷新后再提交");
       }
       if (amountCents > Number(this.data.home.availableBalanceCents || 0)) {
         throw new Error("提现金额不能超过可提现余额");
-      }
-      if (this.data.dailyRemain <= 0) {
-        throw new Error("今日提现次数已用完");
       }
       if (this.data.home.paymentInfoStatus === "MISSING") {
         wx.showToast({ title: "请先填写打款信息", icon: "none" });
@@ -227,9 +238,8 @@ Page({
         openPage("withdraw-guide", { reason: "YZH_UNSIGNED" });
         return;
       }
-      const hour = getChinaHour();
-      if (hour < WITHDRAW_SUBMIT_START_HOUR || hour >= WITHDRAW_SUBMIT_END_HOUR) {
-        throw new Error("请在每日 09:00-18:00 提交提现申请");
+      if (!isWithdrawSubmitWindowOpen()) {
+        throw new Error("请在每日 08:00-16:30 提交提现申请");
       }
       const confirmed = await confirmWithdrawSubmit({
         amountText: formatMoney(amountCents),
@@ -265,16 +275,14 @@ Page({
           home: decorateHome(latestHome),
           records,
           emptyText: "",
-          dailyRemain: 0,
-          dailyRemainText: "今日剩余 0 次",
+          ...buildDailySubmitMeta(records),
         });
       } catch (refreshError) {
         const nextRecords = [decorateWithdrawRecord(apply), ...this.data.records.filter((record) => record.applyId !== apply.applyId)];
         this.setData({
           records: nextRecords,
           emptyText: "",
-          dailyRemain: 0,
-          dailyRemainText: "今日剩余 0 次",
+          ...buildDailySubmitMeta(nextRecords),
           error: "提现已提交成功，但记录刷新失败，请稍后下拉或进入提现记录查看。",
           errorSource: "load",
         });
