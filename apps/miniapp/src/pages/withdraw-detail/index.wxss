@@ -1,1 +1,63 @@
+.withdraw-progress {
+  display: flex;
+  gap: 8rpx;
+  margin: 18rpx 0 8rpx;
+}
 
+.progress-step {
+  align-items: center;
+  color: #8b8076;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  font-size: 22rpx;
+  gap: 8rpx;
+  min-width: 0;
+  text-align: center;
+}
+
+.progress-dot {
+  align-items: center;
+  background: #f3eee8;
+  border: 1rpx solid #ded5cc;
+  border-radius: 999rpx;
+  color: #7d7168;
+  display: flex;
+  font-size: 22rpx;
+  font-weight: 800;
+  height: 38rpx;
+  justify-content: center;
+  width: 38rpx;
+}
+
+.progress-step.done .progress-dot,
+.progress-step.current .progress-dot {
+  background: #fff2a8;
+  border-color: #ffd400;
+  color: #231815;
+}
+
+.progress-step.failed .progress-dot {
+  background: #ffe5e5;
+  border-color: #ffb8b8;
+  color: #c62828;
+}
+
+.progress-step.current,
+.progress-step.done {
+  color: #231815;
+  font-weight: 700;
+}
+
+.progress-step.failed {
+  color: #c62828;
+  font-weight: 700;
+}
+
+.progress-summary {
+  color: #6f655c;
+  display: block;
+  font-size: 24rpx;
+  line-height: 1.6;
+  margin-top: 8rpx;
+}

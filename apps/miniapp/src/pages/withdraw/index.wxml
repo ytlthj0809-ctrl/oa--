@@ -40,12 +40,17 @@
     </label>
     <text wx:if="{{amountFeedbackText}}" class="amount-feedback {{amountFeedbackTone}}">{{amountFeedbackText}}</text>
     <view class="withdraw-rule-summary">
-      <text>{{withdrawRuleSnapshot.minAmountText}}</text>
-      <text>{{withdrawRuleSnapshot.windowSummaryText}}</text>
-      <text>{{withdrawRuleSnapshot.arrivalText}}</text>
+      <view wx:for="{{withdrawRuleSummaryItems}}" wx:key="key" class="rule-summary-item">
+        <text class="summary-label">{{item.label}}</text>
+        <text class="summary-value">{{item.value}}</text>
+      </view>
+    </view>
+    <view wx:if="{{submitWindowStatusText}}" class="window-hint {{submitWindowTone}}">
+      <text>{{submitWindowStatusText}}</text>
+      <text wx:if="{{submitWindowCountdownText}}" class="window-countdown">{{submitWindowCountdownText}}</text>
     </view>
     <view class="actions">
-      <button class="primary" bindtap="submitWithdraw" loading="{{submitting}}" disabled="{{submitting || !canSubmitAmount}}">提交提现</button>
+      <button class="primary" bindtap="submitWithdraw" loading="{{submitting}}" disabled="{{submitting || !canSubmitAmount || !submitWindowOpen}}">提交提现</button>
       <button class="secondary" bindtap="openRecords">提现记录</button>
     </view>
   </view>

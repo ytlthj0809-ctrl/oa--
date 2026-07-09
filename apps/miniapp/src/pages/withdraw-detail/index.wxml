@@ -33,6 +33,21 @@
     </view>
   </view>
   <view wx:if="{{detail}}" class="card">
+    <text class="label">处理进度</text>
+    <view class="withdraw-progress detail-progress" aria-label="提现处理进度">
+      <view
+        wx:for="{{detail.progressSteps}}"
+        wx:for-item="step"
+        wx:key="key"
+        class="progress-step {{step.done ? 'done' : ''}} {{step.current ? 'current' : ''}} {{step.failed ? 'failed' : ''}}"
+      >
+        <text class="progress-dot">{{step.index}}</text>
+        <text>{{step.label}}</text>
+      </view>
+    </view>
+    <text class="progress-summary">{{detail.progressSummaryText}}</text>
+  </view>
+  <view wx:if="{{detail}}" class="card">
     <text class="label">状态轨迹</text>
     <view wx:if="{{detail.statusHistory.length > 0}}" class="timeline">
       <view wx:for="{{detail.statusHistory}}" wx:key="sequence" class="timeline-item">

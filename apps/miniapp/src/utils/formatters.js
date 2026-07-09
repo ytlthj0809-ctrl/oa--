@@ -9,16 +9,21 @@ const statusLabels = {
   ENABLED: "启用",
   EFFECTIVE: "已生效",
   FAILED: "失败",
+  FINANCE_REJECTED: "财审驳回",
   FIRST_REJECTED: "初审驳回",
   FROZEN: "已冻结",
   INVALID: "无效",
   MISSING: "未填写",
   NEED_RESIGN: "需重新签约",
-  PAID: "已打款",
+  PAID: "已付款",
   PAUSED: "已暂停",
+  PAY_FAILED: "打款失败",
   PAYING: "打款中",
   PENDING: "待处理",
+  PENDING_FINANCE_REVIEW: "待管理员财审",
+  PENDING_FIRST_REVIEW: "待财务经理初审",
   PENDING_REVIEW: "待审核",
+  PENDING_SUPER_REVIEW: "待超管终审",
   PENDING_SYNC: "待同步",
   QUALIFIED: "已达标",
   READ: "已读",
@@ -31,11 +36,13 @@ const statusLabels = {
   SIGNING: "签约中",
   SUBMITTED: "已提交",
   SUCCESS: "成功",
+  SUPER_REJECTED: "终审驳回",
   UNBOUND: "未绑定",
   UNFREEZE: "已解冻",
   UNREAD: "未读",
   UNSIGNED: "未签约",
-  WAIT_PAY: "待打款",
+  WAIT_PAY: "待线下付款",
+  WAIT_BATCH: "待成批",
 };
 
 const directionLabels = {
@@ -63,9 +70,9 @@ const typeLabels = {
   YZH_PAYMENT_INFO: "打款信息",
 };
 
-const pendingStatuses = new Set(["APPLIED", "NEED_RESIGN", "PENDING", "PENDING_REVIEW", "SIGNING", "SUBMITTED", "WAIT_PAY", "PAYING", "PENDING_SYNC"]);
+const pendingStatuses = new Set(["APPLIED", "NEED_RESIGN", "PENDING", "PENDING_FINANCE_REVIEW", "PENDING_FIRST_REVIEW", "PENDING_REVIEW", "PENDING_SUPER_REVIEW", "SIGNING", "SUBMITTED", "WAIT_BATCH", "WAIT_PAY", "PAYING", "PENDING_SYNC"]);
 const successStatuses = new Set(["ACTIVE", "AGREED", "APPROVED", "BOUND", "COMPLETED", "EFFECTIVE", "ENABLED", "PAID", "QUALIFIED", "READ", "READY", "SAVED", "SENT_LOCAL", "SIGNED", "SUCCESS"]);
-const dangerStatuses = new Set(["CANCELLED", "FAILED", "FIRST_REJECTED", "FROZEN", "INVALID", "MISSING", "PAUSED", "REJECTED", "RETURNED", "UNBOUND", "UNSIGNED"]);
+const dangerStatuses = new Set(["CANCELLED", "FAILED", "FINANCE_REJECTED", "FIRST_REJECTED", "FROZEN", "INVALID", "MISSING", "PAUSED", "PAY_FAILED", "REJECTED", "RETURNED", "SUPER_REJECTED", "UNBOUND", "UNSIGNED"]);
 
 function normalizeStatus(value) {
   if (value && typeof value === "object") {

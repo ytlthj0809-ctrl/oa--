@@ -218,7 +218,7 @@ button::after {
   margin: 6rpx 0 2rpx;
 }
 
-.withdraw-rule-summary text {
+.rule-summary-item {
   background: #fff8cf;
   border: 1rpx solid #f2df7a;
   border-radius: 999rpx;
@@ -230,6 +230,48 @@ button::after {
   overflow-wrap: anywhere;
   padding: 12rpx 10rpx;
   text-align: center;
+}
+
+.summary-label,
+.summary-value {
+  display: block;
+}
+
+.summary-label {
+  color: #8a6a00;
+  font-size: 20rpx;
+  margin-bottom: 4rpx;
+}
+
+.summary-value {
+  color: #4a3b00;
+}
+
+.window-hint {
+  border-radius: 14rpx;
+  display: grid;
+  font-size: 24rpx;
+  font-weight: 700;
+  gap: 6rpx;
+  line-height: 1.45;
+  padding: 14rpx 18rpx;
+}
+
+.window-countdown {
+  display: block;
+  font-size: 22rpx;
+  font-weight: 600;
+  opacity: 0.78;
+}
+
+.window-hint.success {
+  background: #e8f6ef;
+  color: #1d7f5d;
+}
+
+.window-hint.warning {
+  background: #fff8cf;
+  color: #8a6a00;
 }
 
 .field-head {

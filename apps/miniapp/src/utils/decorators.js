@@ -69,6 +69,71 @@ function buildWithdrawGuideSteps(paymentInfoStatus, signStatus) {
   ];
 }
 
+function buildWithdrawRecordSteps(statusValue) {
+  const status = String(statusValue || "").trim().toUpperCase();
+  const steps = [
+    { key: "submitted", label: "已提交" },
+    { key: "review", label: "审核中" },
+    { key: "super-review", label: "终审" },
+    { key: "batch", label: "成批" },
+    { key: "pay", label: "付款" },
+  ];
+  const failedStepByStatus = {
+    CANCELLED: 1,
+    FAILED: 1,
+    FINANCE_REJECTED: 1,
+    FIRST_REJECTED: 1,
+    PAY_FAILED: 4,
+    REJECTED: 1,
+    RETURNED: 4,
+    SUPER_REJECTED: 2,
+  };
+  const currentStepByStatus = {
+    PENDING_FIRST_REVIEW: 1,
+    PENDING_REVIEW: 1,
+    SUBMITTED: 1,
+    PENDING_FINANCE_REVIEW: 1,
+    PENDING_SUPER_REVIEW: 2,
+    WAIT_BATCH: 3,
+    BATCH_CREATED: 3,
+    WAIT_PAY: 4,
+    PAYING: 4,
+  };
+  const doneUntilByStatus = {
+    PAID: 4,
+    COMPLETED: 4,
+    SUCCESS: 4,
+    WAIT_PAY: 3,
+    PAYING: 3,
+    WAIT_BATCH: 2,
+    BATCH_CREATED: 2,
+    PENDING_SUPER_REVIEW: 1,
+    PENDING_FINANCE_REVIEW: 0,
+    PENDING_FIRST_REVIEW: 0,
+    PENDING_REVIEW: 0,
+    SUBMITTED: 0,
+  };
+  const failedStep = failedStepByStatus[status];
+  const currentStep = failedStep !== undefined ? failedStep : currentStepByStatus[status];
+  const doneUntil = failedStep !== undefined
+    ? Math.max(0, failedStep - 1)
+    : doneUntilByStatus[status] ?? 0;
+  const progressSteps = steps.map((step, index) => ({
+    ...step,
+    index: index + 1,
+    done: index <= doneUntil,
+    current: currentStep === index,
+    failed: failedStep === index,
+  }));
+  const current = progressSteps.find((step) => step.current || step.failed) || progressSteps.find((step) => !step.done) || progressSteps[progressSteps.length - 1];
+  const summaryPrefix = failedStep !== undefined ? "当前卡在" : "当前进度";
+  return {
+    currentStepText: current ? current.label : "-",
+    progressSteps,
+    progressSummaryText: `${summaryPrefix}：${current ? current.label : "-"}`,
+  };
+}
+
 function decorateHome(home = {}) {
   const todayMetrics = home.todayMetrics || {};
   const paymentInfoStatus = home.paymentInfoStatus || "MISSING";
@@ -107,13 +172,15 @@ function decorateHome(home = {}) {
 
 function decorateWithdrawRecord(record = {}) {
   const status = record.status || record.reviewStatus;
+  const progress = buildWithdrawRecordSteps(status);
   return {
     ...record,
     amountText: formatMoney(record.amountCents),
     createdAtText: formatDateShort(record.createdAt),
     displayStatusText: record.statusText || statusLabel(status),
     displayStatusTone: statusTone(status),
-    progressText: `进度 ${record.progressStep || 0}/5`,
+    progressText: progress.progressSummaryText,
+    ...progress,
     statusText: record.statusText || statusLabel(status),
     statusTone: statusTone(status),
   };

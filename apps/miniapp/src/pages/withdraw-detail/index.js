@@ -1,13 +1,16 @@
 const { appendQuery, formatMoney, openPage, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const { decorateWithdrawRecord } = require("../../utils/decorators");
 const { formatDateShort, statusLabel, statusTone } = require("../../utils/formatters");
 
-const rejectedStatuses = new Set(["FIRST_REJECTED", "REJECTED", "RETURNED"]);
+const rejectedStatuses = new Set(["CANCELLED", "FAILED", "FINANCE_REJECTED", "FIRST_REJECTED", "PAY_FAILED", "REJECTED", "RETURNED", "SUPER_REJECTED"]);
 
 function decorate(detail) {
   if (!detail) return null;
+  const progress = decorateWithdrawRecord(detail);
   const history = (detail.statusHistory || []).map((item) => ({
     ...item,
     createdAtText: formatDateShort(item.createdAt),
+    statusText: item.statusText || statusLabel(item.status),
   }));
   return {
     ...detail,
@@ -16,6 +19,9 @@ function decorate(detail) {
     frozenAmountText: formatMoney(detail.frozenAmountCents),
     displayStatusText: detail.statusText || statusLabel(detail.status),
     displayStatusTone: statusTone(detail.status),
+    currentStepText: progress.currentStepText,
+    progressSteps: progress.progressSteps,
+    progressSummaryText: progress.progressSummaryText,
     statusHistory: history,
   };
 }

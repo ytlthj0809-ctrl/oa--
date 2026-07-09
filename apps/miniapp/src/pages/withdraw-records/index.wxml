@@ -20,6 +20,18 @@
       <text class="meta">{{item.amountText}}</text>
       <text class="meta">{{item.createdAtText || '-'}}</text>
     </view>
-    <text>{{item.visibleReason || item.rejectReason || '-'}}</text>
+    <view class="withdraw-progress" aria-label="提现处理进度">
+      <view
+        wx:for="{{item.progressSteps}}"
+        wx:for-item="step"
+        wx:key="key"
+        class="progress-step {{step.done ? 'done' : ''}} {{step.current ? 'current' : ''}} {{step.failed ? 'failed' : ''}}"
+      >
+        <text class="progress-dot">{{step.index}}</text>
+        <text>{{step.label}}</text>
+      </view>
+    </view>
+    <text class="progress-summary">{{item.progressSummaryText}}</text>
+    <text wx:if="{{item.visibleReason || item.rejectReason}}" class="record-reason">{{item.visibleReason || item.rejectReason}}</text>
   </view>
 </view>
