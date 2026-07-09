@@ -92,10 +92,7 @@
       </view>
     </view>
     <view class="actions">
-      <button class="primary" bindtap="goPage" data-page="withdraw">提现</button>
-      <button class="secondary" bindtap="goPage" data-page="withdraw-records">提现记录</button>
-      <button class="secondary" bindtap="goPage" data-page="data">数据</button>
-      <button class="secondary" bindtap="goPage" data-page="profile">我的</button>
+      <button class="secondary" bindtap="goPage" data-page="withdraw-records">查看提现记录</button>
     </view>
   </view>
 </view>

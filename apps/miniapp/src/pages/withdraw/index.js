@@ -19,11 +19,19 @@ const { isPaymentInfoReady, isSigned } = require("../../utils/formatters");
 const { parseAmountYuanToCents } = require("../../utils/validators");
 const { createWithdrawApply, getHome, listWithdrawApplies } = require("../../services/miniapp-api");
 
+function formatMinuteOfDay(minuteOfDay) {
+  const hour = Math.floor(minuteOfDay / 60);
+  const minute = minuteOfDay % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
 const withdrawRuleSnapshot = {
   dailyLimitText: "不限次数",
-  windowText: "每日 08:00-16:30 可提交，后台可调整不可提现时段",
+  minAmountText: `最低 ${formatMoney(WITHDRAW_MIN_AMOUNT_CENTS)}`,
+  windowSummaryText: `${formatMinuteOfDay(WITHDRAW_SUBMIT_START_MINUTE_OF_DAY)}-${formatMinuteOfDay(WITHDRAW_SUBMIT_END_MINUTE_OF_DAY)} 可提交`,
+  windowText: `每日 ${formatMinuteOfDay(WITHDRAW_SUBMIT_START_MINUTE_OF_DAY)}-${formatMinuteOfDay(WITHDRAW_SUBMIT_END_MINUTE_OF_DAY)} 可提交，后台可调整不可提现时段`,
   arrivalText: "预计当日到账",
-  amountRangeText: "单笔最低 100 元，无固定上限，最高不超过可提现余额",
+  amountRangeText: `单笔${formatMoney(WITHDRAW_MIN_AMOUNT_CENTS)}起，无固定上限，最高不超过可提现余额`,
   feeText: "不扣平台服务费和银行/第三方手续费；税费由云账户代扣代缴",
   frozenText: "提交后冻结对应余额，失败或驳回自动退回",
   auditText: "申请需通过财务经理初审、管理员财审、超管终审和线下付款登记",

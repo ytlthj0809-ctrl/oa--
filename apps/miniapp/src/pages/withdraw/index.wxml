@@ -40,9 +40,9 @@
     </label>
     <text wx:if="{{amountFeedbackText}}" class="amount-feedback {{amountFeedbackTone}}">{{amountFeedbackText}}</text>
     <view class="withdraw-rule-summary">
-      <text>最低 100 元</text>
-      <text>08:00-16:30 可提交</text>
-      <text>预计当日到账</text>
+      <text>{{withdrawRuleSnapshot.minAmountText}}</text>
+      <text>{{withdrawRuleSnapshot.windowSummaryText}}</text>
+      <text>{{withdrawRuleSnapshot.arrivalText}}</text>
     </view>
     <view class="actions">
       <button class="primary" bindtap="submitWithdraw" loading="{{submitting}}" disabled="{{submitting || !canSubmitAmount}}">提交提现</button>
