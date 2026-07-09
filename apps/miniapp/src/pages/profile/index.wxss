@@ -1,1 +1,9 @@
 @import "../../styles/common.wxss";
+
+.action-section .label {
+  margin-bottom: 16rpx;
+}
+
+.action-section .actions {
+  margin-top: 12rpx;
+}

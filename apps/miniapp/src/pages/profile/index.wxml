@@ -30,14 +30,27 @@
     </view>
   </view>
 
-  <view class="card">
+  <view class="card action-section">
+    <text class="label">提现必备</text>
     <view class="actions">
       <button class="secondary" bindtap="goPage" data-page="payment-info">打款信息</button>
       <button class="secondary" bindtap="goPage" data-page="sign">云账户签约</button>
       <button class="secondary" bindtap="goPage" data-page="platform-accounts">平台账号</button>
-      <button class="secondary" bindtap="goPage" data-page="notifications">通知中心</button>
+    </view>
+  </view>
+
+  <view class="card action-section">
+    <text class="label">账号资料</text>
+    <view class="actions">
       <button class="secondary" bindtap="goPage" data-page="profile-detail">个人资料</button>
+      <button class="secondary" bindtap="goPage" data-page="notifications">通知中心</button>
       <button class="secondary" bindtap="goPage" data-page="protocols">协议隐私</button>
+    </view>
+  </view>
+
+  <view class="card action-section">
+    <text class="label">帮助设置</text>
+    <view class="actions">
       <button class="secondary" bindtap="goPage" data-page="contact">联系客服</button>
       <button class="secondary" bindtap="goPage" data-page="settings">设置</button>
     </view>

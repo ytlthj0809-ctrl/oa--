@@ -15,7 +15,7 @@ const {
   WITHDRAW_SUBMIT_START_MINUTE_OF_DAY,
 } = require("../../utils/constants");
 const { decorateHome, decorateWithdrawRecord } = require("../../utils/decorators");
-const { isSigned } = require("../../utils/formatters");
+const { isPaymentInfoReady, isSigned } = require("../../utils/formatters");
 const { parseAmountYuanToCents } = require("../../utils/validators");
 const { createWithdrawApply, getHome, listWithdrawApplies } = require("../../services/miniapp-api");
 
@@ -29,6 +29,7 @@ const withdrawRuleSnapshot = {
   auditText: "申请需通过财务经理初审、管理员财审、超管终审和线下付款登记",
   exceptionText: "资料缺失、未签约、余额不足或处于不可提现时段时不可提交",
 };
+const RULES = withdrawRuleSnapshot;
 
 function getChinaDateKey(date = new Date()) {
   return new Date(date.getTime() + CHINA_TIME_OFFSET_MS).toISOString().slice(0, 10);
@@ -130,11 +131,11 @@ Page({
     amountFeedbackTone: "neutral",
     canSubmitAmount: false,
     home: null,
-    withdrawRuleSnapshot,
+    withdrawRuleSnapshot: RULES,
     dailyRemain: null,
     dailyRemainText: "今日不限提交次数",
-    submitWindowText: withdrawRuleSnapshot.windowText,
-    arrivalText: withdrawRuleSnapshot.arrivalText,
+    submitWindowText: RULES.windowText,
+    arrivalText: RULES.arrivalText,
     loadingList: false,
     submitting: false,
     error: "",
@@ -142,7 +143,7 @@ Page({
     successText: "",
     records: [],
     emptyText: "暂无提现记录",
-    rulesExpanded: true,
+    rulesExpanded: false,
   },
 
   onShow() {
@@ -228,9 +229,9 @@ Page({
       if (amountCents > Number(this.data.home.availableBalanceCents || 0)) {
         throw new Error("提现金额不能超过可提现余额");
       }
-      if (this.data.home.paymentInfoStatus === "MISSING") {
-        wx.showToast({ title: "请先填写打款信息", icon: "none" });
-        openPage("withdraw-guide", { reason: "PAYMENT_INFO_MISSING" });
+      if (!isPaymentInfoReady(this.data.home.paymentInfoStatus)) {
+        wx.showToast({ title: "打款信息生效后才能提现", icon: "none" });
+        openPage("withdraw-guide", { reason: "PAYMENT_INFO_NOT_EFFECTIVE" });
         return;
       }
       if (!isSigned(this.data.home.signStatus)) {

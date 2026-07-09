@@ -1,5 +1,5 @@
 const { formatMoney } = require("./api");
-const { directionLabel, formatDateShort, isSigned, ruleCodeLabel, statusLabel, statusTone, typeLabel } = require("./formatters");
+const { directionLabel, formatDateShort, isPaymentInfoReady, isSigned, ruleCodeLabel, statusLabel, statusTone, typeLabel } = require("./formatters");
 
 function buildGreeting() {
   const hour = new Date().getHours();
@@ -13,23 +13,69 @@ function buildGreeting() {
 }
 
 function buildProgressSteps(paymentInfoStatus, signStatus) {
+  const paymentInfoDone = isPaymentInfoReady(paymentInfoStatus);
   const steps = [
-    { label: "打款信息", done: paymentInfoStatus !== "MISSING" },
+    { label: "打款信息", done: paymentInfoDone },
     { label: "签约", done: isSigned(signStatus) },
     { label: "提现", done: false },
   ];
-  if (paymentInfoStatus === "MISSING") steps[0].current = true;
+  if (!paymentInfoDone) steps[0].current = true;
   else if (!isSigned(signStatus)) steps[1].current = true;
   else steps[2].current = true;
   return steps;
+}
+
+function buildWithdrawGuideSteps(paymentInfoStatus, signStatus) {
+  const paymentInfoDone = isPaymentInfoReady(paymentInfoStatus);
+  const signDone = isSigned(signStatus);
+  const paymentInfoPending = ["PENDING", "PENDING_REVIEW"].includes(String(paymentInfoStatus || "").toUpperCase());
+  return [
+    {
+      key: "payment-info",
+      title: "打款信息",
+      description: paymentInfoDone
+        ? "实名和收款信息已生效"
+        : paymentInfoPending
+          ? "打款信息待审核，审核通过后才可签约提现"
+          : "先补充本人实名和收款信息",
+      statusText: paymentInfoDone ? "已完成" : paymentInfoPending ? "待审核" : "待完成",
+      tone: paymentInfoDone ? "success" : "warning",
+      buttonText: paymentInfoDone ? "查看信息" : paymentInfoPending ? "查看进度" : "去补充",
+      page: "payment-info",
+      disabled: false,
+    },
+    {
+      key: "sign",
+      title: "云账户签约",
+      description: signDone ? "云账户签约已完成" : "使用已保存实名信息完成云账户签约",
+      statusText: signDone ? "已完成" : "待签约",
+      tone: signDone ? "success" : "warning",
+      buttonText: signDone ? "查看状态" : "去签约",
+      page: "sign",
+      disabled: !paymentInfoDone,
+      disabledText: "打款信息生效后才能签约",
+    },
+    {
+      key: "withdraw",
+      title: "提交提现",
+      description: paymentInfoDone && signDone ? "可提交提现申请" : "完成前两步后开放提现",
+      statusText: paymentInfoDone && signDone ? "可提现" : "未开放",
+      tone: paymentInfoDone && signDone ? "success" : "neutral",
+      buttonText: "去提现",
+      page: "withdraw",
+      disabled: !(paymentInfoDone && signDone),
+      disabledText: "需先完成有效打款信息和签约",
+    },
+  ];
 }
 
 function decorateHome(home = {}) {
   const todayMetrics = home.todayMetrics || {};
   const paymentInfoStatus = home.paymentInfoStatus || "MISSING";
   const signStatus = home.signStatus || "UNSIGNED";
-  const nextAction = !home.paymentInfoStatus || paymentInfoStatus === "MISSING"
-    ? { text: "请先补充打款信息", buttonText: "去补充", page: "payment-info" }
+  const paymentInfoDone = isPaymentInfoReady(paymentInfoStatus);
+  const nextAction = !paymentInfoDone
+    ? { text: "打款信息生效后才能继续签约和提现", buttonText: "查看打款信息", page: "payment-info" }
     : !isSigned(signStatus)
       ? { text: "请完成云账户签约", buttonText: "去签约", page: "sign" }
       : { text: "可以提交提现申请", buttonText: "去提现", page: "withdraw" };
@@ -42,6 +88,7 @@ function decorateHome(home = {}) {
     paymentInfoStatusText: statusLabel(paymentInfoStatus),
     paymentInfoStatusTone: statusTone(paymentInfoStatus),
     progressSteps: buildProgressSteps(paymentInfoStatus, signStatus),
+    withdrawGuideSteps: buildWithdrawGuideSteps(paymentInfoStatus, signStatus),
     rewardBalanceText: formatMoney(home.rewardBalanceCents),
     signStatusText: statusLabel(signStatus),
     signStatusTone: statusTone(signStatus),

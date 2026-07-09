@@ -113,6 +113,10 @@ function isSigned(value) {
   return normalizeStatus(value) === "SIGNED";
 }
 
+function isPaymentInfoReady(value) {
+  return normalizeStatus(value) === "EFFECTIVE";
+}
+
 function formatChinaDateTime(value) {
   if (!value) return "-";
   const parsed = new Date(value);
@@ -149,6 +153,7 @@ module.exports = {
   directionLabel,
   formatDateShort,
   formatChinaDateTime,
+  isPaymentInfoReady,
   isSigned,
   normalizeStatus,
   ruleCodeLabel,

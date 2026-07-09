@@ -211,6 +211,27 @@ button::after {
   color: #667085;
 }
 
+.withdraw-rule-summary {
+  display: grid;
+  gap: 10rpx;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 6rpx 0 2rpx;
+}
+
+.withdraw-rule-summary text {
+  background: #fff8cf;
+  border: 1rpx solid #f2df7a;
+  border-radius: 999rpx;
+  color: #6b5600;
+  display: block;
+  font-size: 22rpx;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  padding: 12rpx 10rpx;
+  text-align: center;
+}
+
 .field-head {
   align-items: center;
   display: flex;

@@ -28,7 +28,6 @@
       <input value="{{form.accountNo}}" data-field="accountNo" bindinput="updateField" placeholder="请输入平台账号" />
     </label>
     <button class="primary" bindtap="submitBindRequest" loading="{{submitting}}" disabled="{{submitting}}">提交追加绑定</button>
-    <button class="secondary" bindtap="openBindRequest">进入申请页</button>
   </view>
 
   <view wx:if="{{requestResult}}" class="card">

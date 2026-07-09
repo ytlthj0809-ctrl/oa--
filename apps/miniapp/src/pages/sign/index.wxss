@@ -1,1 +1,25 @@
 @import "../../styles/common.wxss";
+
+.identity-summary {
+  align-items: flex-start;
+  background: #fffdf3;
+  border: 1rpx solid #f2df7a;
+  border-radius: 16rpx;
+  display: flex;
+  gap: 16rpx;
+  justify-content: space-between;
+  margin-top: 18rpx;
+  padding: 18rpx;
+}
+
+.identity-summary > view {
+  min-width: 0;
+}
+
+.identity-fields {
+  background: #fbfcfd;
+  border: 1rpx solid #d9dee8;
+  border-radius: 16rpx;
+  margin-top: 18rpx;
+  padding: 18rpx;
+}

@@ -17,14 +17,29 @@
 
   <view wx:if="{{home}}" class="card">
     <view class="section-head">
-      <text class="label">当前进度</text>
-      <text class="badge {{home.signStatusTone}}">{{home.signStatusText}}</text>
+      <text class="label">提现三步</text>
+      <text class="badge {{home.signStatusTone}}">{{home.nextAction.buttonText || '继续'}}</text>
     </view>
-    <view class="step-bar">
-      <block wx:for="{{home.progressSteps}}" wx:key="label">
-        <view wx:if="{{index > 0}}" class="step-line {{item.done ? 'done' : ''}}"></view>
-        <text class="step-dot {{item.done ? 'done' : ''}} {{item.current ? 'current' : ''}}">{{item.label}}</text>
-      </block>
+    <view class="guide-list">
+      <view
+        wx:for="{{home.withdrawGuideSteps}}"
+        wx:key="key"
+        class="guide-step {{item.tone}} {{item.disabled ? 'disabled' : ''}}"
+        bindtap="goGuideStep"
+        data-page="{{item.page}}"
+        data-disabled="{{item.disabled}}"
+        data-disabled-text="{{item.disabledText}}"
+      >
+        <view class="guide-index">{{index + 1}}</view>
+        <view class="guide-main">
+          <text class="guide-title">{{item.title}}</text>
+          <text class="guide-desc">{{item.description}}</text>
+        </view>
+        <view class="guide-action">
+          <text class="badge {{item.tone}}">{{item.statusText}}</text>
+          <text class="guide-link">{{item.buttonText}}</text>
+        </view>
+      </view>
     </view>
     <text class="helper-text">{{home.nextAction.text}}</text>
     <button class="primary" bindtap="goNextAction">{{home.nextAction.buttonText || home.nextAction.text}}</button>

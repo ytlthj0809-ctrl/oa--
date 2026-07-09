@@ -1,4 +1,4 @@
-const { appendQuery, markMiniappDataDirty, openPage, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const { appendQuery, markMiniappDataDirty, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
 const { statusLabel, statusTone } = require("../../utils/formatters");
 
 function decorateAccount(account) {
@@ -76,9 +76,5 @@ Page({
     } finally {
       if (!this.__authRedirecting) this.setData({ submitting: false });
     }
-  },
-
-  openBindRequest() {
-    openPage("platform-bind-request");
   },
 });

@@ -80,4 +80,14 @@ Page({
     if (!page) return;
     openPage(page);
   },
+
+  goGuideStep(event) {
+    const { page, disabled, disabledText } = event.currentTarget.dataset;
+    const isDisabled = disabled === true || disabled === "true";
+    if (isDisabled) {
+      wx.showToast({ title: disabledText || "请先完成前一步", icon: "none" });
+      return;
+    }
+    if (page) openPage(page);
+  },
 });

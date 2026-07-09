@@ -1,1 +1,81 @@
 @import "../../styles/common.wxss";
+
+.guide-list {
+  display: grid;
+  gap: 16rpx;
+}
+
+.guide-step {
+  align-items: center;
+  background: #fbfcfd;
+  border: 1rpx solid #d9dee8;
+  border-radius: 16rpx;
+  display: grid;
+  gap: 16rpx;
+  grid-template-columns: 48rpx 1fr auto;
+  min-height: 112rpx;
+  padding: 18rpx;
+}
+
+.guide-step.success {
+  background: #f0f9f4;
+  border-color: #cfead8;
+}
+
+.guide-step.warning {
+  background: #fff8cf;
+  border-color: #f2df7a;
+}
+
+.guide-step.disabled {
+  opacity: 0.72;
+}
+
+.guide-index {
+  align-items: center;
+  background: #231815;
+  border-radius: 999rpx;
+  color: #ffda01;
+  display: flex;
+  font-size: 24rpx;
+  font-weight: 800;
+  height: 48rpx;
+  justify-content: center;
+  width: 48rpx;
+}
+
+.guide-main {
+  min-width: 0;
+}
+
+.guide-title,
+.guide-desc,
+.guide-link {
+  display: block;
+}
+
+.guide-title {
+  color: #231815;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.guide-desc {
+  color: #667085;
+  font-size: 24rpx;
+  line-height: 1.4;
+  margin-top: 6rpx;
+}
+
+.guide-action {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.guide-link {
+  color: #231815;
+  font-size: 23rpx;
+  font-weight: 700;
+}

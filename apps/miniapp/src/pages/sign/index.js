@@ -1,5 +1,5 @@
-const { appendQuery, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
-const { isSigned, statusLabel, statusTone } = require("../../utils/formatters");
+const { appendQuery, openPage, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const { isPaymentInfoReady, isSigned, statusLabel, statusTone } = require("../../utils/formatters");
 const { normalizeSignIdentityForm, validateSignIdentityForm } = require("../../utils/validators");
 const { startYzhSdk } = require("../../utils/yzh-sdk");
 
@@ -17,6 +17,40 @@ function decorateSignStatus(signStatus) {
   };
 }
 
+function decoratePaymentInfoForSign(paymentInfo) {
+  const paymentInfoStatus = paymentInfo?.paymentInfoStatus || "MISSING";
+  if (!isPaymentInfoReady(paymentInfoStatus)) {
+    return {
+      ...paymentInfo,
+      ready: false,
+      statusText: statusLabel(paymentInfoStatus),
+      statusTone: statusTone(paymentInfoStatus),
+      helperText: paymentInfoStatus === "MISSING"
+        ? "请先补充打款信息，再进行云账户签约。"
+        : "打款信息尚未生效，审核通过后才能生成云账户签约入口。",
+    };
+  }
+  const hasPlainIdentity = Boolean(paymentInfo.realName && paymentInfo.idCardNo);
+  return {
+    ...paymentInfo,
+    ready: true,
+    hasPlainIdentity,
+    statusText: statusLabel(paymentInfoStatus),
+    statusTone: statusTone(paymentInfoStatus),
+    helperText: hasPlainIdentity
+      ? "将使用已保存实名信息生成签约入口。"
+      : "已保存实名信息；为保护隐私，系统只保留脱敏摘要。本次签约需本人再确认姓名和身份证号。",
+  };
+}
+
+function buildIdentityFormFromPaymentInfo(paymentInfo) {
+  if (!paymentInfo) return { realName: "", idCardNo: "" };
+  return {
+    realName: paymentInfo.realName || "",
+    idCardNo: paymentInfo.idCardNo || "",
+  };
+}
+
 Page({
   data: {
     loading: false,
@@ -24,6 +58,8 @@ Page({
     refreshing: false,
     error: "",
     signStatus: null,
+    paymentInfo: null,
+    identityFormExpanded: true,
     presign: null,
     form: {
       realName: "",
@@ -39,8 +75,18 @@ Page({
     this.setData({ loading: true, error: "" });
     try {
       const anchorId = requireAnchorId();
-      const signStatus = await request(appendQuery("/api/miniapp/yzh/sign-status", { anchorId }));
-      this.setData({ signStatus: decorateSignStatus(signStatus) });
+      const [signStatus, paymentInfo] = await Promise.all([
+        request(appendQuery("/api/miniapp/yzh/sign-status", { anchorId })),
+        request(appendQuery("/api/miniapp/payment-info", { anchorId })),
+      ]);
+      const decoratedPaymentInfo = decoratePaymentInfoForSign(paymentInfo);
+      const nextForm = buildIdentityFormFromPaymentInfo(paymentInfo);
+      this.setData({
+        signStatus: decorateSignStatus(signStatus),
+        paymentInfo: decoratedPaymentInfo,
+        form: nextForm,
+        identityFormExpanded: !decoratedPaymentInfo.ready || !decoratedPaymentInfo.hasPlainIdentity,
+      });
     } catch (error) {
       if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
       this.setData({ error: error.message });
@@ -54,13 +100,27 @@ Page({
     this.setData({ form: { ...this.data.form, [field]: event.detail.value } });
   },
 
+  toggleIdentityForm() {
+    this.setData({ identityFormExpanded: !this.data.identityFormExpanded });
+  },
+
   async createPresign() {
     if (this.data.presigning) return;
     this.setData({ presigning: true, error: "" });
     try {
       const anchorId = requireAnchorId();
+      if (!this.data.paymentInfo || !this.data.paymentInfo.ready) {
+        wx.showToast({ title: "打款信息生效后才能签约", icon: "none" });
+        openPage("payment-info");
+        return;
+      }
       const form = normalizeSignIdentityForm(this.data.form);
-      validateSignIdentityForm(form);
+      try {
+        validateSignIdentityForm(form);
+      } catch (validationError) {
+        this.setData({ identityFormExpanded: true });
+        throw validationError;
+      }
       const presign = await request("/api/miniapp/yzh/presign", {
         method: "POST",
         data: {
