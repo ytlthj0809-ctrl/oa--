@@ -336,7 +336,7 @@ button::after {
   color: #231815;
   font-size: 52rpx;
   font-weight: 800;
-  letter-spacing: -1rpx;
+  letter-spacing: 0;
 }
 
 /* ---- Step indicator (withdrawal wizard) ---- */

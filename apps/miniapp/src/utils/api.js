@@ -37,12 +37,31 @@ function getSessionStorageKey() {
 }
 
 function getSession() {
-  return wx.getStorageSync(getSessionStorageKey()) || null;
+  const session = wx.getStorageSync(getSessionStorageKey()) || null;
+  if (!session) return null;
+  const expireAt = Date.parse(String(session.expireAt || ""));
+  if (!Number.isFinite(expireAt) || expireAt <= Date.now()) {
+    clearSession();
+    return null;
+  }
+  return session;
 }
 
 function setSession(session) {
   authRedirecting = false;
-  wx.setStorageSync(getSessionStorageKey(), session);
+  const safeSession = {
+    anchorId: session && session.anchorId ? session.anchorId : "",
+    token: session && session.token ? session.token : "",
+    expireAt: session && session.expireAt ? session.expireAt : "",
+    loginStatus: session && session.loginStatus ? session.loginStatus : "",
+    protocolStatus: session && session.protocolStatus ? session.protocolStatus : "",
+    bindingStatus: session && session.bindingStatus ? session.bindingStatus : "",
+  };
+  if (!safeSession.anchorId || !safeSession.token || !safeSession.expireAt) {
+    clearSession();
+    throw createAuthRequiredError("登录信息不完整，请重新登录");
+  }
+  wx.setStorageSync(getSessionStorageKey(), safeSession);
   wx.removeStorageSync(wechatBindTokenStorageKey);
 }
 

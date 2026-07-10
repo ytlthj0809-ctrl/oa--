@@ -13,22 +13,19 @@
   <view wx:if="{{successText}}" class="success-card">{{successText}}</view>
 
   <view class="card">
-    <view class="grid">
-      <view class="metric">
-        <text class="label">可提现余额</text>
-        <text class="value">{{home.availableBalanceText || '加载中'}}</text>
+    <view class="withdraw-balance">
+      <text class="label">可提现余额</text>
+      <text class="balance-value">{{home.availableBalanceText || '加载中'}}</text>
+      <text class="balance-subline">冻结余额 {{home.frozenBalanceText || '-'}}</text>
+    </view>
+    <view class="payment-destination">
+      <view>
+        <text class="label">收款银行卡</text>
+        <text class="destination-value">{{home.paymentInfoSummary.bankCardNoMasked || '打款信息生效后显示'}}</text>
       </view>
-      <view class="metric">
-        <text class="label">冻结余额</text>
-        <text class="value">{{home.frozenBalanceText || '-'}}</text>
-      </view>
-      <view class="metric">
-        <text class="label">打款信息</text>
-        <text class="badge {{home.paymentInfoStatusTone || 'neutral'}}">{{home.paymentInfoStatusText || '-'}}</text>
-      </view>
-      <view class="metric">
-        <text class="label">签约状态</text>
-        <text class="badge {{home.signStatusTone || 'neutral'}}">{{home.signStatusText || '-'}}</text>
+      <view class="prerequisite-statuses">
+        <text class="badge {{home.paymentInfoStatusTone || 'neutral'}}">打款信息 {{home.paymentInfoStatusText || '-'}}</text>
+        <text class="badge {{home.signStatusTone || 'neutral'}}">签约 {{home.signStatusText || '-'}}</text>
       </view>
     </view>
     <label class="field">
@@ -51,7 +48,6 @@
     </view>
     <view class="actions">
       <button class="primary" bindtap="submitWithdraw" loading="{{submitting}}" disabled="{{submitting || !canSubmitAmount || !submitWindowOpen}}">提交提现</button>
-      <button class="secondary" bindtap="openRecords">提现记录</button>
     </view>
   </view>
 
@@ -95,17 +91,25 @@
     </view>
   </view>
 
+  <view class="recent-records-head">
+    <view>
+      <text class="recent-records-title">最近提现</text>
+      <text class="recent-records-caption">仅显示最近 3 条</text>
+    </view>
+    <button class="inline-action" bindtap="openRecords">全部记录</button>
+  </view>
+
   <view wx:if="{{loadingList}}" class="state-card loading-state page-loading">加载中</view>
-  <view wx:elif="{{records.length === 0}}" class="state-card empty-state empty">{{emptyText}}</view>
+  <view wx:elif="{{recentRecords.length === 0}}" class="state-card empty-state empty">{{emptyText}}</view>
 
   <view wx:else class="record-list">
-    <view wx:for="{{records}}" wx:key="applyId" class="record arrow-right row-clickable" hover-class="tap-target-hover" bindtap="openDetail" data-apply-id="{{item.applyId}}">
+    <view wx:for="{{recentRecords}}" wx:key="applyId" class="record arrow-right row-clickable" hover-class="tap-target-hover" bindtap="openDetail" data-apply-id="{{item.applyId}}">
       <view>
-        <text class="record-id">{{item.applyId}}</text>
+        <text class="record-id">{{item.amountText}}</text>
+        <text class="record-reference">申请编号 {{item.applyId}}</text>
         <text class="record-status {{item.statusTone || 'neutral'}}">{{item.statusText}}</text>
       </view>
       <view class="record-meta">
-        <text>{{item.amountText}}</text>
         <text>{{item.createdAtText || item.progressText}}</text>
       </view>
     </view>

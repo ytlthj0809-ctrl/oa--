@@ -43,6 +43,10 @@ function listWithdrawApplies(anchorId) {
   return request(appendQuery("/api/miniapp/withdraw-applies", { anchorId }));
 }
 
+function getWithdrawApplyDetail({ anchorId, applyId }) {
+  return request(appendQuery(`/api/miniapp/withdraw-applies/${applyId}`, { anchorId }));
+}
+
 function listNotifications(anchorId) {
   return request(appendQuery("/api/miniapp/notifications", { anchorId }));
 }
@@ -75,6 +79,14 @@ function loginByWechat(jsCode) {
   });
 }
 
+function logout() {
+  return request("/api/miniapp/auth/logout", {
+    method: "POST",
+    data: {},
+    skipAuthRedirect: true,
+  });
+}
+
 module.exports = {
   agreeProtocol,
   createWithdrawApply,
@@ -84,11 +96,13 @@ module.exports = {
   getLegacyHistory,
   getProfile,
   getProtocols,
+  getWithdrawApplyDetail,
   listBalanceFlows,
   listNotifications,
   listTaskRewards,
   listWithdrawApplies,
   loginByPassword,
   loginByWechat,
+  logout,
   markNotificationRead,
 };

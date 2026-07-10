@@ -124,6 +124,32 @@ function buildDailySubmitMeta(records = []) {
   };
 }
 
+function normalizeAmountInput(value) {
+  const raw = String(value || "").replace(/[^\d.]/g, "");
+  const decimalIndex = raw.indexOf(".");
+  const integerPart = (decimalIndex >= 0 ? raw.slice(0, decimalIndex) : raw).replace(/^0+(?=\d)/, "");
+  if (decimalIndex < 0) return integerPart;
+  const decimalPart = raw.slice(decimalIndex + 1).replace(/\./g, "").slice(0, 2);
+  return `${integerPart || "0"}.${decimalPart}`;
+}
+
+function sortWithdrawRecords(records = []) {
+  return [...records].sort((left, right) => {
+    const leftTime = new Date(left.createdAt || 0).getTime();
+    const rightTime = new Date(right.createdAt || 0).getTime();
+    return rightTime - leftTime;
+  });
+}
+
+function buildRecordView(records = []) {
+  const sortedRecords = sortWithdrawRecords(records);
+  return {
+    records: sortedRecords,
+    recentRecords: sortedRecords.slice(0, 3),
+    emptyText: sortedRecords.length ? "" : "暂无提现记录",
+  };
+}
+
 function confirmWithdrawSubmit({ amountText, availableBalanceText, dailyRemainText }) {
   const remainText = dailyRemainText || "今日不限提交次数";
   return new Promise((resolve) => {
@@ -203,6 +229,7 @@ Page({
     errorSource: "",
     successText: "",
     records: [],
+    recentRecords: [],
     emptyText: "暂无提现记录",
     rulesExpanded: false,
     withdrawRuleSummaryItems: RULES.summaryItems,
@@ -225,7 +252,7 @@ Page({
   },
 
   updateAmount(event) {
-    const amountYuan = event.detail.value;
+    const amountYuan = normalizeAmountInput(event.detail.value);
     this.setData({
       amountYuan,
       ...buildAmountFeedback({
@@ -233,6 +260,7 @@ Page({
         availableBalanceCents: this.data.home && this.data.home.availableBalanceCents,
       }),
     });
+    return amountYuan;
   },
 
   fillFullAmount() {
@@ -262,8 +290,7 @@ Page({
         home: decoratedHome,
         ...buildDailySubmitMeta(records),
         ...buildSubmitWindowMeta(),
-        records,
-        emptyText: records.length ? "" : "暂无提现记录",
+        ...buildRecordView(records),
         ...buildAmountFeedback({
           amountYuan: this.data.amountYuan,
           availableBalanceCents: decoratedHome.availableBalanceCents,
@@ -340,8 +367,7 @@ Page({
         const records = (recordsRaw || []).map(decorateWithdrawRecord);
         this.setData({
           home: decorateHome(latestHome),
-          records,
-          emptyText: "",
+          ...buildRecordView(records),
           ...buildDailySubmitMeta(records),
           ...buildSubmitWindowMeta(),
         });
@@ -349,8 +375,7 @@ Page({
       } catch (refreshError) {
         const nextRecords = [decorateWithdrawRecord(apply), ...this.data.records.filter((record) => record.applyId !== apply.applyId)];
         this.setData({
-          records: nextRecords,
-          emptyText: "",
+          ...buildRecordView(nextRecords),
           ...buildDailySubmitMeta(nextRecords),
           ...buildSubmitWindowMeta(),
           error: "提现已提交成功，但记录刷新失败，请稍后下拉或进入提现记录查看。",

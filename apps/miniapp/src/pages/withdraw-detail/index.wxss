@@ -61,3 +61,21 @@
   line-height: 1.6;
   margin-top: 8rpx;
 }
+
+.bank-card-value {
+  font-size: 26rpx;
+  overflow-wrap: anywhere;
+}
+
+.next-step-card {
+  border-top-color: #1d7f5d;
+}
+
+.next-step-text {
+  color: #231815;
+  display: block;
+  font-size: 27rpx;
+  font-weight: 700;
+  line-height: 1.55;
+  margin-top: 10rpx;
+}

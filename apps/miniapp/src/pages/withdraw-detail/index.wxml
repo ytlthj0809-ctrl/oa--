@@ -19,18 +19,23 @@
         <text class="value">{{detail.amountText}}</text>
       </view>
       <view class="metric">
-        <text class="label">冻结金额</text>
-        <text class="value">{{detail.frozenAmountText}}</text>
+        <text class="label">收款银行卡</text>
+        <text class="value bank-card-value">{{detail.bankCardText}}</text>
       </view>
       <view class="metric">
-        <text class="label">处理批次</text>
-        <text>{{detail.batchId || '-'}}</text>
+        <text class="label">冻结金额</text>
+        <text class="value">{{detail.frozenAmountText}}</text>
       </view>
       <view class="metric">
         <text class="label">提交时间</text>
         <text>{{detail.createdAtText || '-'}}</text>
       </view>
     </view>
+    <text wx:if="{{detail.batchId}}" class="helper-text">付款批次：{{detail.batchId}}</text>
+  </view>
+  <view wx:if="{{detail}}" class="card next-step-card">
+    <text class="label">下一步</text>
+    <text class="next-step-text">{{detail.nextStepText}}</text>
   </view>
   <view wx:if="{{detail}}" class="card">
     <text class="label">处理进度</text>
@@ -55,17 +60,17 @@
         <view class="timeline-body">
           <text>{{item.statusText}}</text>
           <text wx:if="{{item.createdAtText}}" class="timeline-time">{{item.createdAtText}}</text>
-          <text wx:if="{{item.reason}}" class="timeline-reason">{{item.reason}}</text>
+          <text wx:if="{{item.visibleReason}}" class="timeline-reason">{{item.visibleReason}}</text>
         </view>
       </view>
     </view>
     <view wx:else class="empty">暂无状态更新</view>
   </view>
-  <view wx:if="{{detail && isRejected}}" class="card">
+  <view wx:if="{{detail && (canResubmit || showSupport)}}" class="card">
     <text class="label">操作</text>
     <view class="actions">
-      <button class="primary" bindtap="resubmit">重新提交</button>
-      <button class="secondary" bindtap="openContact">联系客服</button>
+      <button wx:if="{{canResubmit}}" class="primary" bindtap="resubmit">修改后重新提交</button>
+      <button wx:if="{{showSupport}}" class="secondary" bindtap="openContact">联系客服</button>
     </view>
   </view>
 </view>

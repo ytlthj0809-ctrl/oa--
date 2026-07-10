@@ -199,6 +199,74 @@ button::after {
   margin-top: -4rpx;
 }
 
+.withdraw-balance {
+  border-bottom: 1rpx solid #e4e7ec;
+  margin-bottom: 20rpx;
+  padding-bottom: 20rpx;
+}
+
+.balance-value {
+  color: #231815;
+  display: block;
+  font-size: 54rpx;
+  font-weight: 800;
+  letter-spacing: 0;
+  margin-top: 8rpx;
+}
+
+.balance-subline,
+.recent-records-caption,
+.record-reference {
+  color: #667085;
+  display: block;
+  font-size: 22rpx;
+  line-height: 1.45;
+  margin-top: 6rpx;
+  overflow-wrap: anywhere;
+}
+
+.payment-destination {
+  align-items: flex-start;
+  display: flex;
+  gap: 16rpx;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.destination-value {
+  color: #231815;
+  display: block;
+  font-size: 27rpx;
+  font-weight: 700;
+  margin-top: 8rpx;
+}
+
+.prerequisite-statuses {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.recent-records-head {
+  align-items: center;
+  display: flex;
+  gap: 16rpx;
+  justify-content: space-between;
+  margin: 28rpx 0 16rpx;
+}
+
+.recent-records-title {
+  color: #231815;
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.recent-records-head .recent-records-caption {
+  color: #667085;
+}
+
 .amount-feedback.success {
   color: #1d7f5d;
 }

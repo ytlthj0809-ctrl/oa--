@@ -8,14 +8,16 @@
   <view wx:if="{{error}}" class="error">{{error}}</view>
   <view wx:if="{{loading}}" class="card page-loading">加载中</view>
 
-  <view wx:if="{{home}}" class="card">
+  <view wx:if="{{home}}" class="card home-primary-card">
     <view class="hero-balance">
       <text class="label">可提现余额</text>
       <text class="value">{{home.availableBalanceText}}</text>
     </view>
+    <text class="home-next-copy">{{home.nextAction.text}}</text>
+    <button class="primary home-primary-action" bindtap="goNextAction">{{home.nextAction.buttonText || '继续'}}</button>
   </view>
 
-  <view wx:if="{{home}}" class="card">
+  <view wx:if="{{home && !home.withdrawReady}}" class="card">
     <view class="section-head">
       <text class="label">提现三步</text>
       <text class="badge {{home.signStatusTone}}">{{home.nextAction.buttonText || '继续'}}</text>
@@ -41,8 +43,6 @@
         </view>
       </view>
     </view>
-    <text class="helper-text">{{home.nextAction.text}}</text>
-    <button class="primary" bindtap="goNextAction">{{home.nextAction.buttonText || home.nextAction.text}}</button>
   </view>
 
   <view wx:if="{{home}}" class="card">

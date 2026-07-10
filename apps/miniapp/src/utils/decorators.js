@@ -139,6 +139,7 @@ function decorateHome(home = {}) {
   const paymentInfoStatus = home.paymentInfoStatus || "MISSING";
   const signStatus = home.signStatus || "UNSIGNED";
   const paymentInfoDone = isPaymentInfoReady(paymentInfoStatus);
+  const withdrawReady = paymentInfoDone && isSigned(signStatus);
   const nextAction = !paymentInfoDone
     ? { text: "打款信息生效后才能继续签约和提现", buttonText: "查看打款信息", page: "payment-info" }
     : !isSigned(signStatus)
@@ -150,6 +151,7 @@ function decorateHome(home = {}) {
     availableBalanceText: formatMoney(home.availableBalanceCents),
     frozenBalanceText: formatMoney(home.frozenBalanceCents),
     greetingText: buildGreeting(),
+    paymentInfoSummary: home.paymentInfoSummary || {},
     paymentInfoStatusText: statusLabel(paymentInfoStatus),
     paymentInfoStatusTone: statusTone(paymentInfoStatus),
     progressSteps: buildProgressSteps(paymentInfoStatus, signStatus),
@@ -157,6 +159,7 @@ function decorateHome(home = {}) {
     rewardBalanceText: formatMoney(home.rewardBalanceCents),
     signStatusText: statusLabel(signStatus),
     signStatusTone: statusTone(signStatus),
+    withdrawReady,
     nextAction,
     todayMetrics: {
       incomeCents: todayMetrics.incomeCents || 0,
