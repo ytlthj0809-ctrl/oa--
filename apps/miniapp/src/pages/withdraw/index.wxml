@@ -8,7 +8,7 @@
 
   <view wx:if="{{error}}" class="error">
     <text>{{error}}</text>
-    <button class="secondary small" bindtap="retryLoad">{{errorSource === 'submit' ? '重新提交' : '重新加载'}}</button>
+    <button class="secondary small" bindtap="retryLoad">{{errorSource === 'submit-uncertain' ? '查询提交结果' : errorSource === 'submit' ? '重新检查' : '重新加载'}}</button>
   </view>
   <view wx:if="{{successText}}" class="success-card">{{successText}}</view>
 
@@ -31,9 +31,9 @@
     <label class="field">
       <view class="field-head">
         <text>提现金额</text>
-        <button class="inline-action enhanced" bindtap="fillFullAmount">全部提现</button>
+        <button class="inline-action enhanced" bindtap="fillFullAmount" disabled="{{submitting || submitResultUncertain}}">全部提现</button>
       </view>
-      <input type="digit" value="{{amountYuan}}" bindinput="updateAmount" placeholder="请输入金额，单位元" />
+      <input type="digit" value="{{amountYuan}}" bindinput="updateAmount" disabled="{{submitting || submitResultUncertain}}" placeholder="请输入金额，单位元" />
     </label>
     <text wx:if="{{amountFeedbackText}}" class="amount-feedback {{amountFeedbackTone}}">{{amountFeedbackText}}</text>
     <view class="withdraw-rule-summary">
@@ -47,7 +47,7 @@
       <text wx:if="{{submitWindowCountdownText}}" class="window-countdown">{{submitWindowCountdownText}}</text>
     </view>
     <view class="actions">
-      <button class="primary" bindtap="submitWithdraw" loading="{{submitting}}" disabled="{{submitting || !canSubmitAmount || !submitWindowOpen}}">提交提现</button>
+      <button class="primary" bindtap="submitWithdraw" loading="{{submitting}}" disabled="{{submitting || submitResultUncertain || !canSubmitAmount || !submitWindowOpen}}">{{submitResultUncertain ? '正在确认上次提交' : '提交提现'}}</button>
     </view>
   </view>
 

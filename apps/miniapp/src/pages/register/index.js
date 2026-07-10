@@ -22,6 +22,16 @@ function normalizeRegistrationForm(form) {
   };
 }
 
+function canSubmitRegistration(form) {
+  const normalized = normalizeRegistrationForm(form);
+  return Boolean(
+    normalized.anchorId &&
+    normalized.displayName &&
+    /^1[3-9]\d{9}$/.test(normalized.mobile) &&
+    form.protocolChecked
+  );
+}
+
 function decorateRegistrationRequest(requestRecord) {
   if (!requestRecord) return null;
   const reviewStatus = requestRecord.reviewStatus || requestRecord.status;
@@ -42,33 +52,35 @@ Page({
     loadingStatus: false,
     error: "",
     latestRequest: null,
+    canSubmit: false,
     sourceText: "注册后由后台审核，打款信息在提现前单独填写。",
   },
 
   onLoad(options = {}) {
     if (options.from === "wechatLogin") {
-      this.setData({ sourceText: "当前微信尚未绑定主播账号，请先提交注册申请。审核通过后可直接登录。" });
+      this.setData({ sourceText: "当前微信尚未绑定。提交后等待审核，通过即可微信登录。" });
     }
   },
 
   updateField(event) {
     const field = event.currentTarget.dataset.field;
+    const form = {
+      ...this.data.form,
+      [field]: event.detail.value,
+    };
     this.setData({
-      form: {
-        ...this.data.form,
-        [field]: event.detail.value,
-      },
+      form,
+      canSubmit: canSubmitRegistration(form),
     });
   },
 
   toggleProtocol(event) {
     const values = event.detail && event.detail.value ? event.detail.value : [];
-    this.setData({
-      form: {
-        ...this.data.form,
-        protocolChecked: values.includes("agreed"),
-      },
-    });
+    const form = {
+      ...this.data.form,
+      protocolChecked: values.includes("agreed"),
+    };
+    this.setData({ form, canSubmit: canSubmitRegistration(form) });
   },
 
   async submitRegistration() {
@@ -103,6 +115,7 @@ Page({
   },
 
   async refreshRegistrationStatus() {
+    if (this.data.loadingStatus) return;
     this.setData({ loadingStatus: true, error: "" });
     try {
       const form = normalizeRegistrationForm(this.data.form);

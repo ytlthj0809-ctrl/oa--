@@ -2,7 +2,7 @@
   <view class="summary">
     <view>
       <text class="eyebrow">主播注册</text>
-      <text class="title">提交注册申请</text>
+      <text class="title">新主播注册</text>
       <text class="summary-desc">{{sourceText}}</text>
     </view>
   </view>
@@ -13,8 +13,8 @@
 
   <view class="form-card">
     <label class="field">
-      <text>主播ID</text>
-      <input value="{{form.anchorId}}" data-field="anchorId" bindinput="updateField" placeholder="请输入公司分配的主播ID" />
+      <text>主播编号（公司分配）</text>
+      <input value="{{form.anchorId}}" data-field="anchorId" bindinput="updateField" placeholder="例如 A1001" />
     </label>
     <label class="field">
       <text>主播姓名</text>
@@ -24,7 +24,7 @@
       <text>手机号</text>
       <input value="{{form.mobile}}" data-field="mobile" bindinput="updateField" type="number" maxlength="11" placeholder="请输入本人手机号" />
     </label>
-    <view class="privacy-note">注册阶段只用于确认主播ID和手机号，不收集平台账号、银行卡号或身份证号。提现前请在“打款信息”中补充实名、身份证和银行卡。</view>
+    <view class="privacy-note">这里只填写基本身份信息。银行卡和身份证在提现前单独完善。</view>
     <checkbox-group class="field" bindchange="toggleProtocol">
       <text>协议确认</text>
       <label class="checkbox-line">
@@ -32,10 +32,10 @@
         <text class="hint" bindtap="openProtocols">已阅读并同意《用户服务协议》和《隐私政策》</text>
       </label>
     </checkbox-group>
-    <view class="actions">
-      <button class="primary" bindtap="submitRegistration" loading="{{submitting}}" disabled="{{submitting}}">提交申请</button>
-      <button class="secondary" bindtap="refreshRegistrationStatus" loading="{{loadingStatus}}" disabled="{{loadingStatus}}">刷新状态</button>
-      <button class="secondary" bindtap="goLogin">返回登录</button>
+    <button class="primary submit-button" bindtap="submitRegistration" loading="{{submitting}}" disabled="{{submitting || !canSubmit}}">提交注册申请</button>
+    <view class="form-links">
+      <text bindtap="refreshRegistrationStatus">{{loadingStatus ? '正在查询' : '查询申请状态'}}</text>
+      <text bindtap="goLogin">返回登录</text>
     </view>
   </view>
 

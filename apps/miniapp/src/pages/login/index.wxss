@@ -12,15 +12,6 @@
   margin-top: 10rpx;
 }
 
-.login-note {
-  color: #8a6a00;
-  display: block;
-  font-size: 23rpx;
-  line-height: 1.45;
-  margin-top: 18rpx;
-  text-align: center;
-}
-
 .login-cooldown {
   color: #b54708;
   display: block;
@@ -54,4 +45,49 @@
   margin-top: 18rpx;
   background: #ffda01;
   color: #22130f;
+}
+
+.binding-choice {
+  border-top: 1rpx solid #eee5c8;
+  margin-top: 24rpx;
+  padding-top: 22rpx;
+}
+
+.binding-title,
+.binding-hint {
+  color: #5f5543;
+  display: block;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.binding-actions {
+  display: grid;
+  gap: 14rpx;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 16rpx;
+}
+
+.binding-actions button {
+  margin: 0;
+  min-width: 0;
+}
+
+.binding-hint {
+  color: #806200;
+  margin-bottom: 18rpx;
+}
+
+.login-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18rpx 30rpx;
+  justify-content: center;
+  padding: 28rpx 16rpx 12rpx;
+}
+
+.login-footer text {
+  color: #675f53;
+  font-size: 24rpx;
+  text-decoration: underline;
 }

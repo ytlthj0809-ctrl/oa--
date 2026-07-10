@@ -14,6 +14,9 @@ const { isPaymentInfoReady, isSigned } = require("../../utils/formatters");
 const { parseAmountYuanToCents } = require("../../utils/validators");
 const { createWithdrawApply, getHome, getWithdrawRules, listWithdrawApplies } = require("../../services/miniapp-api");
 
+const pendingWithdrawStorageKey = "withdraw-oa.miniapp.pending-withdraw";
+const pendingWithdrawMaxAgeMs = 24 * 60 * 60 * 1000;
+
 const EMPTY_RULE_SNAPSHOT = {
   amountRangeText: "加载中",
   feeText: "加载中",
@@ -80,6 +83,28 @@ function buildRecordView(records = []) {
     recentRecords: sortedRecords.slice(0, 3),
     emptyText: sortedRecords.length ? "" : "暂无提现记录",
   };
+}
+
+function readPendingWithdrawAttempt() {
+  const attempt = wx.getStorageSync(pendingWithdrawStorageKey);
+  if (!attempt || !attempt.clientRequestId) return null;
+  if (Date.now() - Number(attempt.createdAt || 0) > pendingWithdrawMaxAgeMs) {
+    wx.removeStorageSync(pendingWithdrawStorageKey);
+    return null;
+  }
+  return attempt;
+}
+
+function writePendingWithdrawAttempt(attempt) {
+  wx.setStorageSync(pendingWithdrawStorageKey, attempt);
+  return attempt;
+}
+
+function clearPendingWithdrawAttempt(clientRequestId = "") {
+  const current = readPendingWithdrawAttempt();
+  if (!current || !clientRequestId || current.clientRequestId === clientRequestId) {
+    wx.removeStorageSync(pendingWithdrawStorageKey);
+  }
 }
 
 function confirmWithdrawSubmit({ amountText, availableBalanceText, dailyRemainText }) {
@@ -168,6 +193,7 @@ Page({
     arrivalText: "规则加载中",
     loadingList: false,
     submitting: false,
+    submitResultUncertain: false,
     error: "",
     errorSource: "",
     successText: "",
@@ -179,6 +205,15 @@ Page({
   },
 
   onShow() {
+    const pendingAttempt = readPendingWithdrawAttempt();
+    if (pendingAttempt) {
+      this.setData({
+        amountYuan: (Number(pendingAttempt.amountCents || 0) / 100).toFixed(2),
+        submitResultUncertain: true,
+        error: "上次提现的提交结果尚未确认，请查询结果，不要重复发起。",
+        errorSource: "submit-uncertain",
+      });
+    }
     this.loadWithdrawList();
   },
 
@@ -187,8 +222,12 @@ Page({
   },
 
   retryLoad() {
+    if (this.data.errorSource === "submit-uncertain") {
+      this.runWithdrawSubmit({ replayPending: true });
+      return;
+    }
     if (this.data.errorSource === "submit") {
-      this.submitWithdraw();
+      this.runWithdrawSubmit({ replayPending: false });
       return;
     }
     this.loadWithdrawList();
@@ -235,6 +274,11 @@ Page({
       ]);
       const decoratedHome = decorateHome(home);
       const records = (recordsRaw || []).map(decorateWithdrawRecord);
+      const pendingAttempt = readPendingWithdrawAttempt();
+      const confirmedRecord = pendingAttempt
+        ? records.find((record) => record.clientRequestId === pendingAttempt.clientRequestId)
+        : null;
+      if (confirmedRecord) clearPendingWithdrawAttempt(pendingAttempt.clientRequestId);
       this.setData({
         home: decoratedHome,
         ...buildWithdrawRuleView(rules),
@@ -245,6 +289,17 @@ Page({
           availableBalanceCents: decoratedHome.availableBalanceCents,
           minAmountCents: rules.minAmountCents,
         }),
+        ...(confirmedRecord ? {
+          submitResultUncertain: false,
+          error: "",
+          errorSource: "",
+          successText: `已确认提现申请：${confirmedRecord.applyId}`,
+        } : pendingAttempt ? {
+          amountYuan: (Number(pendingAttempt.amountCents || 0) / 100).toFixed(2),
+          submitResultUncertain: true,
+          error: "上次提现的提交结果尚未确认，请点击“查询提交结果”。",
+          errorSource: "submit-uncertain",
+        } : {}),
       });
     } catch (error) {
       if (handlePageRequestError(this, error)) return;
@@ -255,8 +310,14 @@ Page({
   },
 
   async submitWithdraw() {
+    return this.runWithdrawSubmit({ replayPending: false });
+  },
+
+  async runWithdrawSubmit({ replayPending = false } = {}) {
     if (this.data.submitting) return;
     this.setData({ submitting: true, error: "", errorSource: "", successText: "" });
+    let requestStarted = false;
+    let clientRequestId = "";
     try {
       const anchorId = requireAnchorId();
       const amountCents = parseAmountYuanToCents(this.data.amountYuan);
@@ -286,21 +347,32 @@ Page({
       if (!this.data.submitWindowOpen) {
         throw new Error(this.data.submitWindowStatusText || "当前不在可提现时间段");
       }
-      const confirmed = await confirmWithdrawSubmit({
-        amountText: formatMoney(amountCents),
-        availableBalanceText: this.data.home.availableBalanceText,
-        dailyRemainText: this.data.dailyRemainText,
-      });
-      if (!confirmed) {
-        return;
+      const pendingAttempt = readPendingWithdrawAttempt();
+      const canReplayPending = pendingAttempt
+        && pendingAttempt.anchorId === anchorId
+        && Number(pendingAttempt.amountCents) === amountCents;
+      if (replayPending && !canReplayPending) {
+        this.setData({ submitResultUncertain: false });
+        throw new Error("未找到待确认的提现请求，请刷新记录后重新填写");
       }
-      const clientRequestId = createClientRequestId("withdraw");
+      if (!replayPending) {
+        const confirmed = await confirmWithdrawSubmit({
+          amountText: formatMoney(amountCents),
+          availableBalanceText: this.data.home.availableBalanceText,
+          dailyRemainText: this.data.dailyRemainText,
+        });
+        if (!confirmed) return;
+      }
+      clientRequestId = canReplayPending ? pendingAttempt.clientRequestId : createClientRequestId("withdraw");
+      writePendingWithdrawAttempt({ anchorId, amountCents, clientRequestId, createdAt: canReplayPending ? pendingAttempt.createdAt : Date.now() });
+      requestStarted = true;
       const apply = await createWithdrawApply({
         anchorId,
         amountCents,
         clientRequestId,
         operatorId: "MINIAPP",
       });
+      clearPendingWithdrawAttempt(clientRequestId);
       markMiniappDataDirty();
       try { wx.vibrateShort({ type: "medium" }); } catch (_) {}
       this.setData({
@@ -308,6 +380,7 @@ Page({
         amountFeedbackText: "",
         amountFeedbackTone: "neutral",
         canSubmitAmount: false,
+        submitResultUncertain: false,
         successText: `提现申请已提交：${apply.applyId}`,
       });
       try {
@@ -336,7 +409,17 @@ Page({
       }
     } catch (error) {
       if (handlePageRequestError(this, error)) return;
-      this.setData({ error: error.userMessage || error.message || "提现提交失败，请稍后重试", errorSource: "submit" });
+      const statusCode = Number(error.statusCode || 0);
+      const isDefinitiveRejection = statusCode >= 400 && statusCode < 500;
+      const resultUncertain = requestStarted && !isDefinitiveRejection;
+      if (requestStarted && isDefinitiveRejection) clearPendingWithdrawAttempt(clientRequestId);
+      this.setData({
+        submitResultUncertain: resultUncertain,
+        error: resultUncertain
+          ? "网络中断，提交结果尚未确认。请点击“查询提交结果”，系统会沿用同一请求号核对，避免重复提现。"
+          : error.userMessage || error.message || "提现提交失败，请检查后重试",
+        errorSource: resultUncertain ? "submit-uncertain" : "submit",
+      });
     } finally {
       if (!this.__authRedirecting) this.setData({ submitting: false });
     }

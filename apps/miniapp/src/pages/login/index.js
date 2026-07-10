@@ -191,6 +191,10 @@ Page({
     this.setData({ legacyLoginExpanded: !this.data.legacyLoginExpanded });
   },
 
+  openLegacyLogin() {
+    this.setData({ legacyLoginExpanded: true });
+  },
+
   togglePasswordVisibility() {
     this.setData({ passwordVisible: !this.data.passwordVisible });
   },

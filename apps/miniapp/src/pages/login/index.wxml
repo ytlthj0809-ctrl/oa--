@@ -2,32 +2,35 @@
   <view class="summary login-hero">
     <image class="brand-logo" src="../../assets/brand/jiayin-logo-horizontal-official.png" mode="aspectFit" />
     <text class="eyebrow">主播账户</text>
-    <text class="title">欢迎回到嘉音提现</text>
-    <text class="meta">已绑定微信的主播可直接登录；旧手机号、主播编号或平台账号可作为迁移兼容入口。</text>
+    <text class="title">欢迎回来</text>
+    <text class="meta">使用微信快速登录嘉音提现。</text>
   </view>
 
   <view wx:if="{{error}}" class="error">{{error}}</view>
 
   <view class="card wechat-login-card" data-q124-miniapp-formal-login="true">
-    <text class="wechat-title">微信登录与账号绑定</text>
-    <text class="wechat-desc">已绑定主播可直接进入；未绑定时可用旧账号登录并自动绑定，或提交新主播注册申请。</text>
-    <button class="primary wechat-login" bindtap="loginByWechat" loading="{{wechatSubmitting}}" disabled="{{wechatSubmitting || submitting}}">微信登录/绑定</button>
-    <view wx:if="{{wechatBindingPending}}" class="notice">
-      <text>当前微信尚未绑定。旧主播请在下方登录，成功后会自动绑定；新主播请提交注册申请。</text>
-      <button class="secondary" bindtap="goRegister">新主播注册</button>
+    <text class="wechat-title">微信快速登录</text>
+    <text class="wechat-desc">已绑定账号会直接进入。</text>
+    <button class="primary wechat-login" bindtap="loginByWechat" loading="{{wechatSubmitting}}" disabled="{{wechatSubmitting || submitting}}">微信一键登录</button>
+    <view wx:if="{{wechatBindingPending}}" class="binding-choice">
+      <text class="binding-title">这个微信还没有绑定主播账号</text>
+      <view class="binding-actions">
+        <button class="secondary" bindtap="openLegacyLogin">我是旧主播</button>
+        <button class="secondary" bindtap="goRegister">我是新主播</button>
+      </view>
     </view>
   </view>
 
   <view class="card login-card">
     <view class="section-head" bindtap="toggleLegacyLogin">
-      <text class="label" style="font-size: 28rpx;">旧账号迁移登录</text>
+      <text class="label" style="font-size: 28rpx;">旧主播账号登录</text>
       <text class="collapse-toggle">{{legacyLoginExpanded ? '收起' : '展开'}}</text>
     </view>
     <view wx:if="{{legacyLoginExpanded}}">
-      <text class="meta">仅用于旧系统主播迁移兼容。{{wechatBindingPending ? '本次登录成功后会自动绑定当前微信。' : '登录后可绑定微信，后续打开更方便。'}}</text>
+      <text wx:if="{{wechatBindingPending}}" class="binding-hint">登录成功后会自动绑定当前微信。</text>
       <label class="field">
-        <text>手机号/账号</text>
-        <input value="{{form.mobile}}" data-field="mobile" bindinput="updateField" placeholder="请输入手机号或账号" />
+        <text>旧账号</text>
+        <input value="{{form.mobile}}" data-field="mobile" bindinput="updateField" placeholder="手机号、主播编号或平台账号" />
       </label>
       <label class="field">
         <view class="field-head">
@@ -39,15 +42,13 @@
         <text class="collapse-toggle" bindtap="togglePasswordVisibility">{{passwordVisible ? '隐藏密码' : '显示密码'}}</text>
       </view>
       <text wx:if="{{cooldownText}}" class="login-cooldown">{{cooldownText}}</text>
-      <button class="primary" bindtap="loginWithCurrentForm" loading="{{submitting}}" disabled="{{submitting || cooldownText}}">登录</button>
-      <view class="actions">
-        <button class="secondary" bindtap="goRegister">注册</button>
-        <button class="secondary" bindtap="openProtocols">协议隐私</button>
-        <button class="secondary" bindtap="openContact">联系客服</button>
-      </view>
-      <text class="login-note">首次迁移登录请使用旧系统手机号或主播编号。</text>
+      <button class="primary" bindtap="loginWithCurrentForm" loading="{{submitting}}" disabled="{{submitting || cooldownText || !form.mobile || !form.password}}">登录{{wechatBindingPending ? '并绑定微信' : ''}}</button>
     </view>
   </view>
 
-  <view class="notice">旧系统迁移主播可继续使用旧手机号、主播编号或平台账号登录；登录后建议绑定微信，后续打开更方便。</view>
+  <view class="login-footer">
+    <text bindtap="goRegister">新主播注册</text>
+    <text bindtap="openProtocols">协议与隐私</text>
+    <text bindtap="openContact">联系客服</text>
+  </view>
 </view>

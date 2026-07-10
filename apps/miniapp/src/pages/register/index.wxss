@@ -98,6 +98,24 @@
   flex: 1 1 220rpx;
 }
 
+.submit-button {
+  margin: 4rpx 0 0;
+  width: 100%;
+}
+
+.form-links {
+  display: flex;
+  gap: 34rpx;
+  justify-content: center;
+  padding: 8rpx 0 2rpx;
+}
+
+.form-links text {
+  color: #675f53;
+  font-size: 24rpx;
+  text-decoration: underline;
+}
+
 .primary,
 .secondary {
   align-items: center;
