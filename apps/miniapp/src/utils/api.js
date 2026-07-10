@@ -1,9 +1,4 @@
 const { clearMiniappCaches } = require("./cache");
-const {
-  WITHDRAW_MIN_AMOUNT_CENTS,
-  WITHDRAW_SUBMIT_END_MINUTE_OF_DAY,
-  WITHDRAW_SUBMIT_START_MINUTE_OF_DAY,
-} = require("./constants");
 
 const serviceOrigin = "https://api.jiayin.site";
 const sessionStorageKey = "jy-miniapp-session";
@@ -92,19 +87,13 @@ function createAuthRequiredError(message = "请先登录") {
   return error;
 }
 
-function formatMinuteOfDay(minuteOfDay) {
-  const hours = Math.floor(Number(minuteOfDay || 0) / 60);
-  const minutes = Number(minuteOfDay || 0) % 60;
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-}
-
 const friendlyErrorMessages = {
   AUTH_REQUIRED: "登录已过期，请重新登录",
   BALANCE_INSUFFICIENT: "当前可提现余额不足，请确认余额后再提交",
   DUPLICATE_PAYMENT_RISK_BLOCKED: "系统检测到重复打款风险，已阻断本次操作，请联系财务核对",
   INSUFFICIENT_BALANCE: "当前可提现余额不足，请确认余额后再提交",
-  MINIAPP_WITHDRAW_MIN_AMOUNT: `单笔提现最低 ${formatMoney(WITHDRAW_MIN_AMOUNT_CENTS)}`,
-  MINIAPP_WITHDRAW_WINDOW_CLOSED: `当前不在提现时间内，请在每日 ${formatMinuteOfDay(WITHDRAW_SUBMIT_START_MINUTE_OF_DAY)}-${formatMinuteOfDay(WITHDRAW_SUBMIT_END_MINUTE_OF_DAY)} 提交`,
+  MINIAPP_WITHDRAW_MIN_AMOUNT: "提现金额低于当前最低限额，请刷新规则后重试",
+  MINIAPP_WITHDRAW_WINDOW_CLOSED: "当前不在提现开放时段，请刷新页面查看下次开放时间",
   PAYMENT_INFO_INCOMPLETE: "打款信息未生效，请先补全并等待审核通过",
   PAYMENT_INFO_NOT_FOUND: "请先填写打款信息，审核通过后再继续",
   PAYMENT_INFO_REQUIRED: "请先填写打款信息，审核通过后再继续",

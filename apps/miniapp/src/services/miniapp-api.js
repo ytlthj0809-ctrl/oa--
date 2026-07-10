@@ -43,6 +43,10 @@ function listWithdrawApplies(anchorId) {
   return request(appendQuery("/api/miniapp/withdraw-applies", { anchorId }));
 }
 
+function getWithdrawRules() {
+  return request("/api/miniapp/withdraw-rules");
+}
+
 function getWithdrawApplyDetail({ anchorId, applyId }) {
   return request(appendQuery(`/api/miniapp/withdraw-applies/${applyId}`, { anchorId }));
 }
@@ -79,6 +83,13 @@ function loginByWechat(jsCode) {
   });
 }
 
+function bindWechatAccount(wechatBindToken) {
+  return request("/api/miniapp/auth/wechat-bind", {
+    method: "POST",
+    data: { wechatBindToken },
+  });
+}
+
 function logout() {
   return request("/api/miniapp/auth/logout", {
     method: "POST",
@@ -89,6 +100,7 @@ function logout() {
 
 module.exports = {
   agreeProtocol,
+  bindWechatAccount,
   createWithdrawApply,
   getContact,
   getDataSnapshots,
@@ -97,6 +109,7 @@ module.exports = {
   getProfile,
   getProtocols,
   getWithdrawApplyDetail,
+  getWithdrawRules,
   listBalanceFlows,
   listNotifications,
   listTaskRewards,

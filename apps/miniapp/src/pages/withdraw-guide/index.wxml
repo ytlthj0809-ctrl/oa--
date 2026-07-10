@@ -13,8 +13,13 @@
 
   <view class="card rule-guide" data-q121-miniapp-withdraw-guide-rules="true">
     <view class="rule-guide-head">
-      <text class="eyebrow">审核展示规则</text>
+      <text class="eyebrow">实时规则</text>
       <text class="title">提现规则</text>
+    </view>
+    <view wx:if="{{loadingRules}}" class="state-card loading-state">规则加载中</view>
+    <view wx:elif="{{ruleError}}" class="error">
+      <text>{{ruleError}}</text>
+      <button class="secondary small" bindtap="loadRules">重新加载</button>
     </view>
     <view class="rule-guide-list">
       <view wx:for="{{ruleSections}}" wx:key="title" class="rule-guide-item">

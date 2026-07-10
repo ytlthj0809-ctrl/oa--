@@ -87,7 +87,7 @@ Page({
         method: "POST",
         data: {
           ...normalizedForm,
-          ...(wechatBindToken ? { openId: wechatBindToken } : {}),
+          ...(wechatBindToken ? { wechatBindToken } : {}),
           operatorId: "MINIAPP",
         },
       });

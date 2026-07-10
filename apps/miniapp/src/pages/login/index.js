@@ -1,6 +1,16 @@
-const { openPage, setSession, setWechatBindToken } = require("../../utils/api");
+const {
+  clearWechatBindToken,
+  getWechatBindToken,
+  openPage,
+  setSession,
+  setWechatBindToken,
+} = require("../../utils/api");
 const { LOGIN_COOLDOWN_MS, LOGIN_FAILURE_LIMIT } = require("../../utils/constants");
-const { loginByPassword, loginByWechat: loginByWechatRequest } = require("../../services/miniapp-api");
+const {
+  bindWechatAccount,
+  loginByPassword,
+  loginByWechat: loginByWechatRequest,
+} = require("../../services/miniapp-api");
 
 const loginFailureStorageKey = "jy-miniapp-login-failure";
 let cooldownTimer = null;
@@ -41,6 +51,15 @@ Page({
     cooldownText: "",
     legacyLoginExpanded: false,
     passwordVisible: false,
+    wechatBindingPending: false,
+  },
+
+  onLoad(options = {}) {
+    const wechatBindingPending = options.wechatChecked === "1" && Boolean(getWechatBindToken());
+    this.setData({
+      wechatBindingPending,
+      legacyLoginExpanded: wechatBindingPending,
+    });
   },
 
   onShow() {
@@ -81,13 +100,35 @@ Page({
     this.setData({ form: { ...this.data.form, [field]: event.detail.value } });
   },
 
-  enterWithSession(session) {
-    setSession(session);
+  routeAfterLogin(session) {
     if (session.protocolStatus && session.protocolStatus !== "AGREED") {
       wx.redirectTo({ url: "/src/pages/protocols/index?mode=required" });
       return;
     }
     wx.switchTab({ url: "/src/pages/home/index" });
+  },
+
+  async enterWithSession(session) {
+    const wechatBindToken = getWechatBindToken();
+    setSession(session);
+    if (!wechatBindToken) {
+      this.routeAfterLogin(session);
+      return;
+    }
+    try {
+      await bindWechatAccount(wechatBindToken);
+      clearWechatBindToken();
+      wx.showToast({ title: "微信绑定成功", icon: "success" });
+      this.routeAfterLogin({ ...session, bindingStatus: "BOUND" });
+    } catch (error) {
+      setWechatBindToken(wechatBindToken);
+      wx.showModal({
+        title: "登录成功，微信绑定未完成",
+        content: `${error.message || "绑定失败"}。本次仍可进入系统，稍后可重新绑定。`,
+        showCancel: false,
+        complete: () => this.routeAfterLogin(session),
+      });
+    }
   },
 
   async loginWithCurrentForm() {
@@ -110,7 +151,7 @@ Page({
       });
       clearLoginFailureState();
       this.setData({ form: { ...this.data.form, password: "" } });
-      this.enterWithSession(session);
+      await this.enterWithSession(session);
     } catch (error) {
       this.setData({ error: error.message });
       if (!error.clientValidation) this.recordPasswordLoginFailure();
@@ -130,11 +171,10 @@ Page({
             if (result.wechatBindToken) {
               setWechatBindToken(result.wechatBindToken);
             }
-            wx.showToast({ title: "请先提交主播注册申请", icon: "none" });
-            wx.navigateTo({ url: "/src/pages/register/index?from=wechatLogin" });
+            this.setData({ wechatBindingPending: true, legacyLoginExpanded: true });
             return;
           }
-          this.enterWithSession(result);
+          await this.enterWithSession(result);
         } catch (error) {
           this.setData({ error: error.message });
         } finally {
@@ -156,7 +196,7 @@ Page({
   },
 
   goRegister() {
-    wx.navigateTo({ url: "/src/pages/register/index" });
+    wx.navigateTo({ url: `/src/pages/register/index${getWechatBindToken() ? "?from=wechatLogin" : ""}` });
   },
 
   openProtocols() {

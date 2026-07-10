@@ -10,8 +10,12 @@
 
   <view class="card wechat-login-card" data-q124-miniapp-formal-login="true">
     <text class="wechat-title">微信登录与账号绑定</text>
-    <text class="wechat-desc">已绑定主播可直接进入；未绑定时提交主播注册申请，审核通过后再登录提现。</text>
+    <text class="wechat-desc">已绑定主播可直接进入；未绑定时可用旧账号登录并自动绑定，或提交新主播注册申请。</text>
     <button class="primary wechat-login" bindtap="loginByWechat" loading="{{wechatSubmitting}}" disabled="{{wechatSubmitting || submitting}}">微信登录/绑定</button>
+    <view wx:if="{{wechatBindingPending}}" class="notice">
+      <text>当前微信尚未绑定。旧主播请在下方登录，成功后会自动绑定；新主播请提交注册申请。</text>
+      <button class="secondary" bindtap="goRegister">新主播注册</button>
+    </view>
   </view>
 
   <view class="card login-card">
@@ -20,7 +24,7 @@
       <text class="collapse-toggle">{{legacyLoginExpanded ? '收起' : '展开'}}</text>
     </view>
     <view wx:if="{{legacyLoginExpanded}}">
-      <text class="meta">仅用于旧系统主播迁移兼容。登录后建议绑定微信，后续打开更方便。</text>
+      <text class="meta">仅用于旧系统主播迁移兼容。{{wechatBindingPending ? '本次登录成功后会自动绑定当前微信。' : '登录后可绑定微信，后续打开更方便。'}}</text>
       <label class="field">
         <text>手机号/账号</text>
         <input value="{{form.mobile}}" data-field="mobile" bindinput="updateField" placeholder="请输入手机号或账号" />

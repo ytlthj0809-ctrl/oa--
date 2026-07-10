@@ -8,59 +8,19 @@ const {
   requireAnchorId,
   stopPullDownRefresh,
 } = require("../../utils/api");
-const {
-  CHINA_TIME_OFFSET_MS,
-  WITHDRAW_MIN_AMOUNT_CENTS,
-  WITHDRAW_SUBMIT_END_MINUTE_OF_DAY,
-  WITHDRAW_SUBMIT_START_MINUTE_OF_DAY,
-} = require("../../utils/constants");
+const { CHINA_TIME_OFFSET_MS } = require("../../utils/constants");
 const { decorateHome, decorateWithdrawRecord } = require("../../utils/decorators");
 const { isPaymentInfoReady, isSigned } = require("../../utils/formatters");
 const { parseAmountYuanToCents } = require("../../utils/validators");
-const { createWithdrawApply, getHome, listWithdrawApplies } = require("../../services/miniapp-api");
+const { createWithdrawApply, getHome, getWithdrawRules, listWithdrawApplies } = require("../../services/miniapp-api");
 
-function formatMinuteOfDay(minuteOfDay) {
-  const hour = Math.floor(minuteOfDay / 60);
-  const minute = minuteOfDay % 60;
-  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-}
-
-function formatDurationFromMinutes(minutes) {
-  const safeMinutes = Math.max(0, Number(minutes || 0));
-  const hour = Math.floor(safeMinutes / 60);
-  const minute = safeMinutes % 60;
-  if (hour <= 0) return `${minute || 1} 分钟`;
-  if (minute <= 0) return `${hour} 小时`;
-  return `${hour} 小时 ${minute} 分钟`;
-}
-
-function buildWithdrawRuleSnapshot() {
-  const startText = formatMinuteOfDay(WITHDRAW_SUBMIT_START_MINUTE_OF_DAY);
-  const endText = formatMinuteOfDay(WITHDRAW_SUBMIT_END_MINUTE_OF_DAY);
-  const minAmountText = `最低 ${formatMoney(WITHDRAW_MIN_AMOUNT_CENTS)}`;
-  const windowSummaryText = `${startText}-${endText} 可提交`;
-  const arrivalText = "预计当日到账";
-  return {
-    dailyLimitText: "不限次数",
-    minAmountText,
-    windowSummaryText,
-    windowText: `每日 ${startText}-${endText} 可提交，后台可调整不可提现时段`,
-    arrivalText,
-    amountRangeText: `单笔${formatMoney(WITHDRAW_MIN_AMOUNT_CENTS)}起，无固定上限，最高不超过可提现余额`,
-    feeText: "不扣平台服务费和银行/第三方手续费；税费由云账户代扣代缴",
-    frozenText: "提交后冻结对应余额，失败或驳回自动退回",
-    auditText: "申请需通过财务经理初审、管理员财审、超管终审和线下付款登记",
-    exceptionText: "资料缺失、未签约、余额不足或处于不可提现时段时不可提交",
-    summaryItems: [
-      { key: "minAmount", label: "最低金额", value: minAmountText },
-      { key: "submitWindow", label: "可提时间", value: windowSummaryText },
-      { key: "arrival", label: "到账说明", value: arrivalText },
-    ],
-  };
-}
-
-const withdrawRuleSnapshot = buildWithdrawRuleSnapshot();
-const RULES = withdrawRuleSnapshot;
+const EMPTY_RULE_SNAPSHOT = {
+  amountRangeText: "加载中",
+  feeText: "加载中",
+  frozenText: "加载中",
+  auditText: "加载中",
+  exceptionText: "加载中",
+};
 
 function getChinaDateKey(date = new Date()) {
   return new Date(date.getTime() + CHINA_TIME_OFFSET_MS).toISOString().slice(0, 10);
@@ -72,55 +32,27 @@ function getChinaDateKeyFromValue(value) {
   return String(value || "").slice(0, 10);
 }
 
-function getChinaMinuteOfDay(date = new Date()) {
-  const [hour, minute] = new Date(date.getTime() + CHINA_TIME_OFFSET_MS)
-    .toISOString()
-    .slice(11, 16)
-    .split(":")
-    .map(Number);
-  return hour * 60 + minute;
-}
-
-function isWithdrawSubmitWindowOpen(date = new Date()) {
-  const minuteOfDay = getChinaMinuteOfDay(date);
-  return minuteOfDay >= WITHDRAW_SUBMIT_START_MINUTE_OF_DAY && minuteOfDay < WITHDRAW_SUBMIT_END_MINUTE_OF_DAY;
-}
-
-function buildSubmitWindowMeta(date = new Date()) {
-  const minuteOfDay = getChinaMinuteOfDay(date);
-  if (minuteOfDay < WITHDRAW_SUBMIT_START_MINUTE_OF_DAY) {
-    const waitMinutes = WITHDRAW_SUBMIT_START_MINUTE_OF_DAY - minuteOfDay;
-    return {
-      submitWindowOpen: false,
-      submitWindowStatusText: `现在不可提交，${formatMinuteOfDay(WITHDRAW_SUBMIT_START_MINUTE_OF_DAY)} 后可提现`,
-      submitWindowCountdownText: `距下次可提现约 ${formatDurationFromMinutes(waitMinutes)}`,
-      submitWindowTone: "warning",
-    };
-  }
-  if (minuteOfDay >= WITHDRAW_SUBMIT_END_MINUTE_OF_DAY) {
-    const waitMinutes = (24 * 60) - minuteOfDay + WITHDRAW_SUBMIT_START_MINUTE_OF_DAY;
-    return {
-      submitWindowOpen: false,
-      submitWindowStatusText: `现在不可提交，明天 ${formatMinuteOfDay(WITHDRAW_SUBMIT_START_MINUTE_OF_DAY)} 后可提现`,
-      submitWindowCountdownText: `距下次可提现约 ${formatDurationFromMinutes(waitMinutes)}`,
-      submitWindowTone: "warning",
-    };
-  }
-  const remainMinutes = WITHDRAW_SUBMIT_END_MINUTE_OF_DAY - minuteOfDay;
-  return {
-    submitWindowOpen: true,
-    submitWindowStatusText: `当前可提交，${formatMinuteOfDay(WITHDRAW_SUBMIT_END_MINUTE_OF_DAY)} 前完成申请`,
-    submitWindowCountdownText: `本次窗口剩余约 ${formatDurationFromMinutes(remainMinutes)}`,
-    submitWindowTone: "success",
-  };
-}
-
-function buildDailySubmitMeta(records = []) {
-  const today = getChinaDateKey();
+function buildDailySubmitMeta(records = [], serverDate = getChinaDateKey()) {
+  const today = serverDate || getChinaDateKey();
   const todayCount = records.filter((record) => getChinaDateKeyFromValue(record.createdAt) === today).length;
   return {
     dailyRemain: null,
     dailyRemainText: `今日已提交 ${todayCount} 次，不限次数`,
+  };
+}
+
+function buildWithdrawRuleView(rules = {}) {
+  const snapshot = rules.snapshot || EMPTY_RULE_SNAPSHOT;
+  return {
+    withdrawRules: rules,
+    withdrawRuleSnapshot: snapshot,
+    withdrawRuleSummaryItems: rules.summaryItems || [],
+    submitWindowText: snapshot.windowText || "规则加载中",
+    arrivalText: snapshot.arrivalText || "规则加载中",
+    submitWindowOpen: rules.submitWindowOpen === true,
+    submitWindowStatusText: rules.submitWindowStatusText || "提现规则加载中",
+    submitWindowCountdownText: rules.submitWindowCountdownText || "",
+    submitWindowTone: rules.submitWindowTone || "neutral",
   };
 }
 
@@ -168,16 +100,23 @@ function confirmWithdrawSubmit({ amountText, availableBalanceText, dailyRemainTe
   });
 }
 
-function buildAmountFeedback({ amountYuan, availableBalanceCents }) {
+function buildAmountFeedback({ amountYuan, availableBalanceCents, minAmountCents }) {
   const text = String(amountYuan || "").trim();
   if (!text) {
     return { amountFeedbackText: "", amountFeedbackTone: "neutral", canSubmitAmount: false };
   }
   try {
     const amountCents = parseAmountYuanToCents(text);
-    if (amountCents < WITHDRAW_MIN_AMOUNT_CENTS) {
+    if (!Number.isSafeInteger(minAmountCents) || minAmountCents <= 0) {
       return {
-        amountFeedbackText: `单笔提现最低 ${formatMoney(WITHDRAW_MIN_AMOUNT_CENTS)}`,
+        amountFeedbackText: "提现规则加载后可提交",
+        amountFeedbackTone: "neutral",
+        canSubmitAmount: false,
+      };
+    }
+    if (amountCents < minAmountCents) {
+      return {
+        amountFeedbackText: `单笔提现最低 ${formatMoney(minAmountCents)}`,
         amountFeedbackTone: "danger",
         canSubmitAmount: false,
       };
@@ -217,12 +156,16 @@ Page({
     amountFeedbackTone: "neutral",
     canSubmitAmount: false,
     home: null,
-    withdrawRuleSnapshot: RULES,
+    withdrawRules: null,
+    withdrawRuleSnapshot: EMPTY_RULE_SNAPSHOT,
     dailyRemain: null,
     dailyRemainText: "今日不限提交次数",
-    submitWindowText: RULES.windowText,
-    ...buildSubmitWindowMeta(),
-    arrivalText: RULES.arrivalText,
+    submitWindowText: "规则加载中",
+    submitWindowOpen: false,
+    submitWindowStatusText: "提现规则加载中",
+    submitWindowCountdownText: "",
+    submitWindowTone: "neutral",
+    arrivalText: "规则加载中",
     loadingList: false,
     submitting: false,
     error: "",
@@ -232,7 +175,7 @@ Page({
     recentRecords: [],
     emptyText: "暂无提现记录",
     rulesExpanded: false,
-    withdrawRuleSummaryItems: RULES.summaryItems,
+    withdrawRuleSummaryItems: [],
   },
 
   onShow() {
@@ -258,6 +201,7 @@ Page({
       ...buildAmountFeedback({
         amountYuan,
         availableBalanceCents: this.data.home && this.data.home.availableBalanceCents,
+        minAmountCents: this.data.withdrawRules && this.data.withdrawRules.minAmountCents,
       }),
     });
     return amountYuan;
@@ -272,7 +216,11 @@ Page({
     const amountYuan = (availableBalanceCents / 100).toFixed(2);
     this.setData({
       amountYuan,
-      ...buildAmountFeedback({ amountYuan, availableBalanceCents }),
+      ...buildAmountFeedback({
+        amountYuan,
+        availableBalanceCents,
+        minAmountCents: this.data.withdrawRules && this.data.withdrawRules.minAmountCents,
+      }),
     });
   },
 
@@ -280,20 +228,22 @@ Page({
     this.setData({ loadingList: true, error: "", errorSource: "" });
     try {
       const anchorId = requireAnchorId();
-      const [home, recordsRaw] = await Promise.all([
+      const [home, recordsRaw, rules] = await Promise.all([
         getHome(anchorId),
         listWithdrawApplies(anchorId),
+        getWithdrawRules(),
       ]);
       const decoratedHome = decorateHome(home);
       const records = (recordsRaw || []).map(decorateWithdrawRecord);
       this.setData({
         home: decoratedHome,
-        ...buildDailySubmitMeta(records),
-        ...buildSubmitWindowMeta(),
+        ...buildWithdrawRuleView(rules),
+        ...buildDailySubmitMeta(records, rules.serverDate),
         ...buildRecordView(records),
         ...buildAmountFeedback({
           amountYuan: this.data.amountYuan,
           availableBalanceCents: decoratedHome.availableBalanceCents,
+          minAmountCents: rules.minAmountCents,
         }),
       });
     } catch (error) {
@@ -310,8 +260,12 @@ Page({
     try {
       const anchorId = requireAnchorId();
       const amountCents = parseAmountYuanToCents(this.data.amountYuan);
-      if (!Number.isFinite(amountCents) || amountCents < WITHDRAW_MIN_AMOUNT_CENTS) {
-        throw new Error(`单笔提现最低 ${formatMoney(WITHDRAW_MIN_AMOUNT_CENTS)}`);
+      const minAmountCents = Number(this.data.withdrawRules && this.data.withdrawRules.minAmountCents);
+      if (!Number.isSafeInteger(minAmountCents) || minAmountCents <= 0) {
+        throw new Error("提现规则未加载，请刷新后再提交");
+      }
+      if (!Number.isFinite(amountCents) || amountCents < minAmountCents) {
+        throw new Error(`单笔提现最低 ${formatMoney(minAmountCents)}`);
       }
       if (!this.data.home) {
         throw new Error("余额和提现条件未加载，请刷新后再提交");
@@ -329,10 +283,8 @@ Page({
         openPage("withdraw-guide", { reason: "YZH_UNSIGNED" });
         return;
       }
-      if (!isWithdrawSubmitWindowOpen()) {
-        const windowMeta = buildSubmitWindowMeta();
-        this.setData(windowMeta);
-        throw new Error(windowMeta.submitWindowStatusText || "当前不在可提现时间段");
+      if (!this.data.submitWindowOpen) {
+        throw new Error(this.data.submitWindowStatusText || "当前不在可提现时间段");
       }
       const confirmed = await confirmWithdrawSubmit({
         amountText: formatMoney(amountCents),
@@ -357,27 +309,26 @@ Page({
         amountFeedbackTone: "neutral",
         canSubmitAmount: false,
         successText: `提现申请已提交：${apply.applyId}`,
-        ...buildSubmitWindowMeta(),
       });
       try {
-        const [latestHome, recordsRaw] = await Promise.all([
+        const [latestHome, recordsRaw, latestRules] = await Promise.all([
           getHome(anchorId),
           listWithdrawApplies(anchorId),
+          getWithdrawRules(),
         ]);
         const records = (recordsRaw || []).map(decorateWithdrawRecord);
         this.setData({
           home: decorateHome(latestHome),
+          ...buildWithdrawRuleView(latestRules),
           ...buildRecordView(records),
-          ...buildDailySubmitMeta(records),
-          ...buildSubmitWindowMeta(),
+          ...buildDailySubmitMeta(records, latestRules.serverDate),
         });
         this.openSubmittedDetail(apply.applyId);
       } catch (refreshError) {
         const nextRecords = [decorateWithdrawRecord(apply), ...this.data.records.filter((record) => record.applyId !== apply.applyId)];
         this.setData({
           ...buildRecordView(nextRecords),
-          ...buildDailySubmitMeta(nextRecords),
-          ...buildSubmitWindowMeta(),
+          ...buildDailySubmitMeta(nextRecords, this.data.withdrawRules && this.data.withdrawRules.serverDate),
           error: "提现已提交成功，但记录刷新失败，请稍后下拉或进入提现记录查看。",
           errorSource: "load",
         });

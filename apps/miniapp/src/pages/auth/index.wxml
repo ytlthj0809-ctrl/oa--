@@ -2,9 +2,10 @@
   <view class="card" style="text-align: center; padding: 60rpx 24rpx;">
     <view class="page-loading" style="border-radius: 14rpx; margin-bottom: 24rpx; min-height: 80rpx;"></view>
     <text class="title">正在检查登录状态</text>
-    <text class="meta">请稍候…</text>
+    <text class="meta">正在安全登录，请稍候…</text>
+    <text wx:if="{{error}}" class="error">{{error}}</text>
     <view wx:if="{{showFallback}}" class="actions" style="justify-content: center; margin-top: 24rpx;">
-      <button class="secondary" bindtap="goLogin">手动登录</button>
+      <button class="primary" bindtap="goLogin">进入登录页</button>
     </view>
   </view>
 </view>
