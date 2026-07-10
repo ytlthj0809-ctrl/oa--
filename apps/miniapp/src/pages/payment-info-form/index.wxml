@@ -4,7 +4,7 @@
     <text class="title">首次填写</text>
   </view>
   <view wx:if="{{error}}" class="error">{{error}}</view>
-  <view class="notice">打款信息仅用于云账户签约核验和线下打款登记，提交后页面会脱敏展示。注册主播时不会要求填写银行卡。</view>
+  <view class="notice">打款信息仅用于云账户签约核验和线下打款登记，提交后页面会脱敏展示。签约会默认读取这里已审核的实名信息，不需要重复填写；注册主播时不会要求填写银行卡。</view>
   <view wx:if="{{saved}}" class="success-card">
     <text>保存成功</text>
     <text class="helper-text">下一步请完成云账户签约；签约完成后即可回到提现页提交申请。</text>

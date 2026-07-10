@@ -74,9 +74,4 @@
     <text class="meta">{{contact.workTime}}</text>
   </view>
 
-  <view wx:if="{{legacy}}" class="card">
-    <text class="label">旧系统历史摘要</text>
-    <text>旧提现 {{legacy.oldWithdrawCount}} 条 · 旧流水 {{legacy.oldBalanceFlowCount}} 条</text>
-    <text class="meta">只读归档 {{legacy.readonlyArchiveEnforced}}</text>
-  </view>
 </view>
