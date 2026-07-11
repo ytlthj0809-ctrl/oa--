@@ -14,25 +14,28 @@
   <view class="form-card">
     <label class="field">
       <text>主播编号（公司分配）</text>
-      <input value="{{form.anchorId}}" data-field="anchorId" bindinput="updateField" placeholder="例如 A1001" />
+      <input value="{{form.anchorId}}" data-field="anchorId" bindinput="updateField" disabled="{{registrationLocked}}" placeholder="例如 A1001" />
     </label>
     <label class="field">
       <text>主播姓名</text>
-      <input value="{{form.displayName}}" data-field="displayName" bindinput="updateField" placeholder="请输入主播姓名或昵称" />
+      <input value="{{form.displayName}}" data-field="displayName" bindinput="updateField" disabled="{{registrationLocked}}" placeholder="请输入主播姓名或昵称" />
     </label>
     <label class="field">
       <text>手机号</text>
-      <input value="{{form.mobile}}" data-field="mobile" bindinput="updateField" type="number" maxlength="11" placeholder="请输入本人手机号" />
+      <input value="{{form.mobile}}" data-field="mobile" bindinput="updateField" disabled="{{registrationLocked}}" type="number" maxlength="11" placeholder="请输入本人手机号" />
     </label>
     <view class="privacy-note">这里只填写基本身份信息。银行卡和身份证在提现前单独完善。</view>
     <checkbox-group class="field" bindchange="toggleProtocol">
       <text>协议确认</text>
-      <label class="checkbox-line">
-        <checkbox value="agreed" checked="{{form.protocolChecked}}" />
-        <text class="hint" bindtap="openProtocols">已阅读并同意《用户服务协议》和《隐私政策》</text>
-      </label>
+      <view class="checkbox-line">
+        <label class="checkbox-control">
+          <checkbox value="agreed" checked="{{form.protocolChecked}}" disabled="{{registrationLocked}}" />
+          <text>已阅读并同意</text>
+        </label>
+        <text class="hint protocol-link" catchtap="openProtocols">《用户服务协议》和《隐私政策》</text>
+      </view>
     </checkbox-group>
-    <button class="primary submit-button" bindtap="submitRegistration" loading="{{submitting}}" disabled="{{submitting || !canSubmit}}">提交注册申请</button>
+    <button class="primary submit-button" bindtap="submitRegistration" loading="{{submitting}}" disabled="{{submitting || registrationLocked || !canSubmit}}">{{registrationLocked ? '申请已提交' : '提交注册申请'}}</button>
     <view class="form-links">
       <text bindtap="refreshRegistrationStatus">{{loadingStatus ? '正在查询' : '查询申请状态'}}</text>
       <text bindtap="goLogin">返回登录</text>

@@ -1,4 +1,5 @@
-const { request } = require("../../utils/api");
+const { finishPageLoading, handlePageRequestError } = require("../../utils/api");
+const { getContact } = require("../../services/miniapp-api");
 
 Page({
   data: {
@@ -14,12 +15,12 @@ Page({
   async loadContact() {
     this.setData({ loading: true, error: "" });
     try {
-      const contact = await request("/api/miniapp/contact", { auth: false, skipAuthRedirect: true });
+      const contact = await getContact({ auth: false, skipAuthRedirect: true });
       this.setData({ contact });
     } catch (error) {
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      this.setData({ loading: false });
+      finishPageLoading(this);
     }
   },
 

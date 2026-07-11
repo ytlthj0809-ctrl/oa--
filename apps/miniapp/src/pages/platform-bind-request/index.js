@@ -1,5 +1,11 @@
-const { markMiniappDataDirty, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const {
+  finishPageLoading,
+  handlePageRequestError,
+  markMiniappDataDirty,
+  requireAnchorId,
+} = require("../../utils/api");
 const { statusLabel, statusTone } = require("../../utils/formatters");
+const { createPlatformBindRequest } = require("../../services/miniapp-api");
 
 Page({
   data: {
@@ -27,10 +33,7 @@ Page({
       if (!form.platform) throw new Error("请输入平台");
       if (!form.accountNo) throw new Error("请输入平台账号");
       const anchorId = requireAnchorId();
-      const result = await request("/api/miniapp/platform-bind-requests", {
-        method: "POST",
-        data: { anchorId, ...form, operatorId: "MINIAPP" },
-      });
+      const result = await createPlatformBindRequest({ anchorId, ...form });
       markMiniappDataDirty();
       this.setData({
         form,
@@ -41,10 +44,9 @@ Page({
         },
       });
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ submitting: false });
+      finishPageLoading(this, "submitting");
     }
   },
 });

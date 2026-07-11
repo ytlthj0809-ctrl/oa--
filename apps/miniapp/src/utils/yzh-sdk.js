@@ -12,7 +12,8 @@ function getWx() {
 function isYzhAssistantReturn(options = {}) {
   const scene = Number(options.scene || 0);
   const referrerInfo = options.referrerInfo || {};
-  return scene === 1038 && referrerInfo.appId === yzhAssistantAppId;
+  const expectedAppId = yzhCallbackContext?.appId || yzhAssistantAppId;
+  return scene === 1038 && referrerInfo.appId === expectedAppId;
 }
 
 function handleYzhAppShow(options = {}) {
@@ -37,6 +38,10 @@ function initYzhSdk() {
   if (typeof wxApi.onAppShow === "function") {
     wxApi.onAppShow(handleYzhAppShow);
   }
+}
+
+function clearYzhSdkContext() {
+  yzhCallbackContext = null;
 }
 
 function showYzhModal(content) {
@@ -74,7 +79,7 @@ function startYzhSdk(options = {}) {
     return false;
   }
 
-  yzhCallbackContext = { signUrl, verifyDoneCallback };
+  yzhCallbackContext = { appId, signUrl, verifyDoneCallback };
 
   wxApi.navigateToMiniProgram({
     appId,
@@ -96,6 +101,7 @@ function startYzhSdk(options = {}) {
 }
 
 module.exports = {
+  clearYzhSdkContext,
   handleYzhAppShow,
   initYzhSdk,
   isYzhAssistantReturn,

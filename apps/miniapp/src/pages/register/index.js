@@ -1,4 +1,5 @@
-const { appendQuery, clearWechatBindToken, getWechatBindToken, openPage, request } = require("../../utils/api");
+const { clearWechatBindToken, getWechatBindToken, openPage } = require("../../utils/api");
+const { createAnchorRegistrationRequest, listAnchorRegistrationRequests } = require("../../services/miniapp-api");
 const { statusLabel, statusTone } = require("../../utils/formatters");
 
 function buildDefaultForm() {
@@ -45,6 +46,11 @@ function decorateRegistrationRequest(requestRecord) {
   };
 }
 
+function isRegistrationLocked(requestRecord) {
+  const reviewStatus = requestRecord && (requestRecord.reviewStatus || requestRecord.status);
+  return reviewStatus === "PENDING_REVIEW" || reviewStatus === "APPROVED";
+}
+
 Page({
   data: {
     form: buildDefaultForm(),
@@ -52,6 +58,7 @@ Page({
     loadingStatus: false,
     error: "",
     latestRequest: null,
+    registrationLocked: false,
     canSubmit: false,
     sourceText: "注册后由后台审核，打款信息在提现前单独填写。",
   },
@@ -63,6 +70,7 @@ Page({
   },
 
   updateField(event) {
+    if (this.data.registrationLocked) return;
     const field = event.currentTarget.dataset.field;
     const form = {
       ...this.data.form,
@@ -75,6 +83,7 @@ Page({
   },
 
   toggleProtocol(event) {
+    if (this.data.registrationLocked) return;
     const values = event.detail && event.detail.value ? event.detail.value : [];
     const form = {
       ...this.data.form,
@@ -84,6 +93,7 @@ Page({
   },
 
   async submitRegistration() {
+    if (this.data.submitting || this.data.registrationLocked) return;
     this.setData({ submitting: true, error: "" });
     try {
       const form = this.data.form;
@@ -95,18 +105,20 @@ Page({
         throw new Error("请先同意协议和隐私政策");
       }
       const wechatBindToken = getWechatBindToken();
-      const result = await request("/api/miniapp/anchor-registration-requests", {
-        method: "POST",
-        data: {
-          ...normalizedForm,
-          ...(wechatBindToken ? { wechatBindToken } : {}),
-          operatorId: "MINIAPP",
-        },
+      const result = await createAnchorRegistrationRequest({
+        ...normalizedForm,
+        ...(wechatBindToken ? { wechatBindToken } : {}),
       });
       if (wechatBindToken) {
         clearWechatBindToken();
       }
-      this.setData({ latestRequest: decorateRegistrationRequest(result) });
+      const latestRequest = decorateRegistrationRequest(result);
+      const registrationLocked = isRegistrationLocked(latestRequest);
+      this.setData({
+        latestRequest,
+        registrationLocked,
+        canSubmit: !registrationLocked && canSubmitRegistration(this.data.form),
+      });
     } catch (error) {
       this.setData({ error: error.message });
     } finally {
@@ -120,11 +132,18 @@ Page({
     try {
       const form = normalizeRegistrationForm(this.data.form);
       if (!form.anchorId && !form.mobile) throw new Error("请先输入主播ID或手机号");
-      const records = await request(appendQuery("/api/miniapp/anchor-registration-requests", {
+      const records = await listAnchorRegistrationRequests({
         anchorId: form.anchorId,
         mobile: form.mobile,
-      }));
-      this.setData({ latestRequest: decorateRegistrationRequest(records[0] || null) });
+      });
+      const latestRequest = Array.isArray(records) ? records[records.length - 1] : null;
+      const decoratedRequest = decorateRegistrationRequest(latestRequest);
+      const registrationLocked = isRegistrationLocked(decoratedRequest);
+      this.setData({
+        latestRequest: decoratedRequest,
+        registrationLocked,
+        canSubmit: !registrationLocked && canSubmitRegistration(this.data.form),
+      });
     } catch (error) {
       this.setData({ error: error.message });
     } finally {

@@ -1,6 +1,6 @@
-const { appendQuery, openPage, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const { finishPageLoading, handlePageRequestError, markMiniappDataDirty, openPage, requireAnchorId } = require("../../utils/api");
 const { statusLabel, statusTone, typeLabel } = require("../../utils/formatters");
-const { markNotificationRead } = require("../../services/miniapp-api");
+const { getNotificationDetail, markNotificationRead } = require("../../services/miniapp-api");
 
 Page({
   data: {
@@ -19,7 +19,10 @@ Page({
     this.setData({ loading: true, error: "" });
     try {
       const anchorId = requireAnchorId();
-      const notification = await request(appendQuery(`/api/miniapp/notifications/${this.data.notificationId}`, { anchorId }));
+      const notification = await getNotificationDetail({
+        anchorId,
+        notificationId: this.data.notificationId,
+      });
       this.setData({
         notification: notification ? {
           ...notification,
@@ -32,16 +35,16 @@ Page({
         this.autoMarkRead(anchorId);
       }
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ loading: false });
+      finishPageLoading(this);
     }
   },
 
   async autoMarkRead(anchorId) {
     try {
       await markNotificationRead({ anchorId, notificationId: this.data.notificationId });
+      markMiniappDataDirty();
       if (this.data.notification) {
         this.setData({
           notification: {

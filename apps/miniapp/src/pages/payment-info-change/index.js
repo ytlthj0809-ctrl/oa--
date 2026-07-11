@@ -1,52 +1,39 @@
-const { appendQuery, markMiniappDataDirty, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const {
+  finishPageLoading,
+  handlePageRequestError,
+  isAuthRequiredError,
+  markMiniappDataDirty,
+  requireAnchorId,
+} = require("../../utils/api");
+const { createPaymentInfoChangeRequest, getPaymentInfo } = require("../../services/miniapp-api");
 const { statusLabel, statusTone } = require("../../utils/formatters");
-const { isValidBankCard, isValidMainlandIdCard, isValidMobile, normalizePaymentInfoForm, validatePaymentInfoForm } = require("../../utils/validators");
+const {
+  normalizePaymentInfoPatch,
+  paymentInfoFieldValidators,
+  validatePaymentInfoPatch,
+} = require("../../utils/validators");
 
-const fieldValidators = {
-  realName: (v) => {
-    const text = String(v || "").trim();
-    if (!text) return "请输入真实姓名";
-    if (text.length < 2) return "姓名至少 2 个字";
-    return "";
-  },
-  idCardNo: (v) => {
-    if (!v) return "请输入身份证号";
-    if (!isValidMainlandIdCard(v)) return "请输入有效的 18 位身份证号";
-    return "";
-  },
-  paymentMobile: (v) => {
-    if (!v) return "请输入手机号";
-    if (!isValidMobile(v)) return "请输入有效的 11 位手机号";
-    return "";
-  },
-  bankCardNo: (v) => {
-    if (!v) return "请输入银行卡号";
-    if (!isValidBankCard(v)) return "请输入有效的银行卡号";
-    return "";
-  },
-};
+function emptyPaymentInfoChangeForm() {
+  return { realName: "", idCardNo: "", paymentMobile: "", bankCardNo: "", modifyReason: "" };
+}
 
 function normalizePaymentInfoChangeForm(form) {
   return {
-    ...normalizePaymentInfoForm(form),
+    patch: normalizePaymentInfoPatch(form),
     modifyReason: String(form.modifyReason || "").trim(),
   };
 }
 
 function validatePaymentInfoChangeForm(form) {
-  validatePaymentInfoForm(form);
+  validatePaymentInfoPatch(form.patch);
   if (!form.modifyReason) throw new Error("请输入变更原因");
 }
 
 Page({
   data: {
-    form: {
-      realName: "",
-      idCardNo: "",
-      paymentMobile: "",
-      bankCardNo: "",
-      modifyReason: "",
-    },
+    form: emptyPaymentInfoChangeForm(),
+    currentInfo: null,
+    currentInfoLoadError: "",
     fieldErrors: {},
     fieldTones: {},
     submitting: false,
@@ -59,22 +46,26 @@ Page({
   },
 
   async loadExistingPaymentInfo() {
+    this.setData({ currentInfoLoadError: "" });
     try {
       const anchorId = requireAnchorId();
-      const info = await request(appendQuery("/api/miniapp/payment-info", { anchorId }));
+      const info = await getPaymentInfo(anchorId);
       if (info) {
         this.setData({
-          form: {
-            ...this.data.form,
-            realName: info.realName || "",
-            idCardNo: info.idCardNo || "",
-            paymentMobile: info.paymentMobile || "",
-            bankCardNo: info.bankCardNo || "",
+          currentInfo: {
+            realNameMasked: info.realNameMasked || "",
+            idCardNoMasked: info.idCardNoMasked || "",
+            paymentMobileMasked: info.paymentMobileMasked || "",
+            bankCardNoMasked: info.bankCardNoMasked || "",
           },
         });
       }
-    } catch (_) {
-      // silently ignore; user can fill manually
+    } catch (error) {
+      if (isAuthRequiredError(error)) {
+        this.__authRedirecting = true;
+        return;
+      }
+      this.setData({ currentInfoLoadError: "当前打款信息加载失败，您仍可填写新信息后提交" });
     }
   },
 
@@ -85,48 +76,41 @@ Page({
 
   validateField(event) {
     const field = event.currentTarget.dataset.field;
-    if (!field || !fieldValidators[field]) return;
+    if (!field || !paymentInfoFieldValidators[field]) return;
     const value = this.data.form[field];
-    const errorMsg = fieldValidators[field](value);
+    const errorMsg = value ? paymentInfoFieldValidators[field](value) : "";
     const fieldErrors = { ...this.data.fieldErrors, [field]: errorMsg };
     const fieldTones = { ...this.data.fieldTones, [field]: errorMsg ? "field-error" : (value ? "field-success" : "") };
     this.setData({ fieldErrors, fieldTones });
   },
 
   async submitChange() {
+    if (this.data.submitting) return;
     this.setData({ submitting: true, error: "", result: null });
     try {
       const anchorId = requireAnchorId();
       const form = normalizePaymentInfoChangeForm(this.data.form);
       validatePaymentInfoChangeForm(form);
-      const result = await request("/api/miniapp/payment-info/change-requests", {
-        method: "POST",
-        data: {
-          anchorId,
-          patch: {
-            realName: form.realName,
-            idCardNo: form.idCardNo,
-            paymentMobile: form.paymentMobile,
-            bankCardNo: form.bankCardNo,
-          },
-          modifyReason: form.modifyReason,
-          operatorId: "MINIAPP",
-        },
+      const result = await createPaymentInfoChangeRequest({
+        anchorId,
+        patch: form.patch,
+        modifyReason: form.modifyReason,
       });
       markMiniappDataDirty();
       this.setData({
-        form,
+        form: emptyPaymentInfoChangeForm(),
+        fieldErrors: {},
+        fieldTones: {},
         result: {
-          ...result,
+          changeRequestId: result.changeRequestId || result.requestId || "",
           reviewStatusText: statusLabel(result.reviewStatus || result.status),
           reviewStatusTone: statusTone(result.reviewStatus || result.status),
         },
       });
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ submitting: false });
+      finishPageLoading(this, "submitting");
     }
   },
 });

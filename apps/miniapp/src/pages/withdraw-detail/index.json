@@ -1,3 +1,4 @@
 {
-  "navigationBarTitleText": "提现详情"
+  "navigationBarTitleText": "提现详情",
+  "enablePullDownRefresh": true
 }

@@ -1,3 +1,5 @@
+const { CHINA_TIME_OFFSET_MS } = require("./constants");
+
 const statusLabels = {
   ACTIVE: "正常",
   AGREED: "已同意",
@@ -128,7 +130,7 @@ function formatChinaDateTime(value) {
   if (!value) return "-";
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return String(value);
-  const chinaDate = new Date(parsed.getTime() + 8 * 60 * 60 * 1000);
+  const chinaDate = new Date(parsed.getTime() + CHINA_TIME_OFFSET_MS);
   const iso = chinaDate.toISOString();
   return `${iso.slice(0, 10)} ${iso.slice(11, 16)}`;
 }
@@ -151,15 +153,22 @@ function formatDateShort(value) {
   if (!value) return "";
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return "";
-  const chinaDate = new Date(parsed.getTime() + 8 * 60 * 60 * 1000);
+  const chinaDate = new Date(parsed.getTime() + CHINA_TIME_OFFSET_MS);
   const iso = chinaDate.toISOString();
   return `${iso.slice(5, 10)} ${iso.slice(11, 16)}`;
+}
+
+function getCurrentChinaMonth(now = Date.now()) {
+  const timestamp = now instanceof Date ? now.getTime() : Number(now);
+  const safeTimestamp = Number.isFinite(timestamp) ? timestamp : Date.now();
+  return new Date(safeTimestamp + CHINA_TIME_OFFSET_MS).toISOString().slice(0, 7);
 }
 
 module.exports = {
   directionLabel,
   formatDateShort,
   formatChinaDateTime,
+  getCurrentChinaMonth,
   isPaymentInfoReady,
   isSigned,
   normalizeStatus,

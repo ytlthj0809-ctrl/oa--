@@ -1,28 +1,16 @@
-const { appendQuery, openPage, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
-const { isPaymentInfoReady, isSigned, statusLabel, statusTone } = require("../../utils/formatters");
+const { finishPageLoading, handlePageRequestError, openPage, requireAnchorId } = require("../../utils/api");
+const { createYzhPresign, getPaymentInfo, getYzhSignStatus } = require("../../services/miniapp-api");
+const { decorateSignStatus } = require("../../utils/decorators");
+const { isPaymentInfoReady, statusLabel, statusTone } = require("../../utils/formatters");
 const { normalizeSignIdentityForm, validateSignIdentityForm } = require("../../utils/validators");
-const { startYzhSdk } = require("../../utils/yzh-sdk");
-
-function decorateSignStatus(signStatus) {
-  const normalized = signStatus || { signStatus: "UNSIGNED" };
-  const status = normalized.signStatus || "UNSIGNED";
-  return {
-    ...normalized,
-    signStatusText: statusLabel(status),
-    signStatusTone: statusTone(status),
-    isSigned: isSigned(status),
-    actionHint: isSigned(status)
-      ? "已完成签约，可以返回提现继续提交申请。"
-      : "请使用本人实名信息生成云账户签约入口，并在云账户助手中完成签约。",
-  };
-}
+const { clearYzhSdkContext, startYzhSdk, yzhAssistantAppId } = require("../../utils/yzh-sdk");
 
 function decoratePaymentInfoForSign(paymentInfo) {
-  const paymentInfoStatus = paymentInfo?.paymentInfoStatus || "MISSING";
+  const paymentInfoStatus = paymentInfo && paymentInfo.paymentInfoStatus ? paymentInfo.paymentInfoStatus : "MISSING";
   if (!isPaymentInfoReady(paymentInfoStatus)) {
     return {
-      ...paymentInfo,
       ready: false,
+      hasPlainIdentity: false,
       statusText: statusLabel(paymentInfoStatus),
       statusTone: statusTone(paymentInfoStatus),
       helperText: paymentInfoStatus === "MISSING"
@@ -30,25 +18,17 @@ function decoratePaymentInfoForSign(paymentInfo) {
         : "打款信息尚未生效，审核通过后才能生成云账户签约入口。",
     };
   }
-  const hasPlainIdentity = Boolean(paymentInfo.realName && paymentInfo.idCardNo);
   return {
-    ...paymentInfo,
     ready: true,
-    hasPlainIdentity,
+    hasPlainIdentity: false,
     statusText: statusLabel(paymentInfoStatus),
     statusTone: statusTone(paymentInfoStatus),
-    helperText: hasPlainIdentity
-      ? "将使用已保存实名信息生成签约入口。"
-      : "已保存实名信息；为保护隐私，系统只保留脱敏摘要。本次签约需本人再确认姓名和身份证号。",
+    helperText: "已保存实名信息；为保护隐私，系统只返回脱敏摘要。本次签约需本人再确认姓名和身份证号。",
   };
 }
 
-function buildIdentityFormFromPaymentInfo(paymentInfo) {
-  if (!paymentInfo) return { realName: "", idCardNo: "" };
-  return {
-    realName: paymentInfo.realName || "",
-    idCardNo: paymentInfo.idCardNo || "",
-  };
+function emptySignIdentityForm() {
+  return { realName: "", idCardNo: "" };
 }
 
 Page({
@@ -60,38 +40,47 @@ Page({
     signStatus: null,
     paymentInfo: null,
     identityFormExpanded: true,
-    presign: null,
-    form: {
-      realName: "",
-      idCardNo: "",
-    },
+    presignReady: false,
+    form: emptySignIdentityForm(),
   },
 
   onLoad() {
+    this.__yzhPresign = null;
     this.loadSignStatus();
   },
 
+  onUnload() {
+    this.__signRequestGeneration = Number(this.__signRequestGeneration || 0) + 1;
+    this.clearPresignContext();
+  },
+
+  clearPresignContext() {
+    this.__yzhPresign = null;
+    clearYzhSdkContext();
+  },
+
   async loadSignStatus() {
+    const generation = Number(this.__signRequestGeneration || 0) + 1;
+    this.__signRequestGeneration = generation;
     this.setData({ loading: true, error: "" });
     try {
       const anchorId = requireAnchorId();
       const [signStatus, paymentInfo] = await Promise.all([
-        request(appendQuery("/api/miniapp/yzh/sign-status", { anchorId })),
-        request(appendQuery("/api/miniapp/payment-info", { anchorId })),
+        getYzhSignStatus(anchorId),
+        getPaymentInfo(anchorId),
       ]);
+      if (generation !== this.__signRequestGeneration) return;
       const decoratedPaymentInfo = decoratePaymentInfoForSign(paymentInfo);
-      const nextForm = buildIdentityFormFromPaymentInfo(paymentInfo);
       this.setData({
         signStatus: decorateSignStatus(signStatus),
         paymentInfo: decoratedPaymentInfo,
-        form: nextForm,
+        form: emptySignIdentityForm(),
         identityFormExpanded: !decoratedPaymentInfo.ready || !decoratedPaymentInfo.hasPlainIdentity,
       });
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      if (generation === this.__signRequestGeneration) handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ loading: false });
+      if (generation === this.__signRequestGeneration) finishPageLoading(this);
     }
   },
 
@@ -105,8 +94,11 @@ Page({
   },
 
   async createPresign() {
-    if (this.data.presigning) return;
-    this.setData({ presigning: true, error: "" });
+    if (this.data.presigning || this.data.refreshing) return;
+    const generation = Number(this.__signRequestGeneration || 0) + 1;
+    this.__signRequestGeneration = generation;
+    this.clearPresignContext();
+    this.setData({ loading: false, presigning: true, presignReady: false, error: "" });
     try {
       const anchorId = requireAnchorId();
       if (!this.data.paymentInfo || !this.data.paymentInfo.ready) {
@@ -121,17 +113,14 @@ Page({
         this.setData({ identityFormExpanded: true });
         throw validationError;
       }
-      const presign = await request("/api/miniapp/yzh/presign", {
-        method: "POST",
-        data: {
-          anchorId,
-          realName: form.realName,
-          idCardNo: form.idCardNo,
-          certificateType: 0,
-          collectPhoneNo: 0,
-          operatorId: "MINIAPP",
-        },
+      const presign = await createYzhPresign({
+        anchorId,
+        realName: form.realName,
+        idCardNo: form.idCardNo,
+        certificateType: 0,
+        collectPhoneNo: 0,
       });
+      if (generation !== this.__signRequestGeneration) return;
       const signStatus = presign && typeof presign.signStatus === "object" && presign.signStatus
         ? presign.signStatus
         : {
@@ -139,46 +128,65 @@ Page({
             signStatus: "SIGNING",
             eventStatusDetail: "签约入口已生成，请前往云账户完成签约",
           };
-      this.setData({ form, presign, signStatus: decorateSignStatus(signStatus) }, () => {
+      this.__yzhPresign = {
+        signUrl: presign.signUrl || "",
+        assistantAppId: presign.assistantAppId || yzhAssistantAppId,
+        miniProgramPath: presign.miniProgramPath || "pages/api-sign/index",
+      };
+      this.setData({
+        form: emptySignIdentityForm(),
+        presignReady: Boolean(this.__yzhPresign.signUrl),
+        signStatus: decorateSignStatus(signStatus),
+      }, () => {
         this.openYzhSignMiniProgram();
       });
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      if (generation === this.__signRequestGeneration) handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ presigning: false });
+      if (generation === this.__signRequestGeneration) finishPageLoading(this, "presigning");
     }
   },
 
   async refreshSigned() {
-    if (this.data.refreshing) return;
-    this.setData({ refreshing: true, error: "" });
+    if (this.data.refreshing || this.data.presigning) return;
+    const generation = Number(this.__signRequestGeneration || 0) + 1;
+    this.__signRequestGeneration = generation;
+    this.setData({ loading: false, refreshing: true, error: "" });
     try {
       const anchorId = requireAnchorId();
-      const signStatus = await request(appendQuery("/api/miniapp/yzh/sign-status", { anchorId }));
-      this.setData({ signStatus: decorateSignStatus(signStatus) });
+      const signStatus = await getYzhSignStatus(anchorId);
+      if (generation !== this.__signRequestGeneration) return;
+      const decoratedSignStatus = decorateSignStatus(signStatus);
+      if (decoratedSignStatus.isSigned) this.clearPresignContext();
+      this.setData({
+        signStatus: decoratedSignStatus,
+        ...(decoratedSignStatus.isSigned ? { presignReady: false } : {}),
+      });
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      if (generation === this.__signRequestGeneration) handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ refreshing: false });
+      if (generation === this.__signRequestGeneration) finishPageLoading(this, "refreshing");
     }
   },
 
   openYzhSignMiniProgram() {
-    const presign = this.data.presign || {};
+    const presign = this.__yzhPresign || {};
     const signUrl = presign.signUrl;
     if (!signUrl) return;
     startYzhSdk({
       data: { url: signUrl },
-      appId: presign.assistantAppId || "wx9518fe08d36ee44e",
+      appId: presign.assistantAppId || yzhAssistantAppId,
       path: presign.miniProgramPath || "pages/api-sign/index",
       envVersion: "release",
       onNavigateSuccess() {
         wx.showToast({ title: "已打开签约", icon: "success" });
       },
       onNavigateFail: () => {
-        this.copyPresignUrl();
+        wx.showModal({
+          title: "未能打开云账户",
+          content: "请稍后重试；如需手动处理，请点击“复制签约链接”。",
+          showCancel: false,
+        });
       },
       verifyDoneCallback: ({ verifyDone }) => {
         wx.showToast({
@@ -191,7 +199,7 @@ Page({
   },
 
   copyPresignUrl() {
-    const signUrl = this.data.presign && this.data.presign.signUrl;
+    const signUrl = this.__yzhPresign && this.__yzhPresign.signUrl;
     if (!signUrl) return;
     wx.setClipboardData({
       data: signUrl,

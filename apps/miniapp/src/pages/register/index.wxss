@@ -1,12 +1,5 @@
 @import "../../styles/common.wxss";
 
-.page {
-  background: linear-gradient(180deg, #231815 0rpx, #231815 248rpx, #f4f6f8 248rpx, #f4f6f8 100%);
-  color: #231815;
-  min-height: 100vh;
-  padding: 28rpx 28rpx calc(36rpx + env(safe-area-inset-bottom));
-}
-
 .summary,
 .form-card,
 .result-card {
@@ -76,6 +69,27 @@
   border-radius: 14rpx;
   min-height: 72rpx;
   padding: 0 18rpx;
+}
+
+.checkbox-line,
+.checkbox-control {
+  align-items: center;
+  display: flex;
+}
+
+.checkbox-line {
+  flex-wrap: wrap;
+  gap: 8rpx 12rpx;
+}
+
+.checkbox-control {
+  gap: 8rpx;
+}
+
+.field .protocol-link {
+  color: #675f53;
+  line-height: 1.5;
+  text-decoration: underline;
 }
 
 .privacy-note {

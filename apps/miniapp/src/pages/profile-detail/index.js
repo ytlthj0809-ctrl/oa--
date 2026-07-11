@@ -1,5 +1,6 @@
-const { appendQuery, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const { finishPageLoading, handlePageRequestError, requireAnchorId } = require("../../utils/api");
 const { statusLabel, statusTone } = require("../../utils/formatters");
+const { getLegacyHistory, getProfile } = require("../../services/miniapp-api");
 
 Page({
   data: {
@@ -18,8 +19,8 @@ Page({
     try {
       const anchorId = requireAnchorId();
       const [profile, legacy] = await Promise.all([
-        request(appendQuery("/api/miniapp/profile", { anchorId })),
-        request(appendQuery("/api/miniapp/legacy-history", { anchorId })),
+        getProfile(anchorId),
+        getLegacyHistory(anchorId),
       ]);
       this.setData({
         profile: profile ? {
@@ -30,10 +31,9 @@ Page({
         legacy,
       });
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ loading: false });
+      finishPageLoading(this);
     }
   },
 });

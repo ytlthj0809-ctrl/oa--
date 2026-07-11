@@ -1,9 +1,7 @@
-const { appendQuery, formatMoney, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
-const { statusLabel, statusTone } = require("../../utils/formatters");
-
-function getCurrentChinaMonth() {
-  return new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 7);
-}
+const { finishPageLoading, handlePageRequestError, requireAnchorId } = require("../../utils/api");
+const { decorateDataSnapshot } = require("../../utils/decorators");
+const { getCurrentChinaMonth } = require("../../utils/formatters");
+const { getDataSnapshots } = require("../../services/miniapp-api");
 
 Page({
   data: {
@@ -23,25 +21,19 @@ Page({
     this.setData({ loading: true, error: "" });
     try {
       const anchorId = requireAnchorId();
-      const list = await request(appendQuery("/api/miniapp/data", {
+      const list = await getDataSnapshots({
         anchorId,
         month: this.data.month,
         platform: this.data.platform,
-      }));
-      const detail = (list || [])[0] || null;
-      this.setData({
-        detail: detail ? {
-          ...detail,
-          incomeText: formatMoney(detail.incomeCents),
-          taskStatusText: statusLabel(detail.taskStatus),
-          taskStatusTone: statusTone(detail.taskStatus),
-        } : null,
       });
+      const detail = (Array.isArray(list) ? list : []).find((item) => (
+        item.month === this.data.month && item.platform === this.data.platform
+      )) || (Array.isArray(list) ? list[0] : null) || null;
+      this.setData({ detail: detail ? decorateDataSnapshot(detail) : null });
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ loading: false });
+      finishPageLoading(this);
     }
   },
 });

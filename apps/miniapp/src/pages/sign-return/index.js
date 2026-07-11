@@ -1,5 +1,6 @@
-const { appendQuery, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
-const { statusLabel, statusTone } = require("../../utils/formatters");
+const { finishPageLoading, handlePageRequestError, requireAnchorId } = require("../../utils/api");
+const { getYzhSignStatus } = require("../../services/miniapp-api");
+const { decorateSignStatus } = require("../../utils/decorators");
 
 function hasSignedReturn(options = {}) {
   const status = String(options.signStatus || options.status || options.result || "").toUpperCase();
@@ -15,15 +16,6 @@ Page({
     returnHint: "",
   },
 
-  decorateSignStatus(signStatus) {
-    const status = signStatus && signStatus.signStatus ? signStatus.signStatus : "UNSIGNED";
-    return {
-      ...(signStatus || {}),
-      signStatusText: statusLabel(status),
-      signStatusTone: statusTone(status),
-    };
-  },
-
   onLoad(options = {}) {
     this.refreshReturnStatus(options);
   },
@@ -32,21 +24,22 @@ Page({
     this.setData({ loading: true, error: "" });
     try {
       const anchorId = requireAnchorId();
-      const signStatus = hasSignedReturn(options)
-        ? await request("/api/miniapp/yzh/refresh", {
-            method: "POST",
-            data: { anchorId, signStatus: "SIGNED", operatorId: "MINIAPP" },
-          })
-        : await request(appendQuery("/api/miniapp/yzh/sign-status", { anchorId }));
-      this.setData({ signStatus: this.decorateSignStatus(signStatus) });
-      if (!hasSignedReturn(options)) {
-        this.setData({ returnHint: "未收到签约成功参数，已仅查询当前签约状态。" });
-      }
+      const returnedAsSigned = hasSignedReturn(options);
+      const signStatus = await getYzhSignStatus(anchorId);
+      const decoratedSignStatus = decorateSignStatus(signStatus);
+      const serverSigned = decoratedSignStatus.signStatus === "SIGNED";
+      this.setData({
+        signStatus: decoratedSignStatus,
+        returnHint: returnedAsSigned
+          ? serverSigned
+            ? "已收到签约完成提示，服务端状态已同步。"
+            : "已收到签约完成提示，服务端状态正在同步，请稍后刷新。"
+          : "未收到签约完成参数，已查询服务端当前状态。",
+      });
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ loading: false });
+      finishPageLoading(this);
     }
   },
 

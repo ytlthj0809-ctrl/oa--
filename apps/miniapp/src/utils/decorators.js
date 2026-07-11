@@ -1,8 +1,8 @@
 const { formatMoney } = require("./api");
 const { directionLabel, formatDateShort, isPaymentInfoReady, isSigned, ruleCodeLabel, statusLabel, statusTone, typeLabel } = require("./formatters");
 
-function buildGreeting() {
-  const hour = new Date().getHours();
+function buildGreeting(now = new Date()) {
+  const hour = now.getHours();
   if (hour < 6) return "夜深了";
   if (hour < 9) return "早上好";
   if (hour < 12) return "上午好";
@@ -69,11 +69,26 @@ function buildWithdrawGuideSteps(paymentInfoStatus, signStatus) {
   ];
 }
 
+function decorateSignStatus(signStatus) {
+  const normalized = signStatus || { signStatus: "UNSIGNED" };
+  const status = normalized.signStatus || "UNSIGNED";
+  return {
+    ...normalized,
+    signStatusText: statusLabel(status),
+    signStatusTone: statusTone(status),
+    isSigned: isSigned(status),
+    actionHint: isSigned(status)
+      ? "已完成签约，可以返回提现继续提交申请。"
+      : "请使用本人实名信息生成云账户签约入口，并在云账户助手中完成签约。",
+  };
+}
+
 function buildWithdrawRecordSteps(statusValue) {
   const status = String(statusValue || "").trim().toUpperCase();
   const steps = [
     { key: "submitted", label: "已提交" },
-    { key: "review", label: "审核中" },
+    { key: "first-review", label: "初审" },
+    { key: "finance-review", label: "财审" },
     { key: "super-review", label: "终审" },
     { key: "batch", label: "成批" },
     { key: "pay", label: "付款" },
@@ -81,34 +96,34 @@ function buildWithdrawRecordSteps(statusValue) {
   const failedStepByStatus = {
     CANCELLED: 1,
     FAILED: 1,
-    FINANCE_REJECTED: 1,
+    FINANCE_REJECTED: 2,
     FIRST_REJECTED: 1,
-    PAY_FAILED: 4,
+    PAY_FAILED: 5,
     REJECTED: 1,
-    RETURNED: 4,
-    SUPER_REJECTED: 2,
+    RETURNED: 5,
+    SUPER_REJECTED: 3,
   };
   const currentStepByStatus = {
     PENDING_FIRST_REVIEW: 1,
     PENDING_REVIEW: 1,
     SUBMITTED: 1,
-    PENDING_FINANCE_REVIEW: 1,
-    PENDING_SUPER_REVIEW: 2,
-    WAIT_BATCH: 3,
-    BATCH_CREATED: 3,
-    WAIT_PAY: 4,
-    PAYING: 4,
+    PENDING_FINANCE_REVIEW: 2,
+    PENDING_SUPER_REVIEW: 3,
+    WAIT_BATCH: 4,
+    BATCH_CREATED: 4,
+    WAIT_PAY: 5,
+    PAYING: 5,
   };
   const doneUntilByStatus = {
-    PAID: 4,
-    COMPLETED: 4,
-    SUCCESS: 4,
-    WAIT_PAY: 3,
-    PAYING: 3,
-    WAIT_BATCH: 2,
-    BATCH_CREATED: 2,
-    PENDING_SUPER_REVIEW: 1,
-    PENDING_FINANCE_REVIEW: 0,
+    PAID: 5,
+    COMPLETED: 5,
+    SUCCESS: 5,
+    WAIT_PAY: 4,
+    PAYING: 4,
+    WAIT_BATCH: 3,
+    BATCH_CREATED: 3,
+    PENDING_SUPER_REVIEW: 2,
+    PENDING_FINANCE_REVIEW: 1,
     PENDING_FIRST_REVIEW: 0,
     PENDING_REVIEW: 0,
     SUBMITTED: 0,
@@ -222,9 +237,11 @@ function decorateDataSnapshot(snapshot = {}) {
 }
 
 module.exports = {
+  buildGreeting,
   decorateBalanceFlow,
   decorateDataSnapshot,
   decorateHome,
   decorateReward,
+  decorateSignStatus,
   decorateWithdrawRecord,
 };

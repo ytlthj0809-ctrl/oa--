@@ -1,4 +1,12 @@
-const { appendQuery, getAnchorId, markMiniappDataDirty, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const {
+  finishPageLoading,
+  getAnchorId,
+  handlePageRequestError,
+  isAuthRequiredError,
+  markMiniappDataDirty,
+  requireAnchorId,
+} = require("../../utils/api");
+const { agreeProtocol, getProtocols } = require("../../services/miniapp-api");
 
 Page({
   data: {
@@ -14,20 +22,25 @@ Page({
     this.loadProtocols();
   },
 
-  async loadProtocols() {
-    this.setData({ loading: true, error: "" });
+  async loadProtocols(options = {}) {
+    this.setData(options.preserveError ? { loading: true } : { loading: true, error: "" });
     try {
       const anchorId = getAnchorId();
-      const protocols = await request(appendQuery("/api/miniapp/protocols", { anchorId }), {
+      const protocols = await getProtocols(anchorId, {
         auth: Boolean(anchorId),
         skipAuthRedirect: !anchorId,
       });
       this.setData({ protocols });
+      return { ok: true };
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      if (isAuthRequiredError(error)) {
+        this.__authRedirecting = true;
+        return { ok: false, authRequired: true, error };
+      }
+      if (!options.preserveError) this.setData({ error: error.message });
+      return { ok: false, error };
     } finally {
-      if (!this.__authRedirecting) this.setData({ loading: false });
+      finishPageLoading(this);
     }
   },
 
@@ -38,30 +51,27 @@ Page({
       const protocols = this.data.protocols || {};
       const items = [protocols.userAgreement, protocols.privacyPolicy].filter(Boolean);
       if (items.length === 0) throw new Error("暂无需要确认的协议");
-      if (!getAnchorId()) {
-        wx.showToast({ title: "请先登录后再确认协议", icon: "none" });
-        wx.redirectTo({ url: "/src/pages/login/index" });
-        return;
-      }
-      const results = await Promise.allSettled(items.map((item) => request("/api/miniapp/protocols/agree", {
-        method: "POST",
-        data: { anchorId, protocolType: item.protocolType, versionNo: item.versionNo },
+      const results = await Promise.allSettled(items.map((item) => agreeProtocol({
+        anchorId,
+        protocolType: item.protocolType,
+        versionNo: item.versionNo,
       })));
       const failedCount = results.filter((result) => result.status === "rejected").length;
       if (failedCount > 0) {
         const successCount = results.length - failedCount;
-        await this.loadProtocols();
-        throw new Error(successCount > 0
+        const agreementError = new Error(successCount > 0
           ? `已同意 ${successCount} 项，${failedCount} 项失败，请重试。`
           : "协议确认失败，请稍后重试。");
+        const refreshResult = await this.loadProtocols({ preserveError: true });
+        if (refreshResult && refreshResult.authRequired) return;
+        throw agreementError;
       }
       markMiniappDataDirty();
       wx.switchTab({ url: "/src/pages/home/index" });
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ submitting: false });
+      finishPageLoading(this, "submitting");
     }
   },
 });

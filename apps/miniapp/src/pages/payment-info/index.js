@@ -1,22 +1,31 @@
-const { appendQuery, openPage, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const { finishPageLoading, handlePageRequestError, openPage, requireAnchorId } = require("../../utils/api");
 const { statusLabel, statusTone, yesNo } = require("../../utils/formatters");
+const { getPaymentInfo, listPaymentInfoChangeRequests } = require("../../services/miniapp-api");
 
 function decoratePaymentInfo(paymentInfo) {
   if (!paymentInfo) return null;
+  const paymentInfoStatus = paymentInfo.paymentInfoStatus || "MISSING";
+  const signStatus = paymentInfo.signStatus || "UNSIGNED";
   return {
-    ...paymentInfo,
-    paymentInfoStatusText: statusLabel(paymentInfo.paymentInfoStatus || "MISSING"),
-    paymentInfoStatusTone: statusTone(paymentInfo.paymentInfoStatus || "MISSING"),
-    signStatusText: statusLabel(paymentInfo.signStatus || "UNSIGNED"),
-    signStatusTone: statusTone(paymentInfo.signStatus || "UNSIGNED"),
+    bankCardNoMasked: paymentInfo.bankCardNoMasked || "",
+    paymentInfoStatus,
+    paymentInfoStatusText: statusLabel(paymentInfoStatus),
+    paymentInfoStatusTone: statusTone(paymentInfoStatus),
+    realNameMasked: paymentInfo.realNameMasked || "",
+    signStatus,
+    signStatusText: statusLabel(signStatus),
+    signStatusTone: statusTone(signStatus),
   };
 }
 
 function decorateChangeRequest(item) {
+  const reviewStatus = item.reviewStatus || item.status;
   return {
-    ...item,
-    reviewStatusText: statusLabel(item.reviewStatus || item.status),
-    reviewStatusTone: statusTone(item.reviewStatus || item.status),
+    changeRequestId: item.changeRequestId || "",
+    reviewStatus,
+    reviewStatusText: statusLabel(reviewStatus),
+    reviewStatusTone: statusTone(reviewStatus),
+    requireResign: Boolean(item.requireResign),
     requireResignText: yesNo(item.requireResign),
   };
 }
@@ -39,8 +48,8 @@ Page({
     try {
       const anchorId = requireAnchorId();
       const [paymentInfo, changeRequests] = await Promise.all([
-        request(appendQuery("/api/miniapp/payment-info", { anchorId })),
-        request(appendQuery("/api/miniapp/payment-info/change-requests", { anchorId })),
+        getPaymentInfo(anchorId),
+        listPaymentInfoChangeRequests({ anchorId }),
       ]);
       const paymentInfoStatus = paymentInfo && paymentInfo.paymentInfoStatus;
       const canCreatePaymentInfo = !paymentInfo || ["MISSING", "REJECTED", "RETURNED", "FAILED"].includes(paymentInfoStatus);
@@ -50,10 +59,9 @@ Page({
         canCreatePaymentInfo,
       });
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ loading: false });
+      finishPageLoading(this);
     }
   },
 

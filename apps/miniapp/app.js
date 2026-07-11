@@ -1,4 +1,5 @@
-const { handleYzhAppShow, initYzhSdk, isYzhAssistantReturn } = require("./src/utils/yzh-sdk");
+const { getSession } = require("./src/utils/api");
+const { initYzhSdk, isYzhAssistantReturn } = require("./src/utils/yzh-sdk");
 
 function reportMiniappRuntimeError(type, detail) {
   if (typeof console !== "undefined" && console.error) {
@@ -10,7 +11,7 @@ App({
   globalData: {
     appName: "嘉音提现",
     defaultApiBase: "https://api.jiayin.site",
-    version: "0.1.0",
+    version: "1.0.0",
     q100PrdAcceptanceRuntime: true,
     q101PrdOperationActionRuntime: true,
     serviceOrigin: "https://api.jiayin.site",
@@ -32,11 +33,9 @@ App({
   },
 
   onShow(options = {}) {
-    if (isYzhAssistantReturn(options)) {
-      handleYzhAppShow(options);
-      return;
+    if (!isYzhAssistantReturn(options)) {
+      this.globalData.lastShowTime = Date.now();
     }
-    this.globalData.lastShowTime = Date.now();
   },
 
   onError(error) {
@@ -49,6 +48,10 @@ App({
 
   onPageNotFound(result) {
     reportMiniappRuntimeError("page-not-found", result);
-    wx.reLaunch({ url: "/src/pages/home/index" });
+    const session = getSession();
+    const hasValidSession = Boolean(session && session.anchorId && session.token);
+    wx.reLaunch({
+      url: hasValidSession ? "/src/pages/home/index" : "/src/pages/login/index",
+    });
   },
 });

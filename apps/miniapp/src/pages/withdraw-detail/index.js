@@ -1,4 +1,11 @@
-const { formatMoney, openPage, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const {
+  finishPageLoading,
+  formatMoney,
+  handlePageRequestError,
+  openPage,
+  requireAnchorId,
+  stopPullDownRefresh,
+} = require("../../utils/api");
 const { getWithdrawApplyDetail } = require("../../services/miniapp-api");
 const { decorateWithdrawRecord } = require("../../utils/decorators");
 const { formatDateShort, statusLabel, statusTone } = require("../../utils/formatters");
@@ -60,11 +67,30 @@ Page({
   },
 
   onLoad(options = {}) {
+    this.__initialShowPending = true;
     this.setData({ applyId: options.applyId || "" });
     this.loadDetail();
   },
 
+  onShow() {
+    if (this.__initialShowPending) {
+      this.__initialShowPending = false;
+      return;
+    }
+    this.loadDetail();
+  },
+
+  onPullDownRefresh() {
+    this.loadDetail().finally(stopPullDownRefresh);
+  },
+
+  onUnload() {
+    this.__detailLoadGeneration = Number(this.__detailLoadGeneration || 0) + 1;
+  },
+
   async loadDetail() {
+    const generation = Number(this.__detailLoadGeneration || 0) + 1;
+    this.__detailLoadGeneration = generation;
     if (!this.data.applyId) {
       this.setData({ error: "缺少提现记录编号" });
       return;
@@ -73,6 +99,7 @@ Page({
     try {
       const anchorId = requireAnchorId();
       const detail = await getWithdrawApplyDetail({ anchorId, applyId: this.data.applyId });
+      if (generation !== this.__detailLoadGeneration) return;
       const decorated = decorate(detail);
       const status = detail.status || detail.reviewStatus;
       this.setData({
@@ -81,10 +108,12 @@ Page({
         showSupport: supportStatuses.has(String(status || "").trim().toUpperCase()),
       });
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      if (generation !== this.__detailLoadGeneration) return;
+      handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ loading: false });
+      if (generation === this.__detailLoadGeneration) {
+        finishPageLoading(this);
+      }
     }
   },
 

@@ -1,5 +1,11 @@
-const { appendQuery, markMiniappDataDirty, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
+const {
+  finishPageLoading,
+  handlePageRequestError,
+  markMiniappDataDirty,
+  requireAnchorId,
+} = require("../../utils/api");
 const { statusLabel, statusTone } = require("../../utils/formatters");
+const { createPlatformBindRequest, listPlatformAccounts } = require("../../services/miniapp-api");
 
 function decorateAccount(account) {
   const status = account.bindStatus || account.status;
@@ -43,13 +49,12 @@ Page({
     this.setData({ loading: true, error: "" });
     try {
       const anchorId = requireAnchorId();
-      const accounts = await request(appendQuery("/api/miniapp/platform-accounts", { anchorId }));
+      const accounts = await listPlatformAccounts({ anchorId });
       this.setData({ accounts: (accounts || []).map(decorateAccount) });
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ loading: false });
+      finishPageLoading(this);
     }
   },
 
@@ -63,18 +68,14 @@ Page({
       if (!form.platform) throw new Error("请输入平台");
       if (!form.accountNo) throw new Error("请输入平台账号");
       const anchorId = requireAnchorId();
-      const requestResult = await request("/api/miniapp/platform-bind-requests", {
-        method: "POST",
-        data: { anchorId, ...form, operatorId: "MINIAPP" },
-      });
+      const requestResult = await createPlatformBindRequest({ anchorId, ...form });
       markMiniappDataDirty();
       this.setData({ form, requestResult: decorateRequest(requestResult) });
-      this.loadAccounts();
+      await this.loadAccounts();
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ submitting: false });
+      finishPageLoading(this, "submitting");
     }
   },
 });

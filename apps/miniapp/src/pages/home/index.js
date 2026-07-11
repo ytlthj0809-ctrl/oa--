@@ -1,7 +1,7 @@
 const { finishPageLoading, getMiniappDataDirtyAt, handlePageRequestError, openPage, requireAnchorId, stopPullDownRefresh } = require("../../utils/api");
 const { HOME_CACHE_TTL_MS } = require("../../utils/constants");
 const { registerMiniappCacheResetter } = require("../../utils/cache");
-const { decorateHome } = require("../../utils/decorators");
+const { buildGreeting, decorateHome } = require("../../utils/decorators");
 const { getHome } = require("../../services/miniapp-api");
 
 let homeCache = { anchorId: "", data: null, loadedAt: 0 };
@@ -40,8 +40,10 @@ Page({
         && homeCache.loadedAt >= dirtyAt
         && Date.now() - homeCache.loadedAt < HOME_CACHE_TTL_MS
       ) {
-        this.setData({ home: homeCache.data });
-        this.updateTabBarBadge(homeCache.data);
+        const refreshedHome = { ...homeCache.data, greetingText: buildGreeting() };
+        homeCache = { ...homeCache, data: refreshedHome };
+        this.setData({ home: refreshedHome });
+        this.updateTabBarBadge(refreshedHome);
         return;
       }
       const home = await getHome(anchorId);

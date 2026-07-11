@@ -8,6 +8,64 @@ function getProfile(anchorId) {
   return request(appendQuery("/api/miniapp/profile", { anchorId }));
 }
 
+function getPaymentInfo(anchorId) {
+  return request(appendQuery("/api/miniapp/payment-info", { anchorId }));
+}
+
+function createPaymentInfo({ anchorId, realName, idCardNo, paymentMobile, bankCardNo }) {
+  return request("/api/miniapp/payment-info", {
+    method: "POST",
+    data: { anchorId, realName, idCardNo, paymentMobile, bankCardNo },
+  });
+}
+
+function listPaymentInfoChangeRequests({ anchorId, reviewStatus } = {}) {
+  return request(appendQuery("/api/miniapp/payment-info/change-requests", { anchorId, reviewStatus }));
+}
+
+function createPaymentInfoChangeRequest({
+  anchorId,
+  patch,
+  modifyReason,
+  voucherFileIds,
+  voucherFileName,
+  voucherContent,
+  voucherSizeBytes,
+  voucherContentType,
+}) {
+  return request("/api/miniapp/payment-info/change-requests", {
+    method: "POST",
+    data: {
+      anchorId,
+      patch,
+      modifyReason,
+      voucherFileIds,
+      voucherFileName,
+      voucherContent,
+      voucherSizeBytes,
+      voucherContentType,
+    },
+  });
+}
+
+function getYzhSignStatus(anchorId) {
+  return request(appendQuery("/api/miniapp/yzh/sign-status", { anchorId }));
+}
+
+function createYzhPresign({ anchorId, realName, idCardNo, certificateType, collectPhoneNo }) {
+  return request("/api/miniapp/yzh/presign", {
+    method: "POST",
+    data: { anchorId, realName, idCardNo, certificateType, collectPhoneNo },
+  });
+}
+
+function refreshYzhSignStatus({ anchorId }) {
+  return request("/api/miniapp/yzh/refresh", {
+    method: "POST",
+    data: { anchorId },
+  });
+}
+
 function getProtocols(anchorId, options = {}) {
   return request(appendQuery("/api/miniapp/protocols", { anchorId }), options);
 }
@@ -25,6 +83,32 @@ function getContact(options = {}) {
 
 function getLegacyHistory(anchorId) {
   return request(appendQuery("/api/miniapp/legacy-history", { anchorId }));
+}
+
+function listPlatformAccounts({ anchorId, platform } = {}) {
+  return request(appendQuery("/api/miniapp/platform-accounts", { anchorId, platform }));
+}
+
+function createPlatformBindRequest({ anchorId, platform, accountNo, reason }) {
+  return request("/api/miniapp/platform-bind-requests", {
+    method: "POST",
+    data: { anchorId, platform, accountNo, reason },
+  });
+}
+
+function createAnchorRegistrationRequest({ anchorId, displayName, mobile, wechatBindToken }) {
+  return request("/api/miniapp/anchor-registration-requests", {
+    method: "POST",
+    data: { anchorId, displayName, mobile, wechatBindToken },
+  });
+}
+
+function listAnchorRegistrationRequests({ anchorId, mobile, reviewStatus } = {}) {
+  return request(appendQuery("/api/miniapp/anchor-registration-requests", {
+    anchorId,
+    mobile,
+    reviewStatus,
+  }));
 }
 
 function getDataSnapshots({ anchorId, month, platform }) {
@@ -55,17 +139,23 @@ function listNotifications(anchorId) {
   return request(appendQuery("/api/miniapp/notifications", { anchorId }));
 }
 
-function markNotificationRead({ anchorId, notificationId, operatorId = "MINIAPP" }) {
-  return request(`/api/miniapp/notifications/${notificationId}/read`, {
+function getNotificationDetail({ anchorId, notificationId }) {
+  const safeNotificationId = encodeURIComponent(String(notificationId || ""));
+  return request(appendQuery(`/api/miniapp/notifications/${safeNotificationId}`, { anchorId }));
+}
+
+function markNotificationRead({ anchorId, notificationId }) {
+  const safeNotificationId = encodeURIComponent(String(notificationId || ""));
+  return request(`/api/miniapp/notifications/${safeNotificationId}/read`, {
     method: "POST",
-    data: { anchorId, operatorId },
+    data: { anchorId },
   });
 }
 
-function createWithdrawApply(data) {
+function createWithdrawApply({ anchorId, amountCents, clientRequestId }) {
   return request("/api/miniapp/withdraw-applies", {
     method: "POST",
-    data,
+    data: { anchorId, amountCents, clientRequestId },
   });
 }
 
@@ -101,21 +191,33 @@ function logout() {
 module.exports = {
   agreeProtocol,
   bindWechatAccount,
+  createAnchorRegistrationRequest,
+  createPaymentInfo,
+  createPaymentInfoChangeRequest,
+  createPlatformBindRequest,
   createWithdrawApply,
+  createYzhPresign,
   getContact,
   getDataSnapshots,
   getHome,
   getLegacyHistory,
+  getNotificationDetail,
+  getPaymentInfo,
   getProfile,
   getProtocols,
   getWithdrawApplyDetail,
   getWithdrawRules,
+  getYzhSignStatus,
+  listAnchorRegistrationRequests,
   listBalanceFlows,
   listNotifications,
+  listPaymentInfoChangeRequests,
+  listPlatformAccounts,
   listTaskRewards,
   listWithdrawApplies,
   loginByPassword,
   loginByWechat,
   logout,
   markNotificationRead,
+  refreshYzhSignStatus,
 };

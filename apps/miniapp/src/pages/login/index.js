@@ -13,7 +13,6 @@ const {
 } = require("../../services/miniapp-api");
 
 const loginFailureStorageKey = "jy-miniapp-login-failure";
-let cooldownTimer = null;
 
 function getLoginFailureState() {
   return wx.getStorageSync(loginFailureStorageKey) || { count: 0, cooldownUntil: 0 };
@@ -30,13 +29,6 @@ function clearLoginFailureState() {
 function getCooldownText(cooldownUntil) {
   const remainSeconds = Math.ceil((Number(cooldownUntil || 0) - Date.now()) / 1000);
   return remainSeconds > 0 ? `登录失败较多，请 ${remainSeconds} 秒后再试` : "";
-}
-
-function clearCooldownTimer() {
-  if (cooldownTimer) {
-    clearTimeout(cooldownTimer);
-    cooldownTimer = null;
-  }
 }
 
 Page({
@@ -67,20 +59,27 @@ Page({
   },
 
   onHide() {
-    clearCooldownTimer();
+    this.clearCooldownTimer();
   },
 
   onUnload() {
-    clearCooldownTimer();
+    this.clearCooldownTimer();
+  },
+
+  clearCooldownTimer() {
+    if (this.__cooldownTimer) {
+      clearTimeout(this.__cooldownTimer);
+      this.__cooldownTimer = null;
+    }
   },
 
   syncLoginCooldown() {
     const state = getLoginFailureState();
     const cooldownText = getCooldownText(state.cooldownUntil);
     this.setData({ cooldownText });
-    clearCooldownTimer();
+    this.clearCooldownTimer();
     if (cooldownText) {
-      cooldownTimer = setTimeout(() => this.syncLoginCooldown(), 1000);
+      this.__cooldownTimer = setTimeout(() => this.syncLoginCooldown(), 1000);
     } else if (state.cooldownUntil && state.cooldownUntil <= Date.now()) {
       clearLoginFailureState();
     }
@@ -145,12 +144,14 @@ Page({
         error.clientValidation = true;
         throw error;
       }
+      const loginAccount = this.data.form.mobile;
+      const password = this.data.form.password;
+      this.setData({ form: { ...this.data.form, password: "" } });
       const session = await loginByPassword({
-        loginAccount: this.data.form.mobile,
-        password: this.data.form.password,
+        loginAccount,
+        password,
       });
       clearLoginFailureState();
-      this.setData({ form: { ...this.data.form, password: "" } });
       await this.enterWithSession(session);
     } catch (error) {
       this.setData({ error: error.message });

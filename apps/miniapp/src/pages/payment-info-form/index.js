@@ -1,38 +1,20 @@
-const { markMiniappDataDirty, openPage, request, isAuthRequiredError, requireAnchorId } = require("../../utils/api");
-const { isValidBankCard, isValidMainlandIdCard, isValidMobile, normalizePaymentInfoForm, validatePaymentInfoForm } = require("../../utils/validators");
+const {
+  finishPageLoading,
+  handlePageRequestError,
+  markMiniappDataDirty,
+  openPage,
+  requireAnchorId,
+} = require("../../utils/api");
+const { createPaymentInfo } = require("../../services/miniapp-api");
+const { normalizePaymentInfoForm, paymentInfoFieldValidators, validatePaymentInfoForm } = require("../../utils/validators");
 
-const fieldValidators = {
-  realName: (v) => {
-    const text = String(v || "").trim();
-    if (!text) return "请输入真实姓名";
-    if (text.length < 2) return "姓名至少 2 个字";
-    return "";
-  },
-  idCardNo: (v) => {
-    if (!v) return "请输入身份证号";
-    if (!isValidMainlandIdCard(v)) return "请输入有效的 18 位身份证号";
-    return "";
-  },
-  paymentMobile: (v) => {
-    if (!v) return "请输入手机号";
-    if (!isValidMobile(v)) return "请输入有效的 11 位手机号";
-    return "";
-  },
-  bankCardNo: (v) => {
-    if (!v) return "请输入银行卡号";
-    if (!isValidBankCard(v)) return "请输入有效的银行卡号";
-    return "";
-  },
-};
+function emptyPaymentInfoForm() {
+  return { realName: "", idCardNo: "", paymentMobile: "", bankCardNo: "" };
+}
 
 Page({
   data: {
-    form: {
-      realName: "",
-      idCardNo: "",
-      paymentMobile: "",
-      bankCardNo: "",
-    },
+    form: emptyPaymentInfoForm(),
     fieldErrors: {},
     fieldTones: {},
     submitting: false,
@@ -47,9 +29,9 @@ Page({
 
   validateField(event) {
     const field = event.currentTarget.dataset.field;
-    if (!field || !fieldValidators[field]) return;
+    if (!field || !paymentInfoFieldValidators[field]) return;
     const value = this.data.form[field];
-    const errorMsg = fieldValidators[field](value);
+    const errorMsg = paymentInfoFieldValidators[field](value);
     const fieldErrors = { ...this.data.fieldErrors, [field]: errorMsg };
     const fieldTones = { ...this.data.fieldTones, [field]: errorMsg ? "field-error" : (value ? "field-success" : "") };
     this.setData({ fieldErrors, fieldTones });
@@ -77,17 +59,18 @@ Page({
       validatePaymentInfoForm(form);
       const confirmed = await this.confirmSave();
       if (!confirmed) return;
-      await request("/api/miniapp/payment-info", {
-        method: "POST",
-        data: { anchorId, ...form, operatorId: "MINIAPP" },
-      });
+      await createPaymentInfo({ anchorId, ...form });
       markMiniappDataDirty();
-      this.setData({ form, saved: true });
+      this.setData({
+        form: emptyPaymentInfoForm(),
+        fieldErrors: {},
+        fieldTones: {},
+        saved: true,
+      });
     } catch (error) {
-      if (isAuthRequiredError(error)) { this.__authRedirecting = true; return; }
-      this.setData({ error: error.message });
+      handlePageRequestError(this, error);
     } finally {
-      if (!this.__authRedirecting) this.setData({ submitting: false });
+      finishPageLoading(this, "submitting");
     }
   },
 

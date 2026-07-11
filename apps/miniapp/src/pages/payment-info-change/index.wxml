@@ -4,26 +4,34 @@
     <text class="title">修改申请</text>
   </view>
   <view wx:if="{{error}}" class="error">{{error}}</view>
-  <view class="notice">修改收款资料会进入后台审核，审核通过前仍以当前已生效资料为准。</view>
+  <view wx:if="{{currentInfoLoadError}}" class="error">{{currentInfoLoadError}}</view>
+  <view class="notice">仅填写需要修改的项，未填写项保持不变。修改资料会进入后台审核，审核通过前仍以当前已生效资料为准。</view>
+  <view wx:if="{{currentInfo}}" class="card">
+    <text class="label">当前已生效信息（已脱敏）</text>
+    <text class="helper-text">姓名：{{currentInfo.realNameMasked || '暂未记录'}}</text>
+    <text class="helper-text">身份证：{{currentInfo.idCardNoMasked || '暂未记录'}}</text>
+    <text class="helper-text">手机号：{{currentInfo.paymentMobileMasked || '暂未记录'}}</text>
+    <text class="helper-text">银行卡：{{currentInfo.bankCardNoMasked || '暂未记录'}}</text>
+  </view>
   <view class="card">
     <label class="field {{fieldTones.realName || ''}}">
       <text>姓名</text>
-      <input value="{{form.realName}}" data-field="realName" bindinput="updateField" bindblur="validateField" />
+      <input value="{{form.realName}}" data-field="realName" bindinput="updateField" bindblur="validateField" placeholder="输入新姓名，不修改请留空" />
       <text wx:if="{{fieldErrors.realName}}" class="field-error-hint">{{fieldErrors.realName}}</text>
     </label>
     <label class="field {{fieldTones.idCardNo || ''}}">
       <text>身份证号</text>
-      <input type="idcard" maxlength="18" value="{{form.idCardNo}}" data-field="idCardNo" bindinput="updateField" bindblur="validateField" placeholder="请输入 18 位身份证号" />
+      <input type="idcard" maxlength="18" value="{{form.idCardNo}}" data-field="idCardNo" bindinput="updateField" bindblur="validateField" placeholder="输入新身份证号，不修改请留空" />
       <text wx:if="{{fieldErrors.idCardNo}}" class="field-error-hint">{{fieldErrors.idCardNo}}</text>
     </label>
     <label class="field {{fieldTones.paymentMobile || ''}}">
       <text>手机号</text>
-      <input type="number" maxlength="11" value="{{form.paymentMobile}}" data-field="paymentMobile" bindinput="updateField" bindblur="validateField" placeholder="请输入收款手机号" />
+      <input type="number" maxlength="11" value="{{form.paymentMobile}}" data-field="paymentMobile" bindinput="updateField" bindblur="validateField" placeholder="输入新手机号，不修改请留空" />
       <text wx:if="{{fieldErrors.paymentMobile}}" class="field-error-hint">{{fieldErrors.paymentMobile}}</text>
     </label>
     <label class="field {{fieldTones.bankCardNo || ''}}">
       <text>银行卡号</text>
-      <input type="number" maxlength="19" value="{{form.bankCardNo}}" data-field="bankCardNo" bindinput="updateField" bindblur="validateField" placeholder="请输入本人银行卡号" />
+      <input type="number" maxlength="19" value="{{form.bankCardNo}}" data-field="bankCardNo" bindinput="updateField" bindblur="validateField" placeholder="输入新银行卡号，不修改请留空" />
       <text wx:if="{{fieldErrors.bankCardNo}}" class="field-error-hint">{{fieldErrors.bankCardNo}}</text>
     </label>
     <label class="field">

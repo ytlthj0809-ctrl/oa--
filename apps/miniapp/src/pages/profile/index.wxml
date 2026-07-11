@@ -60,11 +60,11 @@
     <text class="label">协议与隐私</text>
     <view wx:if="{{protocols.userAgreement}}" class="list-item">
       <text>{{protocols.userAgreement.title}} {{protocols.userAgreement.versionNo}}</text>
-      <button class="secondary" bindtap="agreeProtocol" data-type="{{protocols.userAgreement.protocolType}}" data-version="{{protocols.userAgreement.versionNo}}">同意</button>
+      <button class="secondary" bindtap="agreeProtocol" data-type="{{protocols.userAgreement.protocolType}}" data-version="{{protocols.userAgreement.versionNo}}" loading="{{agreeingProtocolType === protocols.userAgreement.protocolType}}" disabled="{{protocols.userAgreement.agreed || agreeingProtocolType}}">{{protocols.userAgreement.agreed ? '已同意' : '同意'}}</button>
     </view>
     <view wx:if="{{protocols.privacyPolicy}}" class="list-item">
       <text>{{protocols.privacyPolicy.title}} {{protocols.privacyPolicy.versionNo}}</text>
-      <button class="secondary" bindtap="agreeProtocol" data-type="{{protocols.privacyPolicy.protocolType}}" data-version="{{protocols.privacyPolicy.versionNo}}">同意</button>
+      <button class="secondary" bindtap="agreeProtocol" data-type="{{protocols.privacyPolicy.protocolType}}" data-version="{{protocols.privacyPolicy.versionNo}}" loading="{{agreeingProtocolType === protocols.privacyPolicy.protocolType}}" disabled="{{protocols.privacyPolicy.agreed || agreeingProtocolType}}">{{protocols.privacyPolicy.agreed ? '已同意' : '同意'}}</button>
     </view>
   </view>
 

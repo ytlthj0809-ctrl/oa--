@@ -5,7 +5,7 @@
       <text class="title">业务消息</text>
     </view>
     <view wx:if="{{hasUnread}}" class="actions" style="margin-top: 0;">
-      <button class="secondary small" bindtap="markAllRead">全部标记已读</button>
+      <button class="secondary small" bindtap="markAllRead" loading="{{markingAllRead}}" disabled="{{markingAllRead}}">全部标记已读</button>
     </view>
   </view>
 

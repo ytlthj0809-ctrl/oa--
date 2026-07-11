@@ -20,15 +20,15 @@
       <view>
         <text class="label">使用已审核实名信息签约</text>
         <text class="meta">{{paymentInfo.helperText}}</text>
-        <text class="helper-text">默认使用已审核打款信息发起签约；资料缺失或不一致时再展开补充。</text>
+        <text class="helper-text">系统会与已审核打款信息核对；请在下方再次确认本人姓名和身份证号。</text>
       </view>
       <text class="badge {{paymentInfo.statusTone || 'neutral'}}">{{paymentInfo.statusText || '未填写'}}</text>
     </view>
 
     <view wx:if="{{!signStatus.isSigned && paymentInfo.ready}}" class="identity-fields">
       <view class="section-head" bindtap="toggleIdentityForm">
-        <text class="label">资料不一致时补充</text>
-        <text class="collapse-toggle">{{identityFormExpanded ? '收起' : '补充信息'}}</text>
+        <text class="label">确认本次签约身份</text>
+        <text class="collapse-toggle">{{identityFormExpanded ? '收起' : '填写信息'}}</text>
       </view>
       <view wx:if="{{identityFormExpanded}}" class="form">
         <label class="field">
@@ -43,13 +43,13 @@
       </view>
     </view>
     <view class="actions">
-      <button wx:if="{{!signStatus.isSigned}}" class="primary" bindtap="createPresign" loading="{{presigning}}" disabled="{{presigning}}">使用实名信息去签约</button>
+      <button wx:if="{{!signStatus.isSigned}}" class="primary" bindtap="createPresign" loading="{{presigning}}" disabled="{{loading || presigning || refreshing}}">使用实名信息去签约</button>
       <button wx:else class="primary" bindtap="goWithdraw">返回提现</button>
-      <button class="secondary" bindtap="refreshSigned" loading="{{refreshing}}" disabled="{{refreshing}}">刷新状态</button>
+      <button class="secondary" bindtap="refreshSigned" loading="{{refreshing}}" disabled="{{loading || presigning || refreshing}}">刷新状态</button>
     </view>
   </view>
 
-  <view wx:if="{{presign && !signStatus.isSigned}}" class="card">
+  <view wx:if="{{presignReady && !signStatus.isSigned}}" class="card">
     <text class="label">签约入口</text>
     <text class="meta">已生成云账户签约入口。若没有自动打开，可重新打开或复制链接处理。</text>
     <button class="primary" bindtap="openYzhSignMiniProgram">打开云账户签约</button>

@@ -32,6 +32,30 @@ function isValidBankCard(value) {
   return sum % 10 === 0;
 }
 
+const paymentInfoFieldValidators = Object.freeze({
+  realName(value) {
+    const text = String(value || "").trim();
+    if (!text) return "请输入真实姓名";
+    if (text.length < 2) return "姓名至少 2 个字";
+    return "";
+  },
+  idCardNo(value) {
+    if (!value) return "请输入身份证号";
+    if (!isValidMainlandIdCard(value)) return "请输入有效的 18 位身份证号";
+    return "";
+  },
+  paymentMobile(value) {
+    if (!value) return "请输入手机号";
+    if (!isValidMobile(value)) return "请输入有效的 11 位手机号";
+    return "";
+  },
+  bankCardNo(value) {
+    if (!value) return "请输入银行卡号";
+    if (!isValidBankCard(value)) return "请输入有效的银行卡号";
+    return "";
+  },
+});
+
 function parseAmountYuanToCents(value) {
   const text = String(value || "").trim();
   if (!text) {
@@ -41,7 +65,16 @@ function parseAmountYuanToCents(value) {
     throw new Error("提现金额最多支持两位小数");
   }
   const [yuan, cents = ""] = text.split(".");
-  return Number(yuan) * 100 + Number(cents.padEnd(2, "0"));
+  const normalizedYuan = yuan.replace(/^0+(?=\d)/, "");
+  const centsText = `${normalizedYuan}${cents.padEnd(2, "0")}`.replace(/^0+(?=\d)/, "");
+  const maxSafeCents = String(Number.MAX_SAFE_INTEGER);
+  if (
+    centsText.length > maxSafeCents.length
+    || (centsText.length === maxSafeCents.length && centsText > maxSafeCents)
+  ) {
+    throw new Error("提现金额超出安全范围");
+  }
+  return Number(centsText);
 }
 
 function normalizePaymentInfoForm(form) {
@@ -53,11 +86,30 @@ function normalizePaymentInfoForm(form) {
   };
 }
 
+function normalizePaymentInfoPatch(form = {}) {
+  const normalized = normalizePaymentInfoForm(form);
+  return Object.keys(normalized).reduce((patch, field) => {
+    if (normalized[field]) patch[field] = normalized[field];
+    return patch;
+  }, {});
+}
+
 function validatePaymentInfoForm(form) {
-  if (!form.realName) throw new Error("请输入姓名");
-  if (!isValidMainlandIdCard(form.idCardNo)) throw new Error("请输入正确的 18 位身份证号");
-  if (!isValidMobile(form.paymentMobile)) throw new Error("请输入正确的 11 位手机号");
-  if (!isValidBankCard(form.bankCardNo)) throw new Error("请输入正确的银行卡号");
+  Object.entries(paymentInfoFieldValidators).forEach(([field, validator]) => {
+    const error = validator(form[field]);
+    if (error) throw new Error(error);
+  });
+}
+
+function validatePaymentInfoPatch(patch) {
+  const fields = Object.keys(patch || {});
+  if (!fields.length) throw new Error("请至少填写一项需要修改的打款信息");
+  fields.forEach((field) => {
+    const validator = paymentInfoFieldValidators[field];
+    if (!validator) return;
+    const error = validator(patch[field]);
+    if (error) throw new Error(error);
+  });
 }
 
 function normalizeSignIdentityForm(form) {
@@ -78,8 +130,11 @@ module.exports = {
   isValidMobile,
   normalizeDigits,
   normalizePaymentInfoForm,
+  normalizePaymentInfoPatch,
   normalizeSignIdentityForm,
   parseAmountYuanToCents,
+  paymentInfoFieldValidators,
   validatePaymentInfoForm,
+  validatePaymentInfoPatch,
   validateSignIdentityForm,
 };
