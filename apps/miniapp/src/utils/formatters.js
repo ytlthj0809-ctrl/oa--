@@ -45,6 +45,7 @@ const statusLabels = {
   UNREAD: "未读",
   UNSIGNED: "未签约",
   USED: "已使用",
+  USED_BY_OTHER: "已被其他主播使用",
   WAIT_PAY: "待线下付款",
   WAIT_BATCH: "待成批",
 };
@@ -76,7 +77,7 @@ const typeLabels = {
 
 const pendingStatuses = new Set(["APPLIED", "NEED_RESIGN", "PENDING", "PENDING_FINANCE_REVIEW", "PENDING_FIRST_REVIEW", "PENDING_REVIEW", "PENDING_SUPER_REVIEW", "SIGNING", "SUBMITTED", "WAIT_BATCH", "WAIT_PAY", "PAYING", "PENDING_SYNC"]);
 const successStatuses = new Set(["ACTIVE", "AGREED", "APPROVED", "AVAILABLE", "BOUND", "COMPLETED", "EFFECTIVE", "ENABLED", "PAID", "QUALIFIED", "READ", "READY", "SAVED", "SENT_LOCAL", "SIGNED", "SUCCESS", "USED"]);
-const dangerStatuses = new Set(["CANCELLED", "FAILED", "FINANCE_REJECTED", "FIRST_REJECTED", "FROZEN", "INVALID", "MISSING", "PAUSED", "PAY_FAILED", "REJECTED", "RETURNED", "SUPER_REJECTED", "UNBOUND", "UNSIGNED"]);
+const dangerStatuses = new Set(["CANCELLED", "FAILED", "FINANCE_REJECTED", "FIRST_REJECTED", "FROZEN", "INVALID", "MISSING", "PAUSED", "PAY_FAILED", "REJECTED", "RETURNED", "SUPER_REJECTED", "UNBOUND", "UNSIGNED", "USED_BY_OTHER"]);
 
 function normalizeStatus(value) {
   if (value && typeof value === "object") {

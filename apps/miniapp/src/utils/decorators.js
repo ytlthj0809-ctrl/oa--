@@ -17,7 +17,7 @@ function isRegistrationReady(status) {
 }
 
 function isWhitelistReady(status) {
-  return ["APPROVED", "AVAILABLE", "USED"].includes(String(status || "").trim().toUpperCase());
+  return String(status || "").trim().toUpperCase() === "USED";
 }
 
 function buildProgressSteps(registrationStatus, whitelistStatus, paymentInfoStatus, signStatus) {
