@@ -49,6 +49,5 @@
   <view class="login-footer">
     <text bindtap="goRegister">新主播注册</text>
     <text bindtap="openProtocols">协议与隐私</text>
-    <text bindtap="openContact">联系客服</text>
   </view>
 </view>

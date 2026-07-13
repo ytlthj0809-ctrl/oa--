@@ -207,8 +207,4 @@ Page({
   openProtocols() {
     openPage("protocols");
   },
-
-  openContact() {
-    openPage("contact");
-  },
 });

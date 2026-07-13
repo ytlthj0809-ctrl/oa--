@@ -66,11 +66,10 @@
     </view>
     <view wx:else class="empty">暂无状态更新</view>
   </view>
-  <view wx:if="{{detail && (canResubmit || showSupport)}}" class="card">
+  <view wx:if="{{detail && canResubmit}}" class="card">
     <text class="label">操作</text>
     <view class="actions">
       <button wx:if="{{canResubmit}}" class="primary" bindtap="resubmit">修改后重新提交</button>
-      <button wx:if="{{showSupport}}" class="secondary" bindtap="openContact">联系客服</button>
     </view>
   </view>
 </view>

@@ -2,7 +2,7 @@
   <view class="summary">
     <text class="greeting">{{home.greetingText || ''}}</text>
     <text class="eyebrow">首页</text>
-    <text class="title">余额与今日数据</text>
+    <text class="title">余额与提现</text>
   </view>
 
   <view wx:if="{{error}}" class="error">{{error}}</view>
@@ -46,52 +46,26 @@
   </view>
 
   <view wx:if="{{home}}" class="card">
-    <view class="grid" style="grid-template-columns: 1fr 1fr 1fr;">
+    <view class="grid">
+      <view class="metric">
+        <text class="label">可用余额</text>
+        <text class="value">{{home.availableBalanceText}}</text>
+      </view>
       <view class="metric">
         <text class="label">冻结余额</text>
         <text class="value">{{home.frozenBalanceText}}</text>
       </view>
-      <view class="metric" bindtap="goPage" data-page="rewards">
-        <text class="label">任务奖励</text>
-        <text class="value">{{home.rewardBalanceText}}</text>
+      <view class="metric">
+        <text class="label">签约状态</text>
+        <text class="value">{{home.signStatusText}}</text>
       </view>
-      <view class="metric" bindtap="goPage" data-page="notifications">
-        <text class="label">未读通知</text>
-        <text class="value">{{home.unreadNotificationCount}}</text>
-      </view>
-    </view>
-  </view>
-
-  <view wx:if="{{home}}" class="card">
-    <view class="section-head" bindtap="toggleTodayData">
-      <text class="label">今日数据</text>
-      <text class="collapse-toggle">{{todayDataExpanded ? '收起' : '展开'}}</text>
-    </view>
-    <view wx:if="{{todayDataExpanded}}">
-      <view class="grid">
-        <view class="metric">
-          <text class="label">流水</text>
-          <text class="value">{{home.todayIncomeText}}</text>
-        </view>
-        <view class="metric">
-          <text class="label">有效时长</text>
-          <text class="value">{{home.todayMetrics.validDurationMinutes}} 分钟</text>
-        </view>
-        <view class="metric">
-          <text class="label">有效天数</text>
-          <text class="value">{{home.todayMetrics.validDays}}</text>
-        </view>
-        <view class="metric">
-          <text class="label">签约状态</text>
-          <text class="value">{{home.signStatusText}}</text>
-        </view>
-        <view class="metric">
-          <text class="label">打款信息</text>
-          <text class="value">{{home.paymentInfoStatusText}}</text>
-        </view>
+      <view class="metric">
+        <text class="label">打款信息</text>
+        <text class="value">{{home.paymentInfoStatusText}}</text>
       </view>
     </view>
     <view class="actions">
+      <button class="secondary" bindtap="goPage" data-page="balance">查看余额流水</button>
       <button class="secondary" bindtap="goPage" data-page="withdraw-records">查看提现记录</button>
     </view>
   </view>
