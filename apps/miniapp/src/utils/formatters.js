@@ -5,6 +5,7 @@ const statusLabels = {
   AGREED: "已同意",
   APPLIED: "已申请",
   APPROVED: "已通过",
+  AVAILABLE: "可用",
   BOUND: "已绑定",
   CANCELLED: "已取消",
   COMPLETED: "已完成",
@@ -43,6 +44,7 @@ const statusLabels = {
   UNFREEZE: "已解冻",
   UNREAD: "未读",
   UNSIGNED: "未签约",
+  USED: "已使用",
   WAIT_PAY: "待线下付款",
   WAIT_BATCH: "待成批",
 };
@@ -73,7 +75,7 @@ const typeLabels = {
 };
 
 const pendingStatuses = new Set(["APPLIED", "NEED_RESIGN", "PENDING", "PENDING_FINANCE_REVIEW", "PENDING_FIRST_REVIEW", "PENDING_REVIEW", "PENDING_SUPER_REVIEW", "SIGNING", "SUBMITTED", "WAIT_BATCH", "WAIT_PAY", "PAYING", "PENDING_SYNC"]);
-const successStatuses = new Set(["ACTIVE", "AGREED", "APPROVED", "BOUND", "COMPLETED", "EFFECTIVE", "ENABLED", "PAID", "QUALIFIED", "READ", "READY", "SAVED", "SENT_LOCAL", "SIGNED", "SUCCESS"]);
+const successStatuses = new Set(["ACTIVE", "AGREED", "APPROVED", "AVAILABLE", "BOUND", "COMPLETED", "EFFECTIVE", "ENABLED", "PAID", "QUALIFIED", "READ", "READY", "SAVED", "SENT_LOCAL", "SIGNED", "SUCCESS", "USED"]);
 const dangerStatuses = new Set(["CANCELLED", "FAILED", "FINANCE_REJECTED", "FIRST_REJECTED", "FROZEN", "INVALID", "MISSING", "PAUSED", "PAY_FAILED", "REJECTED", "RETURNED", "SUPER_REJECTED", "UNBOUND", "UNSIGNED"]);
 
 function normalizeStatus(value) {

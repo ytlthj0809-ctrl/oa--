@@ -19,8 +19,8 @@
 
   <view wx:if="{{home && !home.withdrawReady}}" class="card">
     <view class="section-head">
-      <text class="label">提现三步</text>
-      <text class="badge {{home.signStatusTone}}">{{home.nextAction.buttonText || '继续'}}</text>
+      <text class="label">提现五步</text>
+      <text class="badge {{home.nextAction.tone}}">{{home.nextAction.buttonText || '继续'}}</text>
     </view>
     <view class="guide-list">
       <view
@@ -54,6 +54,14 @@
       <view class="metric">
         <text class="label">冻结余额</text>
         <text class="value">{{home.frozenBalanceText}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">注册状态</text>
+        <text class="badge {{home.registrationStatusTone}}">{{home.registrationStatusText}}</text>
+      </view>
+      <view class="metric">
+        <text class="label">白名单状态</text>
+        <text class="badge {{home.whitelistStatusTone}}">{{home.whitelistStatusText}}</text>
       </view>
       <view class="metric">
         <text class="label">签约状态</text>
