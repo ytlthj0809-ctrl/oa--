@@ -3,13 +3,10 @@
     "src/pages/auth/index",
     "src/pages/login/index",
     "src/pages/home/index",
-    "src/pages/data/index",
     "src/pages/withdraw/index",
     "src/pages/register/index",
     "src/pages/protocols/index",
     "src/pages/balance/index",
-    "src/pages/data-detail/index",
-    "src/pages/rewards/index",
     "src/pages/withdraw-guide/index",
     "src/pages/withdraw-records/index",
     "src/pages/withdraw-detail/index",
@@ -17,15 +14,7 @@
     "src/pages/payment-info-form/index",
     "src/pages/payment-info-change/index",
     "src/pages/sign/index",
-    "src/pages/sign-return/index",
-    "src/pages/platform-accounts/index",
-    "src/pages/platform-bind-request/index",
-    "src/pages/notifications/index",
-    "src/pages/notification-detail/index",
-    "src/pages/profile/index",
-    "src/pages/profile-detail/index",
-    "src/pages/contact/index",
-    "src/pages/settings/index"
+    "src/pages/sign-return/index"
   ],
   "window": {
     "navigationBarTitleText": "嘉音提现",
@@ -46,22 +35,10 @@
         "selectedIconPath": "src/assets/tab/home-selected.png"
       },
       {
-        "pagePath": "src/pages/data/index",
-        "text": "数据",
-        "iconPath": "src/assets/tab/data.png",
-        "selectedIconPath": "src/assets/tab/data-selected.png"
-      },
-      {
         "pagePath": "src/pages/withdraw/index",
         "text": "提现",
         "iconPath": "src/assets/tab/withdraw.png",
         "selectedIconPath": "src/assets/tab/withdraw-selected.png"
-      },
-      {
-        "pagePath": "src/pages/profile/index",
-        "text": "我的",
-        "iconPath": "src/assets/tab/profile.png",
-        "selectedIconPath": "src/assets/tab/profile-selected.png"
       }
     ]
   },
