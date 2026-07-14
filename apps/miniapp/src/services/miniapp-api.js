@@ -127,8 +127,8 @@ function listWithdrawApplies(anchorId) {
   return request(appendQuery("/api/miniapp/withdraw-applies", { anchorId }));
 }
 
-function getWithdrawRules() {
-  return request("/api/miniapp/withdraw-rules");
+function getWithdrawRules(options = {}) {
+  return request("/api/miniapp/withdraw-rules", options);
 }
 
 function getWithdrawApplyDetail({ anchorId, applyId }) {

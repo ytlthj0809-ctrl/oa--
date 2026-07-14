@@ -216,6 +216,10 @@ Page({
     wx.navigateTo({ url: `/src/pages/register/index${getWechatBindToken() ? "?from=wechatLogin" : ""}` });
   },
 
+  openWithdrawRules() {
+    wx.navigateTo({ url: "/src/pages/withdraw-guide/index?reason=RULES&from=login" });
+  },
+
   openProtocols() {
     openPage("protocols");
   },
