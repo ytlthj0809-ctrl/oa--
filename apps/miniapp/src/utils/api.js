@@ -32,7 +32,7 @@ const sessionManager = createSessionManager({
   wechatBindTokenStorageKey,
 });
 const {
-  clearSession,
+  clearSession: clearStoredSession,
   clearWechatBindToken,
   getMiniappDataDirtyAt,
   getWechatBindToken,
@@ -41,6 +41,11 @@ const {
   setWechatBindToken,
 } = sessionManager;
 let protocolRedirecting = false;
+
+function clearSession(options = {}) {
+  clearStoredSession(options);
+  protocolRedirecting = false;
+}
 
 function getSession() {
   const session = sessionManager.readSession();
@@ -54,6 +59,7 @@ function getSession() {
 }
 
 function setSession(session) {
+  const previousSession = sessionManager.readSession();
   const safeSession = {
     anchorId: session && session.anchorId ? session.anchorId : "",
     token: session && session.token ? session.token : "",
@@ -67,6 +73,14 @@ function setSession(session) {
     throw createAuthRequiredError("登录信息不完整，请重新登录");
   }
   sessionManager.writeSession(safeSession);
+  if (
+    !previousSession
+    || previousSession.anchorId !== safeSession.anchorId
+    || previousSession.token !== safeSession.token
+    || safeSession.protocolStatus === "AGREED"
+  ) {
+    protocolRedirecting = false;
+  }
 }
 
 function getAnchorId() {
@@ -98,14 +112,16 @@ function handleProtocolRequired(error) {
   if (!protocolRedirecting) {
     protocolRedirecting = true;
     setTimeout(() => {
-      wx.reLaunch({
-        url: "/src/pages/protocols/index?mode=required",
-        complete() {
-          setTimeout(() => {
+      try {
+        wx.reLaunch({
+          url: "/src/pages/protocols/index?mode=required",
+          fail() {
             protocolRedirecting = false;
-          }, 800);
-        },
-      });
+          },
+        });
+      } catch (navigationError) {
+        protocolRedirecting = false;
+      }
     }, 0);
   }
   error.silent = true;
