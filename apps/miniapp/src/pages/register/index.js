@@ -1,6 +1,10 @@
 const { clearWechatBindToken, getWechatBindToken, openPage } = require("../../utils/api");
 const { createAnchorRegistrationRequest, listAnchorRegistrationRequests } = require("../../services/miniapp-api");
 const { statusLabel, statusTone } = require("../../utils/formatters");
+const {
+  openPrivacyContract: openWechatPrivacyContract,
+  requirePrivacyAuthorization,
+} = require("../../utils/privacy-consent");
 
 function buildDefaultForm() {
   return {
@@ -104,6 +108,7 @@ Page({
       if (!this.data.form.protocolChecked) {
         throw new Error("请先同意协议和隐私政策");
       }
+      await requirePrivacyAuthorization();
       const wechatBindToken = getWechatBindToken();
       const result = await createAnchorRegistrationRequest({
         ...normalizedForm,
@@ -157,5 +162,13 @@ Page({
 
   openProtocols() {
     openPage("protocols");
+  },
+
+  async openPrivacyContract() {
+    try {
+      await openWechatPrivacyContract();
+    } catch (error) {
+      this.setData({ error: error.message || "隐私指引暂时无法打开" });
+    }
   },
 });

@@ -12,6 +12,10 @@
     <text class="wechat-title">微信快速登录</text>
     <text class="wechat-desc">已绑定账号会直接进入。</text>
     <button class="primary wechat-login" bindtap="loginByWechat" loading="{{wechatSubmitting}}" disabled="{{wechatSubmitting || submitting}}">微信一键登录</button>
+    <view class="privacy-entry">
+      <text>登录或提交资料前，请先阅读</text>
+      <text class="privacy-link" bindtap="openPrivacyContract">《小程序用户隐私保护指引》</text>
+    </view>
     <view wx:if="{{wechatBindingPending}}" class="binding-choice">
       <text class="binding-title">这个微信还没有绑定主播账号</text>
       <view class="binding-actions">
