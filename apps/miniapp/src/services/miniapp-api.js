@@ -70,10 +70,10 @@ function getProtocols(anchorId, options = {}) {
   return request(appendQuery("/api/miniapp/protocols", { anchorId }), options);
 }
 
-function agreeProtocol({ anchorId, protocolType, versionNo }) {
+function agreeProtocol({ protocolType, versionNo }) {
   return request("/api/miniapp/protocols/agree", {
     method: "POST",
-    data: { anchorId, protocolType, versionNo },
+    data: { protocolType, versionNo },
   });
 }
 
