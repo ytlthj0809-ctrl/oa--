@@ -40,6 +40,7 @@ const {
   redirectToLogin,
   setWechatBindToken,
 } = sessionManager;
+let protocolRedirecting = false;
 
 function getSession() {
   const session = sessionManager.readSession();
@@ -90,9 +91,32 @@ function handleUnauthorized() {
   return createAuthRequiredError("登录已过期，请重新登录");
 }
 
+function handleProtocolRequired(error) {
+  const session = getSession();
+  if (!session || !session.anchorId) return handleUnauthorized();
+  setSession({ ...session, protocolStatus: "PENDING" });
+  if (!protocolRedirecting) {
+    protocolRedirecting = true;
+    setTimeout(() => {
+      wx.reLaunch({
+        url: "/src/pages/protocols/index?mode=required",
+        complete() {
+          setTimeout(() => {
+            protocolRedirecting = false;
+          }, 800);
+        },
+      });
+    }, 0);
+  }
+  error.silent = true;
+  error.navigationHandled = true;
+  return error;
+}
+
 const request = createRequester({
   getServiceOrigin,
   getSession,
+  onProtocolRequired: handleProtocolRequired,
   onUnauthorized: handleUnauthorized,
 });
 
