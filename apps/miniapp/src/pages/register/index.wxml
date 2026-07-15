@@ -35,6 +35,10 @@
         <text class="hint protocol-link" catchtap="openProtocols">《用户服务协议》和《隐私政策》</text>
       </view>
     </checkbox-group>
+    <view class="privacy-entry">
+      <text>登录或提交资料前，请先阅读</text>
+      <text class="privacy-link" bindtap="openPrivacyContract">《小程序用户隐私保护指引》</text>
+    </view>
     <button class="primary submit-button" bindtap="submitRegistration" loading="{{submitting}}" disabled="{{submitting || registrationLocked || !canSubmit}}">{{registrationLocked ? '申请已提交' : '提交注册申请'}}</button>
     <view class="form-links">
       <text bindtap="refreshRegistrationStatus">{{loadingStatus ? '正在查询' : '查询申请状态'}}</text>

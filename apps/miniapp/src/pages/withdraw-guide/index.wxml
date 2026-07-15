@@ -5,7 +5,10 @@
   </view>
   <view class="card">
     <text>{{guide.detail}}</text>
-    <view class="actions">
+    <view wx:if="{{fromLogin}}" class="actions">
+      <button class="primary" bindtap="goAction">返回登录</button>
+    </view>
+    <view wx:else class="actions">
       <button class="primary" bindtap="goAction">{{guide.actionText}}</button>
       <button class="secondary" bindtap="goWithdraw">返回提现</button>
     </view>

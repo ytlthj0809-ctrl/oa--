@@ -43,14 +43,16 @@ function createSessionManager({
     if (authRedirecting) return;
     authRedirecting = true;
     setTimeout(() => {
-      wx.reLaunch({
-        url: "/src/pages/login/index",
-        complete() {
-          setTimeout(() => {
+      try {
+        wx.reLaunch({
+          url: "/src/pages/login/index",
+          fail() {
             authRedirecting = false;
-          }, 800);
-        },
-      });
+          },
+        });
+      } catch (error) {
+        authRedirecting = false;
+      }
     }, 0);
   }
 

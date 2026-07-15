@@ -1,12 +1,14 @@
 const {
+  clearSession,
   finishPageLoading,
   getAnchorId,
+  getSession,
   handlePageRequestError,
   isAuthRequiredError,
   markMiniappDataDirty,
-  requireAnchorId,
+  setSession,
 } = require("../../utils/api");
-const { agreeProtocol, getProtocols } = require("../../services/miniapp-api");
+const { agreeProtocol, getProtocols, logout } = require("../../services/miniapp-api");
 
 Page({
   data: {
@@ -15,6 +17,10 @@ Page({
     submitting: false,
     error: "",
     protocols: null,
+    protocolItems: [],
+    canAgree: false,
+    userAgreementChecked: false,
+    privacyPolicyChecked: false,
   },
 
   onLoad(options = {}) {
@@ -30,7 +36,11 @@ Page({
         auth: Boolean(anchorId),
         skipAuthRedirect: !anchorId,
       });
-      this.setData({ protocols });
+      this.setData({
+        protocols,
+        protocolItems: [protocols.userAgreement, protocols.privacyPolicy].filter(Boolean),
+        canAgree: Boolean(getAnchorId()),
+      });
       return { ok: true };
     } catch (error) {
       if (isAuthRequiredError(error)) {
@@ -44,34 +54,55 @@ Page({
     }
   },
 
+  toggleAgreement(event) {
+    const field = event.currentTarget.dataset.field;
+    const values = event.detail && event.detail.value ? event.detail.value : [];
+    this.setData({ [field]: values.includes("agreed") });
+  },
+
   async agreeAll() {
+    if (!this.data.userAgreementChecked || !this.data.privacyPolicyChecked) {
+      this.setData({ error: "请分别阅读并勾选两项协议" });
+      return;
+    }
     this.setData({ submitting: true, error: "" });
     try {
-      const anchorId = requireAnchorId();
       const protocols = this.data.protocols || {};
       const items = [protocols.userAgreement, protocols.privacyPolicy].filter(Boolean);
-      if (items.length === 0) throw new Error("暂无需要确认的协议");
-      const results = await Promise.allSettled(items.map((item) => agreeProtocol({
-        anchorId,
-        protocolType: item.protocolType,
-        versionNo: item.versionNo,
-      })));
-      const failedCount = results.filter((result) => result.status === "rejected").length;
-      if (failedCount > 0) {
-        const successCount = results.length - failedCount;
-        const agreementError = new Error(successCount > 0
-          ? `已同意 ${successCount} 项，${failedCount} 项失败，请重试。`
-          : "协议确认失败，请稍后重试。");
-        const refreshResult = await this.loadProtocols({ preserveError: true });
-        if (refreshResult && refreshResult.authRequired) return;
-        throw agreementError;
+      if (items.length !== 2) throw new Error("协议内容未完整加载，请重新加载");
+      let result = null;
+      for (const item of items) {
+        result = await agreeProtocol({
+          protocolType: item.protocolType,
+          versionNo: item.versionNo,
+        });
       }
+      if (!result || result.protocolStatus !== "AGREED") {
+        throw new Error("协议确认未完成，请重试");
+      }
+      const session = getSession();
+      setSession({ ...session, protocolStatus: "AGREED" });
       markMiniappDataDirty();
       wx.switchTab({ url: "/src/pages/home/index" });
     } catch (error) {
-      handlePageRequestError(this, error);
+      const agreementError = error;
+      const refreshResult = await this.loadProtocols({ preserveError: true });
+      if (refreshResult && refreshResult.authRequired) return;
+      handlePageRequestError(this, agreementError);
     } finally {
       finishPageLoading(this, "submitting");
+    }
+  },
+
+  async declineAndExit() {
+    this.setData({ submitting: true, error: "" });
+    try {
+      if (getAnchorId()) await logout();
+    } catch (error) {
+      // Local session must still be removed when the network logout cannot finish.
+    } finally {
+      clearSession();
+      wx.reLaunch({ url: "/src/pages/login/index" });
     }
   },
 });
