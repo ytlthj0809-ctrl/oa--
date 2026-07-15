@@ -1,25 +1,32 @@
 <view class="page" data-q70-miniapp-home-page="true">
-  <view class="summary">
-    <text class="greeting">{{home.greetingText || ''}}</text>
-    <text class="eyebrow">首页</text>
-    <text class="title">余额与提现</text>
+  <view class="premium-home-header">
+    <image
+      class="premium-brand-logo"
+      src="../../assets/brand/jiayin-logo-horizontal-official.png"
+      mode="widthFix"
+    />
+    <view class="premium-greeting-block">
+      <text class="greeting">{{home.greetingText || '您好'}}</text>
+      <text class="premium-brand-copy">感谢您与嘉音传媒一路同行</text>
+    </view>
   </view>
 
   <view wx:if="{{error}}" class="error">{{error}}</view>
   <view wx:if="{{loading}}" class="card page-loading">加载中</view>
 
-  <view wx:if="{{home}}" class="card home-primary-card">
-    <view class="hero-balance">
-      <text class="label">可提现余额</text>
-      <text class="value">{{home.availableBalanceText}}</text>
-    </view>
+  <view wx:if="{{home}}" class="premium-balance-hero" data-q175-premium-balance-hero="true">
+    <text class="premium-balance-label">可提现余额（元）</text>
+    <text class="premium-balance-value">{{home.availableBalanceText}}</text>
     <text class="home-next-copy">{{home.nextAction.text}}</text>
     <button class="primary home-primary-action" bindtap="goNextAction">{{home.nextAction.buttonText || '继续'}}</button>
   </view>
 
-  <view wx:if="{{home && !home.withdrawReady}}" class="card">
-    <view class="section-head">
-      <text class="label">提现五步</text>
+  <view wx:if="{{home}}" class="premium-withdraw-progress" data-q175-premium-withdraw-progress="true">
+    <view class="premium-section-head">
+      <view>
+        <text class="premium-section-kicker">提现进度</text>
+        <text class="premium-section-title">完成以下五步即可申请提现</text>
+      </view>
       <text class="badge {{home.nextAction.tone}}">{{home.nextAction.buttonText || '继续'}}</text>
     </view>
     <view class="guide-list">
@@ -36,8 +43,6 @@
         <view class="guide-main">
           <text class="guide-title">{{item.title}}</text>
           <text class="guide-desc">{{item.description}}</text>
-        </view>
-        <view class="guide-action">
           <text class="badge {{item.tone}}">{{item.statusText}}</text>
           <text class="guide-link">{{item.buttonText}}</text>
         </view>
@@ -45,29 +50,35 @@
     </view>
   </view>
 
-  <view wx:if="{{home}}" class="card">
-    <view class="grid">
-      <view class="metric">
+  <view wx:if="{{home}}" class="premium-status-section">
+    <view class="premium-section-head premium-status-heading">
+      <view>
+        <text class="premium-section-kicker">账户概览</text>
+        <text class="premium-section-title">余额与提现资格</text>
+      </view>
+    </view>
+    <view class="home-status-list">
+      <view class="metric home-status-row">
         <text class="label">可用余额</text>
         <text class="value">{{home.availableBalanceText}}</text>
       </view>
-      <view class="metric">
+      <view class="metric home-status-row">
         <text class="label">冻结余额</text>
         <text class="value">{{home.frozenBalanceText}}</text>
       </view>
-      <view class="metric">
+      <view class="metric home-status-row">
         <text class="label">注册状态</text>
         <text class="badge {{home.registrationStatusTone}}">{{home.registrationStatusText}}</text>
       </view>
-      <view class="metric">
+      <view class="metric home-status-row">
         <text class="label">白名单状态</text>
         <text class="badge {{home.whitelistStatusTone}}">{{home.whitelistStatusText}}</text>
       </view>
-      <view class="metric">
+      <view class="metric home-status-row">
         <text class="label">签约状态</text>
         <text class="value">{{home.signStatusText}}</text>
       </view>
-      <view class="metric">
+      <view class="metric home-status-row">
         <text class="label">打款信息</text>
         <text class="value">{{home.paymentInfoStatusText}}</text>
       </view>
