@@ -9,6 +9,7 @@ const {
 function buildDefaultForm() {
   return {
     anchorId: "",
+    bixinAccountNo: "",
     displayName: "",
     mobile: "",
     protocolChecked: false,
@@ -22,6 +23,7 @@ function normalizeMobile(value) {
 function normalizeRegistrationForm(form) {
   return {
     anchorId: String(form.anchorId || "").trim(),
+    bixinAccountNo: String(form.bixinAccountNo || "").trim(),
     displayName: String(form.displayName || "").trim(),
     mobile: normalizeMobile(form.mobile),
   };
@@ -31,6 +33,7 @@ function canSubmitRegistration(form) {
   const normalized = normalizeRegistrationForm(form);
   return Boolean(
     normalized.anchorId &&
+    normalized.bixinAccountNo &&
     normalized.displayName &&
     /^1[3-9]\d{9}$/.test(normalized.mobile) &&
     form.protocolChecked
@@ -103,6 +106,7 @@ Page({
       const form = this.data.form;
       const normalizedForm = normalizeRegistrationForm(form);
       if (!normalizedForm.anchorId) throw new Error("请输入主播ID");
+      if (!normalizedForm.bixinAccountNo) throw new Error("请输入比心 ID");
       if (!normalizedForm.displayName) throw new Error("请输入主播姓名或昵称");
       if (!/^1[3-9]\d{9}$/.test(normalizedForm.mobile)) throw new Error("请输入正确的手机号");
       if (!this.data.form.protocolChecked) {

@@ -1,5 +1,21 @@
 const { appendQuery, request } = require("../utils/api");
 
+const bixinRegistrationErrorMessages = {
+  BIXIN_ACCOUNT_NO_REQUIRED: "请输入比心 ID",
+  BIXIN_WHITELIST_NOT_AVAILABLE: "未找到对应的待注册白名单，请核对比心 ID 或联系运营",
+  BIXIN_WHITELIST_RESERVED: "该比心 ID 已有注册申请处理中，请勿重复提交",
+  BIXIN_ACCOUNT_ALREADY_BOUND: "该比心 ID 已完成绑定，请返回登录或联系运营",
+};
+
+function mapBixinRegistrationError(error) {
+  const message = bixinRegistrationErrorMessages[error?.code];
+  if (!message) return error;
+  const safeError = new Error(message);
+  safeError.code = error.code;
+  safeError.statusCode = error.statusCode;
+  return safeError;
+}
+
 function getHome(anchorId) {
   return request(appendQuery("/api/miniapp/home", { anchorId }));
 }
@@ -96,11 +112,15 @@ function createPlatformBindRequest({ anchorId, platform, accountNo, reason }) {
   });
 }
 
-function createAnchorRegistrationRequest({ anchorId, displayName, mobile, wechatBindToken }) {
-  return request("/api/miniapp/anchor-registration-requests", {
-    method: "POST",
-    data: { anchorId, displayName, mobile, wechatBindToken },
-  });
+async function createAnchorRegistrationRequest({ anchorId, displayName, mobile, bixinAccountNo, wechatBindToken }) {
+  try {
+    return await request("/api/miniapp/anchor-registration-requests", {
+      method: "POST",
+      data: { anchorId, displayName, mobile, bixinAccountNo, wechatBindToken },
+    });
+  } catch (error) {
+    throw mapBixinRegistrationError(error);
+  }
 }
 
 function listAnchorRegistrationRequests({ anchorId, mobile, reviewStatus } = {}) {

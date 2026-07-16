@@ -17,6 +17,11 @@
       <input value="{{form.anchorId}}" data-field="anchorId" bindinput="updateField" disabled="{{registrationLocked}}" placeholder="例如 A1001" />
     </label>
     <label class="field">
+      <text>比心 ID</text>
+      <input value="{{form.bixinAccountNo}}" data-field="bixinAccountNo" bindinput="updateField" disabled="{{registrationLocked}}" maxlength="128" placeholder="请输入比心平台中的 ID" />
+      <text class="field-help">用于认领运营已上传的待注册白名单及注册前收入，必须与比心平台中的 ID 完全一致。</text>
+    </label>
+    <label class="field">
       <text>主播姓名</text>
       <input value="{{form.displayName}}" data-field="displayName" bindinput="updateField" disabled="{{registrationLocked}}" placeholder="请输入主播姓名或昵称" />
     </label>
@@ -49,7 +54,7 @@
   <view wx:if="{{latestRequest}}" class="result-card">
     <text class="record-id">{{latestRequest.registrationId}}</text>
     <text class="badge {{latestRequest.reviewStatusTone}}">{{latestRequest.reviewStatusText}}</text>
-    <text class="result-line">主播ID {{latestRequest.anchorId || '-'}} · {{latestRequest.mobile}}</text>
+    <text class="result-line">主播ID {{latestRequest.anchorId || '-'}} · 比心 ID {{latestRequest.bixinAccountNo || latestRequest.accountNo || '-'}} · {{latestRequest.mobile}}</text>
     <text class="helper-text">{{latestRequest.nextStepText}}</text>
   </view>
 </view>
