@@ -141,6 +141,10 @@ Page({
     try {
       const form = normalizeRegistrationForm(this.data.form);
       if (!form.anchorId && !form.mobile) throw new Error("请先输入主播ID或手机号");
+      if (!this.data.form.protocolChecked) {
+        throw new Error("请先同意协议和隐私政策");
+      }
+      await requirePrivacyAuthorization();
       const records = await listAnchorRegistrationRequests({
         anchorId: form.anchorId,
         mobile: form.mobile,

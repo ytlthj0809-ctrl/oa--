@@ -46,7 +46,6 @@
     </view>
     <button class="primary submit-button" bindtap="submitRegistration" loading="{{submitting}}" disabled="{{submitting || registrationLocked || !canSubmit}}">{{registrationLocked ? '申请已提交' : '提交注册申请'}}</button>
     <view class="form-links">
-      <text bindtap="refreshRegistrationStatus">{{loadingStatus ? '正在查询' : '查询申请状态'}}</text>
       <text bindtap="goLogin">返回登录</text>
     </view>
   </view>
