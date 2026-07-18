@@ -1,5 +1,6 @@
 const {
   finishPageLoading,
+  getMiniappDataDirtyAt,
   handlePageRequestError,
   isAuthRequiredError,
   markMiniappDataDirty,
@@ -7,10 +8,20 @@ const {
   requireAnchorId,
   stopPullDownRefresh,
 } = require("../../utils/api");
+const { NOTIFICATIONS_CACHE_TTL_MS } = require("../../utils/constants");
+const { registerMiniappCacheResetter } = require("../../utils/cache");
 const { formatDateShort, statusLabel, statusTone, typeLabel } = require("../../utils/formatters");
 const { createOptimisticUpdateCoordinator } = require("../../utils/optimistic-update-coordinator");
 const { listNotifications, markNotificationRead } = require("../../services/miniapp-api");
 const NOTIFICATION_READ_CONCURRENCY = 5;
+
+let notificationsCache = { anchorId: "", notifications: null, loadedAt: 0 };
+
+function resetNotificationsCache() {
+  notificationsCache = { anchorId: "", notifications: null, loadedAt: 0 };
+}
+
+registerMiniappCacheResetter(resetNotificationsCache);
 
 // Keep async loads and optimistic mutations behind one lifecycle-aware coordinator.
 function getNotificationCoordinator(page) {
@@ -73,7 +84,7 @@ Page({
   },
 
   onPullDownRefresh() {
-    this.loadNotifications().finally(stopPullDownRefresh);
+    this.loadNotifications({ force: true }).finally(stopPullDownRefresh);
   },
 
   onUnload() {
@@ -87,9 +98,23 @@ Page({
     this.setData({ loading: true, ...(options.preserveError ? {} : { error: "" }) });
     try {
       const anchorId = requireAnchorId();
+      const dirtyAt = getMiniappDataDirtyAt();
+      if (
+        !options.force
+        && notificationsCache.anchorId === anchorId
+        && notificationsCache.notifications
+        && notificationsCache.loadedAt >= dirtyAt
+        && Date.now() - notificationsCache.loadedAt < NOTIFICATIONS_CACHE_TTL_MS
+      ) {
+        if (!coordinator.canApplyLoad(loadToken)) return;
+        applyNotificationState(this, notificationsCache.notifications);
+        coordinator.endLoad(loadToken);
+        return;
+      }
       const notifications = await listNotifications(anchorId);
       if (!coordinator.canApplyLoad(loadToken)) return;
       const decorated = (notifications || []).map(decorateNotification);
+      notificationsCache = { anchorId, notifications: decorated, loadedAt: Date.now() };
       applyNotificationState(this, decorated);
     } catch (error) {
       if (!coordinator.canApplyLoad(loadToken)) return;
@@ -132,6 +157,7 @@ Page({
     try {
       await markNotificationRead({ anchorId, notificationId });
       markMiniappDataDirty();
+      resetNotificationsCache();
     } catch (error) {
       if (!coordinator.canApplyItemMutation(mutationToken)) return;
       const rolledBackNotifications = this.data.notifications.map((item) =>
@@ -175,7 +201,10 @@ Page({
       const successfulIds = new Set(
         unreadIds.filter((_, index) => results[index].status === "fulfilled"),
       );
-      if (successfulIds.size > 0) markMiniappDataDirty();
+      if (successfulIds.size > 0) {
+        markMiniappDataDirty();
+        resetNotificationsCache();
+      }
       if (!coordinator.canApplyBulkMutation(mutationToken)) return;
       const failedResults = results.filter((result) => result.status === "rejected");
       const reconciledNotifications = previousNotifications.map((item) =>

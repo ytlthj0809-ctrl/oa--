@@ -7,31 +7,7 @@ const { registerMiniappCacheResetter } = require("../../utils/cache");
 const { decorateBalanceFlow, decorateDataSnapshot, decorateReward } = require("../../utils/decorators");
 const { getCurrentChinaMonth } = require("../../utils/formatters");
 const { getDataSnapshots, listBalanceFlows, listTaskRewards } = require("../../services/miniapp-api");
-
-let staticDataCacheGeneration = 0;
-
-function createStaticDataCache(data = {}) {
-  return {
-    anchorId: "",
-    flows: [],
-    rewards: [],
-    flowPage: 0,
-    rewardPage: 0,
-    flowHasMore: false,
-    rewardHasMore: false,
-    loadedAt: 0,
-    generation: ++staticDataCacheGeneration,
-    flowGeneration: 0,
-    rewardGeneration: 0,
-    ...data,
-  };
-}
-
-let staticDataCache = createStaticDataCache();
-
-function resetStaticDataCache() {
-  staticDataCache = createStaticDataCache();
-}
+const { state, createStaticDataCache, resetStaticDataCache } = require("../../utils/static-data-cache");
 
 registerMiniappCacheResetter(resetStaticDataCache);
 
@@ -108,19 +84,19 @@ Page({
       const platform = this.data.platform;
       const dirtyAt = getMiniappDataDirtyAt();
       const canReuseStatic = !options.force
-        && staticDataCache.anchorId === anchorId
-        && staticDataCache.loadedAt >= dirtyAt
-        && Date.now() - staticDataCache.loadedAt < STATIC_DATA_CACHE_TTL_MS;
+        && state.staticDataCache.anchorId === anchorId
+        && state.staticDataCache.loadedAt >= dirtyAt
+        && Date.now() - state.staticDataCache.loadedAt < STATIC_DATA_CACHE_TTL_MS;
       const snapshotsPromise = getDataSnapshots({
         anchorId,
         month,
         platform,
       });
       const flowsPromise = canReuseStatic
-        ? Promise.resolve(staticDataCache.flows)
+        ? Promise.resolve(state.staticDataCache.flows)
         : listBalanceFlows({ anchorId, page: 1, pageSize: MINIAPP_LIST_PAGE_SIZE });
       const rewardsPromise = canReuseStatic
-        ? Promise.resolve(staticDataCache.rewards)
+        ? Promise.resolve(state.staticDataCache.rewards)
         : listTaskRewards({ anchorId, page: 1, pageSize: MINIAPP_LIST_PAGE_SIZE });
       const [snapshots, flowsRaw, rewardsRaw] = await Promise.all([snapshotsPromise, flowsPromise, rewardsPromise]);
       if (generation !== this.__dataGeneration) return;
@@ -131,7 +107,7 @@ Page({
       if (!canReuseStatic) {
         const flows = Array.isArray(flowsRaw) ? flowsRaw : [];
         const rewards = Array.isArray(rewardsRaw) ? rewardsRaw : [];
-        staticDataCache = createStaticDataCache({
+        state.staticDataCache = createStaticDataCache({
           anchorId,
           flows,
           rewards,
@@ -142,16 +118,16 @@ Page({
           loadedAt: Date.now(),
         });
       }
-      const flows = staticDataCache.flows.map(decorateBalanceFlow);
-      const rewards = staticDataCache.rewards.map(decorateReward);
+      const flows = state.staticDataCache.flows.map(decorateBalanceFlow);
+      const rewards = state.staticDataCache.rewards.map(decorateReward);
       this.setData({
         snapshots: (snapshots || []).map(decorateDataSnapshot),
         flows,
         rewards,
-        flowPage: staticDataCache.flowPage,
-        rewardPage: staticDataCache.rewardPage,
-        flowHasMore: staticDataCache.flowHasMore,
-        rewardHasMore: staticDataCache.rewardHasMore,
+        flowPage: state.staticDataCache.flowPage,
+        rewardPage: state.staticDataCache.rewardPage,
+        flowHasMore: state.staticDataCache.flowHasMore,
+        rewardHasMore: state.staticDataCache.rewardHasMore,
       });
     } catch (error) {
       if (generation !== this.__dataGeneration) return;
@@ -180,11 +156,11 @@ Page({
     try {
       const anchorId = requireAnchorId();
       const dirtyAt = getMiniappDataDirtyAt();
-      const cacheGeneration = staticDataCache.generation;
-      const flowGeneration = staticDataCache.flowGeneration;
-      const cacheLoadedAt = staticDataCache.loadedAt;
-      const cacheReady = staticDataCache.anchorId === anchorId
-        && staticDataCache.flowPage === currentPage
+      const cacheGeneration = state.staticDataCache.generation;
+      const flowGeneration = state.staticDataCache.flowGeneration;
+      const cacheLoadedAt = state.staticDataCache.loadedAt;
+      const cacheReady = state.staticDataCache.anchorId === anchorId
+        && state.staticDataCache.flowPage === currentPage
         && cacheLoadedAt >= dirtyAt
         && Date.now() - cacheLoadedAt < STATIC_DATA_CACHE_TTL_MS;
       if (!cacheReady) {
@@ -208,18 +184,18 @@ Page({
       if (
         dataGeneration !== this.__dataGeneration
         || requestGeneration !== this.__flowLoadMoreGeneration
-        || staticDataCache.generation !== cacheGeneration
-        || staticDataCache.flowGeneration !== flowGeneration
-        || staticDataCache.loadedAt !== cacheLoadedAt
-        || staticDataCache.anchorId !== anchorId
-        || staticDataCache.flowPage !== currentPage
+        || state.staticDataCache.generation !== cacheGeneration
+        || state.staticDataCache.flowGeneration !== flowGeneration
+        || state.staticDataCache.loadedAt !== cacheLoadedAt
+        || state.staticDataCache.anchorId !== anchorId
+        || state.staticDataCache.flowPage !== currentPage
       ) return;
       const items = Array.isArray(rawItems) ? rawItems : [];
       const flows = this.data.flows.concat(items.map(decorateBalanceFlow));
       const flowHasMore = items.length === MINIAPP_LIST_PAGE_SIZE;
-      staticDataCache = {
-        ...staticDataCache,
-        flows: staticDataCache.flows.concat(items),
+      state.staticDataCache = {
+        ...state.staticDataCache,
+        flows: state.staticDataCache.flows.concat(items),
         flowPage: nextPage,
         flowHasMore,
         flowGeneration: flowGeneration + 1,
@@ -250,11 +226,11 @@ Page({
     try {
       const anchorId = requireAnchorId();
       const dirtyAt = getMiniappDataDirtyAt();
-      const cacheGeneration = staticDataCache.generation;
-      const rewardGeneration = staticDataCache.rewardGeneration;
-      const cacheLoadedAt = staticDataCache.loadedAt;
-      const cacheReady = staticDataCache.anchorId === anchorId
-        && staticDataCache.rewardPage === currentPage
+      const cacheGeneration = state.staticDataCache.generation;
+      const rewardGeneration = state.staticDataCache.rewardGeneration;
+      const cacheLoadedAt = state.staticDataCache.loadedAt;
+      const cacheReady = state.staticDataCache.anchorId === anchorId
+        && state.staticDataCache.rewardPage === currentPage
         && cacheLoadedAt >= dirtyAt
         && Date.now() - cacheLoadedAt < STATIC_DATA_CACHE_TTL_MS;
       if (!cacheReady) {
@@ -278,18 +254,18 @@ Page({
       if (
         dataGeneration !== this.__dataGeneration
         || requestGeneration !== this.__rewardLoadMoreGeneration
-        || staticDataCache.generation !== cacheGeneration
-        || staticDataCache.rewardGeneration !== rewardGeneration
-        || staticDataCache.loadedAt !== cacheLoadedAt
-        || staticDataCache.anchorId !== anchorId
-        || staticDataCache.rewardPage !== currentPage
+        || state.staticDataCache.generation !== cacheGeneration
+        || state.staticDataCache.rewardGeneration !== rewardGeneration
+        || state.staticDataCache.loadedAt !== cacheLoadedAt
+        || state.staticDataCache.anchorId !== anchorId
+        || state.staticDataCache.rewardPage !== currentPage
       ) return;
       const items = Array.isArray(rawItems) ? rawItems : [];
       const rewards = this.data.rewards.concat(items.map(decorateReward));
       const rewardHasMore = items.length === MINIAPP_LIST_PAGE_SIZE;
-      staticDataCache = {
-        ...staticDataCache,
-        rewards: staticDataCache.rewards.concat(items),
+      state.staticDataCache = {
+        ...state.staticDataCache,
+        rewards: state.staticDataCache.rewards.concat(items),
         rewardPage: nextPage,
         rewardHasMore,
         rewardGeneration: rewardGeneration + 1,

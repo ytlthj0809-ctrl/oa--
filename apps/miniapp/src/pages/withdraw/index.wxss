@@ -1,6 +1,5 @@
 @import "../../styles/common.wxss";
 
-.summary,
 .record,
 .detail {
   background: #ffffff;
@@ -18,55 +17,6 @@
   justify-content: space-between;
   margin-bottom: 20rpx;
   padding: 24rpx;
-}
-
-.eyebrow,
-.label,
-.timeline-reason {
-  color: #667085;
-  display: block;
-  font-size: 24rpx;
-}
-
-.title {
-  display: block;
-  font-size: 34rpx;
-  font-weight: 700;
-  margin-top: 8rpx;
-}
-
-.primary,
-.secondary {
-  align-items: center;
-  display: flex;
-  font-weight: 700;
-  justify-content: center;
-  line-height: 1.25;
-  min-height: 76rpx;
-  min-width: 0;
-  padding: 0 20rpx;
-  white-space: normal;
-}
-
-.primary::after,
-.secondary::after,
-button::after {
-  border: 0;
-}
-
-.primary {
-  background: #ffda01;
-  border-radius: 14rpx;
-  box-shadow: 0 8rpx 18rpx rgba(255, 218, 1, 0.22);
-  color: #231815;
-  font-size: 26rpx;
-}
-
-.secondary {
-  background: #eef2f6;
-  border-radius: 14rpx;
-  color: #231815;
-  font-size: 24rpx;
 }
 
 .small {

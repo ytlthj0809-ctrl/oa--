@@ -20,6 +20,12 @@ const reasonMap = {
     actionText: "去签约",
     page: "sign",
   },
+  PAYMENT_INFO_NOT_EFFECTIVE: {
+    title: "打款信息尚未生效",
+    detail: "打款信息提交后需要审核生效，生效完成后才能发起提现。",
+    actionText: "查看打款信息",
+    page: "payment-info",
+  },
 };
 
 Page({

@@ -44,6 +44,7 @@
   },
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents",
+  "__usePrivacyCheck__": true,
   "networkTimeout": {
     "request": 15000,
     "uploadFile": 30000,

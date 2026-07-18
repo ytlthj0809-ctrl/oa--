@@ -101,7 +101,7 @@ Page({
     if (this.__profileDisposed || requestId !== this.__profileLoadRequestId) return;
     this.setData({ loading: true, error: "" });
     try {
-      const [profile, protocols, contact, legacy] = await Promise.all([
+      const [profileSettled, protocolsSettled, contactSettled, legacySettled] = await Promise.allSettled([
         getProfile(anchorId),
         getProtocols(anchorId),
         getContact({ auth: false, skipAuthRedirect: true }),
@@ -112,6 +112,13 @@ Page({
         await this.loadProfile({ force: true });
         return;
       }
+      if (profileSettled.status !== "fulfilled") {
+        throw profileSettled.reason;
+      }
+      const profile = profileSettled.value;
+      const protocols = protocolsSettled.status === "fulfilled" ? protocolsSettled.value : (console.warn("profile: protocols load failed", protocolsSettled.reason), null);
+      const contact = contactSettled.status === "fulfilled" ? contactSettled.value : (console.warn("profile: contact load failed", contactSettled.reason), null);
+      const legacy = legacySettled.status === "fulfilled" ? legacySettled.value : (console.warn("profile: legacy load failed", legacySettled.reason), null);
       const pageData = {
         profile: profile ? {
           ...profile,
