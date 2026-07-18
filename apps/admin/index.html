@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>嘉音管理后台</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="toast" class="toast" hidden></div>
+    <main id="login" class="login-shell">
+      <section class="login-card">
+        <img
+          class="login-logo"
+          src="./brand/jiayin-logo-horizontal-official.png"
+          alt="嘉音"
+        />
+        <p class="eyebrow">安全管理后台</p>
+        <h1>欢迎回来</h1>
+        <p class="muted">仅供超级管理员使用</p>
+        <form id="login-form" class="form-stack">
+          <label
+            >用户名<input name="username" autocomplete="username" required
+          /></label>
+          <label
+            >密码<input
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+          /></label>
+          <button class="button primary wide" type="submit">登录</button>
+        </form>
+      </section>
+    </main>
+
+    <div id="shell" class="app-shell" hidden>
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="./brand/jiayin-mark-official.png" alt="" />
+          <div><strong>嘉音</strong><span>提现管理</span></div>
+        </div>
+        <nav id="nav">
+          <button data-page="today" class="nav-item active">
+            <span>01</span>今日处理
+          </button>
+          <button data-page="imports" class="nav-item">
+            <span>02</span>日数据导入
+          </button>
+          <button data-page="anchors" class="nav-item">
+            <span>03</span>主播与余额
+          </button>
+          <button data-page="withdrawals" class="nav-item">
+            <span>04</span>提现记录
+          </button>
+        </nav>
+        <div class="sidebar-note"><i></i>系统安全运行中</div>
+      </aside>
+      <div class="workspace">
+        <header class="topbar">
+          <div>
+            <p id="page-kicker" class="eyebrow">工作台</p>
+            <h1 id="page-title">今日处理</h1>
+          </div>
+          <div class="account-wrap">
+            <button id="account-button" class="account-button">
+              <span id="account-name">管理员</span><b>⌄</b>
+            </button>
+            <div id="account-menu" class="popover" hidden>
+              <button data-action="admins">超级管理员</button>
+              <button data-action="audit">审计记录</button>
+              <button data-action="logout" class="danger-text">退出登录</button>
+            </div>
+          </div>
+        </header>
+        <section id="content" class="content"></section>
+      </div>
+    </div>
+
+    <dialog id="modal" class="modal"><div id="modal-content"></div></dialog>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

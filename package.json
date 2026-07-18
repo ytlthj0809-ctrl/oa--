@@ -1,0 +1,22 @@
+{
+  "name": "jiayin-withdraw-v2",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node services/api/src/server.mjs",
+    "dev": "NODE_ENV=development node --watch services/api/src/server.mjs",
+    "db:init": "node services/api/src/init-db.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1090.0",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "jszip": "^3.10.1",
+    "mysql2": "^3.22.5"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
+  }
+}
