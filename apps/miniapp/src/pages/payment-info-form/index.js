@@ -1,4 +1,5 @@
 const {
+  createClientRequestId,
   finishPageLoading,
   handlePageRequestError,
   markMiniappDataDirty,
@@ -59,7 +60,8 @@ Page({
       validatePaymentInfoForm(form);
       const confirmed = await this.confirmSave();
       if (!confirmed) return;
-      await createPaymentInfo({ anchorId, ...form });
+      const clientRequestId = createClientRequestId("payment-info");
+      await createPaymentInfo({ anchorId, ...form, clientRequestId });
       markMiniappDataDirty();
       this.setData({
         form: emptyPaymentInfoForm(),

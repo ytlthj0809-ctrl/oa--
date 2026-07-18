@@ -5,7 +5,6 @@ const statusLabels = {
   AGREED: "已同意",
   APPLIED: "已申请",
   APPROVED: "已通过",
-  AVAILABLE: "可用",
   BOUND: "已绑定",
   CANCELLED: "已取消",
   COMPLETED: "已完成",
@@ -32,7 +31,6 @@ const statusLabels = {
   READ: "已读",
   READY: "就绪",
   REJECTED: "已驳回",
-  RESERVED: "注册申请占用中",
   RETURNED: "已退回",
   SAVED: "已保存",
   SENT_LOCAL: "已本地记录",
@@ -45,8 +43,6 @@ const statusLabels = {
   UNFREEZE: "已解冻",
   UNREAD: "未读",
   UNSIGNED: "未签约",
-  USED: "已使用",
-  USED_BY_OTHER: "已被其他主播使用",
   WAIT_PAY: "待线下付款",
   WAIT_BATCH: "待成批",
 };
@@ -76,9 +72,9 @@ const typeLabels = {
   YZH_PAYMENT_INFO: "打款信息",
 };
 
-const pendingStatuses = new Set(["APPLIED", "NEED_RESIGN", "PENDING", "PENDING_FINANCE_REVIEW", "PENDING_FIRST_REVIEW", "PENDING_REVIEW", "PENDING_SUPER_REVIEW", "RESERVED", "SIGNING", "SUBMITTED", "WAIT_BATCH", "WAIT_PAY", "PAYING", "PENDING_SYNC"]);
-const successStatuses = new Set(["ACTIVE", "AGREED", "APPROVED", "AVAILABLE", "BOUND", "COMPLETED", "EFFECTIVE", "ENABLED", "PAID", "QUALIFIED", "READ", "READY", "SAVED", "SENT_LOCAL", "SIGNED", "SUCCESS", "USED"]);
-const dangerStatuses = new Set(["CANCELLED", "FAILED", "FINANCE_REJECTED", "FIRST_REJECTED", "FROZEN", "INVALID", "MISSING", "PAUSED", "PAY_FAILED", "REJECTED", "RETURNED", "SUPER_REJECTED", "UNBOUND", "UNSIGNED", "USED_BY_OTHER"]);
+const pendingStatuses = new Set(["APPLIED", "NEED_RESIGN", "PENDING", "PENDING_FINANCE_REVIEW", "PENDING_FIRST_REVIEW", "PENDING_REVIEW", "PENDING_SUPER_REVIEW", "SIGNING", "SUBMITTED", "WAIT_BATCH", "WAIT_PAY", "PAYING", "PENDING_SYNC"]);
+const successStatuses = new Set(["ACTIVE", "AGREED", "APPROVED", "BOUND", "COMPLETED", "EFFECTIVE", "ENABLED", "PAID", "QUALIFIED", "READ", "READY", "SAVED", "SENT_LOCAL", "SIGNED", "SUCCESS"]);
+const dangerStatuses = new Set(["CANCELLED", "FAILED", "FINANCE_REJECTED", "FIRST_REJECTED", "FROZEN", "INVALID", "MISSING", "PAUSED", "PAY_FAILED", "REJECTED", "RETURNED", "SUPER_REJECTED", "UNBOUND", "UNSIGNED"]);
 
 function normalizeStatus(value) {
   if (value && typeof value === "object") {

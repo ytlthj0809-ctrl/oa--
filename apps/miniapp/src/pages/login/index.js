@@ -7,11 +7,6 @@ const {
 } = require("../../utils/api");
 const { LOGIN_COOLDOWN_MS, LOGIN_FAILURE_LIMIT } = require("../../utils/constants");
 const {
-  getWechatLoginCode,
-  openPrivacyContract: openWechatPrivacyContract,
-  requirePrivacyAuthorization,
-} = require("../../utils/privacy-consent");
-const {
   bindWechatAccount,
   loginByPassword,
   loginByWechat: loginByWechatRequest,
@@ -137,8 +132,6 @@ Page({
 
   async loginWithCurrentForm() {
     if (this.syncLoginCooldown()) return;
-    let passwordRequestStarted = false;
-    let passwordRequestCompleted = false;
     this.setData({ submitting: true, error: "" });
     try {
       if (!this.data.form.mobile) {
@@ -154,50 +147,45 @@ Page({
       const loginAccount = this.data.form.mobile;
       const password = this.data.form.password;
       this.setData({ form: { ...this.data.form, password: "" } });
-      await requirePrivacyAuthorization();
-      passwordRequestStarted = true;
       const session = await loginByPassword({
         loginAccount,
         password,
       });
-      passwordRequestCompleted = true;
       clearLoginFailureState();
       await this.enterWithSession(session);
     } catch (error) {
-      this.setData({ error: (error && error.message) || "登录失败，请重试" });
-      if (passwordRequestStarted && !passwordRequestCompleted && !(error && error.clientValidation)) {
-        this.recordPasswordLoginFailure();
-      }
+      this.setData({ error: error.message });
+      if (!error.clientValidation) this.recordPasswordLoginFailure();
     } finally {
       this.setData({ submitting: false });
     }
   },
 
-  async loginByWechat() {
-    if (this.data.wechatSubmitting || this.data.submitting) return;
+  loginByWechat() {
     this.setData({ wechatSubmitting: true, error: "" });
-    try {
-      await requirePrivacyAuthorization();
-      const result = await loginByWechatRequest(await getWechatLoginCode());
-      if (result.bindingRequired) {
-        if (result.wechatBindToken) setWechatBindToken(result.wechatBindToken);
-        this.setData({ wechatBindingPending: true, legacyLoginExpanded: true });
-        return;
-      }
-      await this.enterWithSession(result);
-    } catch (error) {
-      this.setData({ error: error.message || "微信登录失败，请重试" });
-    } finally {
-      this.setData({ wechatSubmitting: false });
-    }
-  },
-
-  async openPrivacyContract() {
-    try {
-      await openWechatPrivacyContract();
-    } catch (error) {
-      this.setData({ error: error.message || "隐私指引暂时无法打开" });
-    }
+    wx.login({
+      success: async ({ code }) => {
+        try {
+          if (!code) throw new Error("未获取到微信登录凭证，请重试");
+          const result = await loginByWechatRequest(code);
+          if (result.bindingRequired) {
+            if (result.wechatBindToken) {
+              setWechatBindToken(result.wechatBindToken);
+            }
+            this.setData({ wechatBindingPending: true, legacyLoginExpanded: true });
+            return;
+          }
+          await this.enterWithSession(result);
+        } catch (error) {
+          this.setData({ error: error.message });
+        } finally {
+          this.setData({ wechatSubmitting: false });
+        }
+      },
+      fail: (error) => {
+        this.setData({ error: error.errMsg || "微信登录失败", wechatSubmitting: false });
+      },
+    });
   },
 
   toggleLegacyLogin() {
@@ -216,11 +204,11 @@ Page({
     wx.navigateTo({ url: `/src/pages/register/index${getWechatBindToken() ? "?from=wechatLogin" : ""}` });
   },
 
-  openWithdrawRules() {
-    wx.navigateTo({ url: "/src/pages/withdraw-guide/index?reason=RULES&from=login" });
-  },
-
   openProtocols() {
     openPage("protocols");
+  },
+
+  openContact() {
+    openPage("contact");
   },
 });

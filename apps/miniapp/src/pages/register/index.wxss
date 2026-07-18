@@ -63,12 +63,6 @@
   font-size: 24rpx;
 }
 
-.field .field-help {
-  color: #7a6a42;
-  font-size: 22rpx;
-  line-height: 1.5;
-}
-
 .field input {
   background: #ffffff;
   border: 1rpx solid #d9dee8;

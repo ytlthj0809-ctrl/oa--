@@ -11,6 +11,7 @@ const { decorateWithdrawRecord } = require("../../utils/decorators");
 const { formatDateShort, statusLabel, statusTone } = require("../../utils/formatters");
 
 const resubmittableStatuses = new Set(["CANCELLED", "FAILED", "FINANCE_REJECTED", "FIRST_REJECTED", "REJECTED", "RETURNED", "SUPER_REJECTED"]);
+const supportStatuses = new Set([...resubmittableStatuses, "PAY_FAILED"]);
 
 function formatVisibleReason(value) {
   const text = String(value || "").trim();
@@ -21,7 +22,7 @@ function formatVisibleReason(value) {
 function buildNextStepText(statusValue) {
   const status = String(statusValue || "").trim().toUpperCase();
   if (resubmittableStatuses.has(status)) return "请查看驳回原因，修正资料后重新提交。";
-  if (status === "PAY_FAILED") return "财务正在处理付款异常，无需重复提交；长时间未更新可线下联系运营。";
+  if (status === "PAY_FAILED") return "财务正在处理付款异常，无需重复提交；长时间未更新可联系客服。";
   if (["PAID", "COMPLETED", "SUCCESS"].includes(status)) return "本次提现已经完成，请核对银行卡到账记录。";
   if (["WAIT_PAY", "PAYING"].includes(status)) return "申请已通过审核，正在等待线下付款和结果登记。";
   if (["WAIT_BATCH", "BATCH_CREATED"].includes(status)) return "审核已通过，正在等待财务安排付款批次。";
@@ -62,6 +63,7 @@ Page({
     error: "",
     detail: null,
     canResubmit: false,
+    showSupport: false,
   },
 
   onLoad(options = {}) {
@@ -103,6 +105,7 @@ Page({
       this.setData({
         detail: decorated,
         canResubmit: resubmittableStatuses.has(String(status || "").trim().toUpperCase()),
+        showSupport: supportStatuses.has(String(status || "").trim().toUpperCase()),
       });
     } catch (error) {
       if (generation !== this.__detailLoadGeneration) return;
@@ -116,6 +119,10 @@ Page({
 
   resubmit() {
     openPage("withdraw");
+  },
+
+  openContact() {
+    openPage("contact");
   },
 
   goRecords() {

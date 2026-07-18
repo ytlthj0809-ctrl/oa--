@@ -1,14 +1,12 @@
 const {
-  clearSession,
   finishPageLoading,
   getAnchorId,
-  getSession,
   handlePageRequestError,
   isAuthRequiredError,
   markMiniappDataDirty,
-  setSession,
+  requireAnchorId,
 } = require("../../utils/api");
-const { agreeProtocol, getProtocols, logout } = require("../../services/miniapp-api");
+const { agreeProtocol, getProtocols } = require("../../services/miniapp-api");
 
 Page({
   data: {
@@ -17,10 +15,7 @@ Page({
     submitting: false,
     error: "",
     protocols: null,
-    protocolItems: [],
-    canAgree: false,
-    userAgreementChecked: false,
-    privacyPolicyChecked: false,
+    checked: { userAgreement: false, privacyPolicy: false },
   },
 
   onLoad(options = {}) {
@@ -36,11 +31,7 @@ Page({
         auth: Boolean(anchorId),
         skipAuthRedirect: !anchorId,
       });
-      this.setData({
-        protocols,
-        protocolItems: [protocols.userAgreement, protocols.privacyPolicy].filter(Boolean),
-        canAgree: Boolean(getAnchorId()),
-      });
+      this.setData({ protocols });
       return { ok: true };
     } catch (error) {
       if (isAuthRequiredError(error)) {
@@ -54,55 +45,44 @@ Page({
     }
   },
 
-  toggleAgreement(event) {
-    const field = event.currentTarget.dataset.field;
-    const values = event.detail && event.detail.value ? event.detail.value : [];
-    this.setData({ [field]: values.includes("agreed") });
-  },
-
   async agreeAll() {
-    if (!this.data.userAgreementChecked || !this.data.privacyPolicyChecked) {
-      this.setData({ error: "请分别阅读并勾选两项协议" });
+    if (!this.data.checked.userAgreement || !this.data.checked.privacyPolicy) {
+      this.setData({ error: "请先阅读并分别勾选用户服务协议和隐私政策" });
       return;
     }
     this.setData({ submitting: true, error: "" });
     try {
+      const anchorId = requireAnchorId();
       const protocols = this.data.protocols || {};
       const items = [protocols.userAgreement, protocols.privacyPolicy].filter(Boolean);
-      if (items.length !== 2) throw new Error("协议内容未完整加载，请重新加载");
-      let result = null;
-      for (const item of items) {
-        result = await agreeProtocol({
-          protocolType: item.protocolType,
-          versionNo: item.versionNo,
-        });
+      if (items.length === 0) throw new Error("暂无需要确认的协议");
+      const results = await Promise.allSettled(items.map((item) => agreeProtocol({
+        anchorId,
+        protocolType: item.protocolType,
+        versionNo: item.versionNo,
+      })));
+      const failedCount = results.filter((result) => result.status === "rejected").length;
+      if (failedCount > 0) {
+        const successCount = results.length - failedCount;
+        const agreementError = new Error(successCount > 0
+          ? `已同意 ${successCount} 项，${failedCount} 项失败，请重试。`
+          : "协议确认失败，请稍后重试。");
+        const refreshResult = await this.loadProtocols({ preserveError: true });
+        if (refreshResult && refreshResult.authRequired) return;
+        throw agreementError;
       }
-      if (!result || result.protocolStatus !== "AGREED") {
-        throw new Error("协议确认未完成，请重试");
-      }
-      const session = getSession();
-      setSession({ ...session, protocolStatus: "AGREED" });
       markMiniappDataDirty();
       wx.switchTab({ url: "/src/pages/home/index" });
     } catch (error) {
-      const agreementError = error;
-      const refreshResult = await this.loadProtocols({ preserveError: true });
-      if (refreshResult && refreshResult.authRequired) return;
-      handlePageRequestError(this, agreementError);
+      handlePageRequestError(this, error);
     } finally {
       finishPageLoading(this, "submitting");
     }
   },
 
-  async declineAndExit() {
-    this.setData({ submitting: true, error: "" });
-    try {
-      if (getAnchorId()) await logout();
-    } catch (error) {
-      // Local session must still be removed when the network logout cannot finish.
-    } finally {
-      clearSession();
-      wx.reLaunch({ url: "/src/pages/login/index" });
-    }
+  toggleProtocol(event) {
+    const type = event.currentTarget.dataset.type;
+    if (!type) return;
+    this.setData({ checked: { ...this.data.checked, [type]: Boolean(event.detail.value.length) }, error: "" });
   },
 });

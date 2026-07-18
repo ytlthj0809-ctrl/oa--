@@ -7,32 +7,19 @@
   <view wx:if="{{error}}" class="error">{{error}}</view>
   <view wx:if="{{loading}}" class="card page-loading">加载中</view>
 
-  <view wx:if="{{protocols}}" class="card protocol-card">
-    <view wx:for="{{protocolItems}}" wx:key="protocolType" class="protocol-document">
-      <text class="status protocol-title">{{item.title}}</text>
-      <text class="meta">版本 {{item.versionNo}} · 更新于 {{item.updatedAt}}</text>
-      <view wx:for="{{item.sections}}" wx:for-item="section" wx:key="heading" class="protocol-section">
-        <text class="protocol-heading">{{section.heading}}</text>
-        <text wx:for="{{section.paragraphs}}" wx:for-item="paragraph" wx:key="*this" class="protocol-paragraph">{{paragraph}}</text>
-      </view>
+  <view wx:if="{{protocols}}" class="card">
+    <view wx:if="{{protocols.userAgreement}}" class="list-item">
+      <text class="status">{{protocols.userAgreement.title}}</text>
+      <text class="meta">版本 {{protocols.userAgreement.versionNo}}</text>
+      <text>{{protocols.userAgreement.content}}</text>
+      <checkbox-group bindchange="toggleProtocol" data-type="userAgreement"><label class="checkbox-line"><checkbox value="checked" /> <text>我已阅读并同意用户服务协议</text></label></checkbox-group>
     </view>
-
-    <view wx:if="{{canAgree}}" class="protocol-consent">
-      <checkbox-group bindchange="toggleAgreement" data-field="userAgreementChecked">
-        <label class="agreement-choice">
-          <checkbox value="agreed" checked="{{userAgreementChecked}}" />
-          <text>我已阅读并同意《嘉音用户服务协议》</text>
-        </label>
-      </checkbox-group>
-      <checkbox-group bindchange="toggleAgreement" data-field="privacyPolicyChecked">
-        <label class="agreement-choice">
-          <checkbox value="agreed" checked="{{privacyPolicyChecked}}" />
-          <text>我已阅读并同意《嘉音隐私政策》</text>
-        </label>
-      </checkbox-group>
-      <button class="primary" bindtap="agreeAll" loading="{{submitting}}" disabled="{{submitting || !userAgreementChecked || !privacyPolicyChecked}}">同意并继续</button>
-      <button class="secondary" bindtap="declineAndExit" disabled="{{submitting}}">暂不同意并退出</button>
+    <view wx:if="{{protocols.privacyPolicy}}" class="list-item">
+      <text class="status">{{protocols.privacyPolicy.title}}</text>
+      <text class="meta">版本 {{protocols.privacyPolicy.versionNo}}</text>
+      <text>{{protocols.privacyPolicy.content}}</text>
+      <checkbox-group bindchange="toggleProtocol" data-type="privacyPolicy"><label class="checkbox-line"><checkbox value="checked" /> <text>我已阅读并同意隐私政策</text></label></checkbox-group>
     </view>
-    <text wx:else class="meta read-only-hint">当前为阅读模式。登录后由您分别选择是否同意。</text>
+    <button class="primary" bindtap="agreeAll" loading="{{submitting}}" disabled="{{submitting || !checked.userAgreement || !checked.privacyPolicy}}">同意并继续</button>
   </view>
 </view>

@@ -1,15 +1,10 @@
 const { clearWechatBindToken, getWechatBindToken, openPage } = require("../../utils/api");
 const { createAnchorRegistrationRequest, listAnchorRegistrationRequests } = require("../../services/miniapp-api");
 const { statusLabel, statusTone } = require("../../utils/formatters");
-const {
-  openPrivacyContract: openWechatPrivacyContract,
-  requirePrivacyAuthorization,
-} = require("../../utils/privacy-consent");
 
 function buildDefaultForm() {
   return {
     anchorId: "",
-    bixinAccountNo: "",
     displayName: "",
     mobile: "",
     protocolChecked: false,
@@ -23,7 +18,6 @@ function normalizeMobile(value) {
 function normalizeRegistrationForm(form) {
   return {
     anchorId: String(form.anchorId || "").trim(),
-    bixinAccountNo: String(form.bixinAccountNo || "").trim(),
     displayName: String(form.displayName || "").trim(),
     mobile: normalizeMobile(form.mobile),
   };
@@ -33,7 +27,6 @@ function canSubmitRegistration(form) {
   const normalized = normalizeRegistrationForm(form);
   return Boolean(
     normalized.anchorId &&
-    normalized.bixinAccountNo &&
     normalized.displayName &&
     /^1[3-9]\d{9}$/.test(normalized.mobile) &&
     form.protocolChecked
@@ -106,13 +99,11 @@ Page({
       const form = this.data.form;
       const normalizedForm = normalizeRegistrationForm(form);
       if (!normalizedForm.anchorId) throw new Error("请输入主播ID");
-      if (!normalizedForm.bixinAccountNo) throw new Error("请输入比心 ID");
       if (!normalizedForm.displayName) throw new Error("请输入主播姓名或昵称");
       if (!/^1[3-9]\d{9}$/.test(normalizedForm.mobile)) throw new Error("请输入正确的手机号");
       if (!this.data.form.protocolChecked) {
         throw new Error("请先同意协议和隐私政策");
       }
-      await requirePrivacyAuthorization();
       const wechatBindToken = getWechatBindToken();
       const result = await createAnchorRegistrationRequest({
         ...normalizedForm,
@@ -141,10 +132,6 @@ Page({
     try {
       const form = normalizeRegistrationForm(this.data.form);
       if (!form.anchorId && !form.mobile) throw new Error("请先输入主播ID或手机号");
-      if (!this.data.form.protocolChecked) {
-        throw new Error("请先同意协议和隐私政策");
-      }
-      await requirePrivacyAuthorization();
       const records = await listAnchorRegistrationRequests({
         anchorId: form.anchorId,
         mobile: form.mobile,
@@ -170,13 +157,5 @@ Page({
 
   openProtocols() {
     openPage("protocols");
-  },
-
-  async openPrivacyContract() {
-    try {
-      await openWechatPrivacyContract();
-    } catch (error) {
-      this.setData({ error: error.message || "隐私指引暂时无法打开" });
-    }
   },
 });

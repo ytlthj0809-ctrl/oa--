@@ -12,61 +12,24 @@ function buildGreeting(now = new Date()) {
   return "夜深了";
 }
 
-function isRegistrationReady(status) {
-  return ["ACTIVE", "APPROVED"].includes(String(status || "").trim().toUpperCase());
-}
-
-function isWhitelistReady(status) {
-  return String(status || "").trim().toUpperCase() === "USED";
-}
-
-function buildProgressSteps(registrationStatus, whitelistStatus, paymentInfoStatus, signStatus) {
-  const registrationDone = isRegistrationReady(registrationStatus);
-  const whitelistDone = isWhitelistReady(whitelistStatus);
+function buildProgressSteps(paymentInfoStatus, signStatus) {
   const paymentInfoDone = isPaymentInfoReady(paymentInfoStatus);
   const steps = [
-    { label: "注册审核", done: registrationDone },
-    { label: "提现白名单", done: whitelistDone },
     { label: "打款信息", done: paymentInfoDone },
     { label: "签约", done: isSigned(signStatus) },
     { label: "提现", done: false },
   ];
-  if (!registrationDone) steps[0].current = true;
-  else if (!whitelistDone) steps[1].current = true;
-  else if (!paymentInfoDone) steps[2].current = true;
-  else if (!isSigned(signStatus)) steps[3].current = true;
-  else steps[4].current = true;
+  if (!paymentInfoDone) steps[0].current = true;
+  else if (!isSigned(signStatus)) steps[1].current = true;
+  else steps[2].current = true;
   return steps;
 }
 
-function buildWithdrawGuideSteps(registrationStatus, whitelistStatus, paymentInfoStatus, signStatus) {
-  const registrationDone = isRegistrationReady(registrationStatus);
-  const whitelistDone = isWhitelistReady(whitelistStatus);
+function buildWithdrawGuideSteps(paymentInfoStatus, signStatus) {
   const paymentInfoDone = isPaymentInfoReady(paymentInfoStatus);
   const signDone = isSigned(signStatus);
   const paymentInfoPending = ["PENDING", "PENDING_REVIEW"].includes(String(paymentInfoStatus || "").toUpperCase());
   return [
-    {
-      key: "registration",
-      title: "主播注册",
-      description: registrationDone ? "主播注册已通过审核" : "提交注册申请并等待后台审核",
-      statusText: registrationDone ? "已通过" : statusLabel(registrationStatus),
-      tone: registrationDone ? "success" : "warning",
-      buttonText: registrationDone ? "查看状态" : "去注册",
-      page: "register",
-      disabled: false,
-    },
-    {
-      key: "whitelist",
-      title: "提现白名单",
-      description: whitelistDone ? "平台账号已纳入提现白名单" : "请线下联系运营上传白名单并完成账号核对",
-      statusText: whitelistDone ? "已就绪" : "待运营处理",
-      tone: whitelistDone ? "success" : "warning",
-      buttonText: "查看注册状态",
-      page: "register",
-      disabled: !registrationDone,
-      disabledText: "请先完成主播注册审核",
-    },
     {
       key: "payment-info",
       title: "打款信息",
@@ -79,8 +42,7 @@ function buildWithdrawGuideSteps(registrationStatus, whitelistStatus, paymentInf
       tone: paymentInfoDone ? "success" : "warning",
       buttonText: paymentInfoDone ? "查看信息" : paymentInfoPending ? "查看进度" : "去补充",
       page: "payment-info",
-      disabled: !(registrationDone && whitelistDone),
-      disabledText: "请先完成注册审核和提现白名单",
+      disabled: false,
     },
     {
       key: "sign",
@@ -90,19 +52,19 @@ function buildWithdrawGuideSteps(registrationStatus, whitelistStatus, paymentInf
       tone: signDone ? "success" : "warning",
       buttonText: signDone ? "查看状态" : "去签约",
       page: "sign",
-      disabled: !(registrationDone && whitelistDone && paymentInfoDone),
-      disabledText: "注册、白名单和打款信息均就绪后才能签约",
+      disabled: !paymentInfoDone,
+      disabledText: "打款信息生效后才能签约",
     },
     {
       key: "withdraw",
       title: "提交提现",
-      description: registrationDone && whitelistDone && paymentInfoDone && signDone ? "可提交提现申请" : "完成前四步后开放提现",
-      statusText: registrationDone && whitelistDone && paymentInfoDone && signDone ? "可提现" : "未开放",
-      tone: registrationDone && whitelistDone && paymentInfoDone && signDone ? "success" : "neutral",
+      description: paymentInfoDone && signDone ? "可提交提现申请" : "完成前两步后开放提现",
+      statusText: paymentInfoDone && signDone ? "可提现" : "未开放",
+      tone: paymentInfoDone && signDone ? "success" : "neutral",
       buttonText: "去提现",
       page: "withdraw",
-      disabled: !(registrationDone && whitelistDone && paymentInfoDone && signDone),
-      disabledText: "需先完成注册、白名单、有效打款信息和签约",
+      disabled: !(paymentInfoDone && signDone),
+      disabledText: "需先完成有效打款信息和签约",
     },
   ];
 }
@@ -189,23 +151,15 @@ function buildWithdrawRecordSteps(statusValue) {
 
 function decorateHome(home = {}) {
   const todayMetrics = home.todayMetrics || {};
-  const registrationStatus = home.registrationStatus || "MISSING";
-  const whitelistStatus = home.whitelistStatus || "MISSING";
   const paymentInfoStatus = home.paymentInfoStatus || "MISSING";
   const signStatus = home.signStatus || "UNSIGNED";
-  const registrationDone = isRegistrationReady(registrationStatus);
-  const whitelistDone = isWhitelistReady(whitelistStatus);
   const paymentInfoDone = isPaymentInfoReady(paymentInfoStatus);
-  const withdrawReady = registrationDone && whitelistDone && paymentInfoDone && isSigned(signStatus);
-  const nextAction = !registrationDone
-    ? { text: "请先提交主播注册申请并等待审核", buttonText: "查看注册状态", page: "register", tone: "warning" }
-    : !whitelistDone
-      ? { text: "提现白名单尚未就绪，请线下联系运营处理", buttonText: "查看注册状态", page: "register", tone: "warning" }
-      : !paymentInfoDone
-        ? { text: "打款信息生效后才能继续签约和提现", buttonText: "查看打款信息", page: "payment-info", tone: "warning" }
-        : !isSigned(signStatus)
-          ? { text: "请完成云账户签约", buttonText: "去签约", page: "sign", tone: "warning" }
-          : { text: "可以提交提现申请", buttonText: "去提现", page: "withdraw", tone: "success" };
+  const withdrawReady = paymentInfoDone && isSigned(signStatus);
+  const nextAction = !paymentInfoDone
+    ? { text: "打款信息生效后才能继续签约和提现", buttonText: "查看打款信息", page: "payment-info" }
+    : !isSigned(signStatus)
+      ? { text: "请完成云账户签约", buttonText: "去签约", page: "sign" }
+      : { text: "可以提交提现申请", buttonText: "去提现", page: "withdraw" };
 
   return {
     ...home,
@@ -215,12 +169,8 @@ function decorateHome(home = {}) {
     paymentInfoSummary: home.paymentInfoSummary || {},
     paymentInfoStatusText: statusLabel(paymentInfoStatus),
     paymentInfoStatusTone: statusTone(paymentInfoStatus),
-    registrationStatusText: registrationStatus === "MISSING" ? "未提交" : statusLabel(registrationStatus),
-    registrationStatusTone: statusTone(registrationStatus),
-    whitelistStatusText: whitelistStatus === "MISSING" ? "未在白名单" : statusLabel(whitelistStatus),
-    whitelistStatusTone: statusTone(whitelistStatus),
-    progressSteps: buildProgressSteps(registrationStatus, whitelistStatus, paymentInfoStatus, signStatus),
-    withdrawGuideSteps: buildWithdrawGuideSteps(registrationStatus, whitelistStatus, paymentInfoStatus, signStatus),
+    progressSteps: buildProgressSteps(paymentInfoStatus, signStatus),
+    withdrawGuideSteps: buildWithdrawGuideSteps(paymentInfoStatus, signStatus),
     rewardBalanceText: formatMoney(home.rewardBalanceCents),
     signStatusText: statusLabel(signStatus),
     signStatusTone: statusTone(signStatus),

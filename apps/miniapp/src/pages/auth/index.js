@@ -1,40 +1,55 @@
-const { getSession, isAuthRequiredError, setSession } = require("../../utils/api");
-const { getProtocols } = require("../../services/miniapp-api");
+const { getSession, setSession, setWechatBindToken } = require("../../utils/api");
+const { loginByWechat } = require("../../services/miniapp-api");
+
+function getWechatLoginCode() {
+  return new Promise((resolve, reject) => {
+    wx.login({
+      success(result) {
+        if (!result.code) {
+          reject(new Error("未获取到微信登录凭证"));
+          return;
+        }
+        resolve(result.code);
+      },
+      fail: reject,
+    });
+  });
+}
 
 Page({
   data: {
-    error: "",
     showFallback: false,
+    error: "",
   },
 
   async onLoad() {
     const session = getSession();
-    if (!session || !session.anchorId) {
-      wx.redirectTo({ url: "/src/pages/login/index" });
+    if (session && session.anchorId) {
+      wx.switchTab({ url: "/src/pages/home/index" });
       return;
     }
-    this.setData({ error: "", showFallback: false });
     try {
-      const protocols = await getProtocols(session.anchorId);
-      const currentSession = protocols && protocols.protocolStatus === "AGREED"
-        ? { ...session, protocolStatus: "AGREED" }
-        : { ...session, protocolStatus: "PENDING" };
-      setSession(currentSession);
-      if (currentSession.protocolStatus !== "AGREED") {
+      const result = await loginByWechat(await getWechatLoginCode());
+      if (result.bindingRequired) {
+        setWechatBindToken(result.wechatBindToken);
+        wx.redirectTo({ url: "/src/pages/login/index?wechatChecked=1" });
+        return;
+      }
+      setSession(result);
+      if (result.protocolStatus && result.protocolStatus !== "AGREED") {
         wx.redirectTo({ url: "/src/pages/protocols/index?mode=required" });
         return;
       }
       wx.switchTab({ url: "/src/pages/home/index" });
     } catch (error) {
-      if (isAuthRequiredError(error)) return;
       this.setData({
-        error: error && error.message ? error.message : "登录状态确认失败，请重试",
+        error: error && error.message ? error.message : "自动登录失败，请手动重试",
         showFallback: true,
       });
     }
   },
 
   goLogin() {
-    wx.reLaunch({ url: "/src/pages/login/index" });
+    wx.redirectTo({ url: "/src/pages/login/index" });
   },
 });

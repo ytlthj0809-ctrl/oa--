@@ -47,22 +47,6 @@
   color: #22130f;
 }
 
-.privacy-entry {
-  color: #675f53;
-  font-size: 24rpx;
-  line-height: 1.55;
-  margin-top: 18rpx;
-  text-align: center;
-}
-
-.privacy-entry text {
-  display: inline;
-}
-
-.privacy-link {
-  text-decoration: underline;
-}
-
 .binding-choice {
   border-top: 1rpx solid #eee5c8;
   margin-top: 24rpx;

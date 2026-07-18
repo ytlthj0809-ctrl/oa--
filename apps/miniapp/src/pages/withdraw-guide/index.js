@@ -35,23 +35,18 @@ Page({
     ruleSections: [],
     loadingRules: true,
     ruleError: "",
-    fromLogin: false,
   },
 
   onLoad(options = {}) {
     const reason = options.reason || "PAYMENT_INFO_MISSING";
-    this.setData({
-      reason,
-      guide: reasonMap[reason] || reasonMap.PAYMENT_INFO_MISSING,
-      fromLogin: options.from === "login",
-    });
+    this.setData({ reason, guide: reasonMap[reason] || reasonMap.PAYMENT_INFO_MISSING });
     this.loadRules();
   },
 
   async loadRules() {
     this.setData({ loadingRules: true, ruleError: "" });
     try {
-      const rules = await getWithdrawRules({ auth: false, skipAuthRedirect: true });
+      const rules = await getWithdrawRules();
       this.setData({ ruleSections: rules.ruleSections || [] });
     } catch (error) {
       this.setData({ ruleError: error.message || "提现规则加载失败，请稍后重试" });
@@ -61,19 +56,14 @@ Page({
   },
 
   goAction() {
-    if (this.data.fromLogin) {
-      wx.redirectTo({ url: "/src/pages/login/index" });
+    if (!this.data.guide.page) {
+      this.goWithdraw();
       return;
     }
-    if (!this.data.guide.page) return this.goWithdraw();
     openPage(this.data.guide.page);
   },
 
   goWithdraw() {
-    if (this.data.fromLogin) {
-      wx.redirectTo({ url: "/src/pages/login/index" });
-      return;
-    }
     wx.switchTab({ url: "/src/pages/withdraw/index" });
   },
 });

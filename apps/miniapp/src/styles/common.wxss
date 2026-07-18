@@ -1,14 +1,5 @@
-/*
- * WXSS brand tokens (fixed-value fallback for runtimes without CSS custom properties):
- * --brand-ivory: #fbfaf6
- * --brand-ink: #231815
- * --brand-yellow: #ffda01
- * --brand-line: #ddd6ce
- * --brand-muted: #6f625c
- * Keep component declarations on the fixed values below for broad WeChat compatibility.
- */
 .page {
-  background: #fbfaf6;
+  background: linear-gradient(180deg, #231815 0rpx, #231815 248rpx, #f4f6f8 248rpx, #f4f6f8 100%);
   color: #231815;
   min-height: 100vh;
   padding: 28rpx 28rpx calc(36rpx + env(safe-area-inset-bottom));
@@ -18,9 +9,10 @@
 .card,
 .list-item {
   background: #ffffff;
-  border: 1rpx solid #ddd6ce;
-  border-radius: 12rpx;
-  box-shadow: 0 4rpx 14rpx rgba(35, 24, 21, 0.035);
+  border: 1rpx solid #d9dee8;
+  border-top: 8rpx solid #ffda01;
+  border-radius: 16rpx;
+  box-shadow: 0 14rpx 34rpx rgba(35, 24, 21, 0.08);
   margin-bottom: 20rpx;
   min-width: 0;
   padding: 24rpx;
@@ -34,7 +26,7 @@
 .eyebrow,
 .label,
 .meta {
-  color: #6f625c;
+  color: #667085;
   display: block;
   font-size: 24rpx;
 }
@@ -66,13 +58,12 @@
 }
 
 .metric {
-  background: transparent;
-  border: 0;
-  border-bottom: 1rpx solid #ddd6ce;
-  border-radius: 0;
-  box-shadow: none;
+  background: #fffdf3;
+  border: 1rpx solid #e4e7ec;
+  border-radius: 14rpx;
+  box-shadow: 0 1rpx 0 rgba(35, 24, 21, 0.03);
   min-height: 116rpx;
-  padding: 20rpx 0;
+  padding: 18rpx;
 }
 
 .metric text {
@@ -107,17 +98,16 @@ button::after {
 
 .primary {
   background: #ffda01;
-  border-radius: 10rpx;
-  box-shadow: 0 6rpx 16rpx rgba(35, 24, 21, 0.09);
+  border-radius: 14rpx;
+  box-shadow: 0 8rpx 18rpx rgba(255, 218, 1, 0.22);
   color: #231815;
   font-size: 26rpx;
   font-weight: 700;
 }
 
 .secondary {
-  background: #f4f0e9;
-  border: 1rpx solid #ddd6ce;
-  border-radius: 10rpx;
+  background: #eef2f6;
+  border-radius: 14rpx;
   color: #231815;
   font-size: 24rpx;
   font-weight: 700;
@@ -208,7 +198,7 @@ button::after {
 }
 
 .helper-text {
-  color: #6f625c;
+  color: #667085;
   display: block;
   font-size: 24rpx;
   line-height: 1.55;
@@ -271,7 +261,7 @@ button::after {
 }
 
 .row-subtitle {
-  color: #6f625c;
+  color: #667085;
   display: block;
   font-size: 24rpx;
   line-height: 1.45;
@@ -521,7 +511,7 @@ button::after {
 
 /* ---- Greeting ---- */
 .greeting {
-  color: #231815;
+  color: #ffffff;
   font-size: 28rpx;
   font-weight: 600;
   margin-bottom: 4rpx;

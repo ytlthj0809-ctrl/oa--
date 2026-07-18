@@ -69,3 +69,4 @@ Page({
     openPage("withdraw-detail", { applyId });
   },
 });
+

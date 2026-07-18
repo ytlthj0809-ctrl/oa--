@@ -40,10 +40,10 @@ function createRequestError(payload, route, responseStatusCode) {
 }
 
 function isAuthRequiredError(error) {
-  return Boolean(error && (error.code === "AUTH_REQUIRED" || error.navigationHandled === true));
+  return Boolean(error && error.code === "AUTH_REQUIRED");
 }
 
-function createRequester({ getServiceOrigin, getSession, onProtocolRequired, onUnauthorized }) {
+function createRequester({ getServiceOrigin, getSession, onUnauthorized }) {
   return function request(route, options = {}) {
     const maxRetries = options.method && options.method !== "GET" ? 0 : (options.retries || 1);
     let attempt = 0;
@@ -71,15 +71,7 @@ function createRequester({ getServiceOrigin, getSession, onProtocolRequired, onU
               return;
             }
             if (response.statusCode >= 400 || payload.ok === false) {
-              const requestError = createRequestError(payload, route, response.statusCode);
-              if (
-                response.statusCode === 403
-                && requestError.code === "MINIAPP_PROTOCOL_REQUIRED"
-              ) {
-                reject(onProtocolRequired ? onProtocolRequired(requestError) : requestError);
-                return;
-              }
-              reject(requestError);
+              reject(createRequestError(payload, route, response.statusCode));
               return;
             }
             resolve(payload.data);

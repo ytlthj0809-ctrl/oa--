@@ -32,7 +32,7 @@ const sessionManager = createSessionManager({
   wechatBindTokenStorageKey,
 });
 const {
-  clearSession: clearStoredSession,
+  clearSession,
   clearWechatBindToken,
   getMiniappDataDirtyAt,
   getWechatBindToken,
@@ -40,12 +40,6 @@ const {
   redirectToLogin,
   setWechatBindToken,
 } = sessionManager;
-let protocolRedirecting = false;
-
-function clearSession(options = {}) {
-  clearStoredSession(options);
-  protocolRedirecting = false;
-}
 
 function getSession() {
   const session = sessionManager.readSession();
@@ -59,7 +53,6 @@ function getSession() {
 }
 
 function setSession(session) {
-  const previousSession = sessionManager.readSession();
   const safeSession = {
     anchorId: session && session.anchorId ? session.anchorId : "",
     token: session && session.token ? session.token : "",
@@ -73,14 +66,6 @@ function setSession(session) {
     throw createAuthRequiredError("登录信息不完整，请重新登录");
   }
   sessionManager.writeSession(safeSession);
-  if (
-    !previousSession
-    || previousSession.anchorId !== safeSession.anchorId
-    || previousSession.token !== safeSession.token
-    || safeSession.protocolStatus === "AGREED"
-  ) {
-    protocolRedirecting = false;
-  }
 }
 
 function getAnchorId() {
@@ -105,34 +90,9 @@ function handleUnauthorized() {
   return createAuthRequiredError("登录已过期，请重新登录");
 }
 
-function handleProtocolRequired(error) {
-  const session = getSession();
-  if (!session || !session.anchorId) return handleUnauthorized();
-  setSession({ ...session, protocolStatus: "PENDING" });
-  if (!protocolRedirecting) {
-    protocolRedirecting = true;
-    setTimeout(() => {
-      try {
-        wx.reLaunch({
-          url: "/src/pages/protocols/index?mode=required",
-          fail() {
-            protocolRedirecting = false;
-          },
-        });
-      } catch (navigationError) {
-        protocolRedirecting = false;
-      }
-    }, 0);
-  }
-  error.silent = true;
-  error.navigationHandled = true;
-  return error;
-}
-
 const request = createRequester({
   getServiceOrigin,
   getSession,
-  onProtocolRequired: handleProtocolRequired,
   onUnauthorized: handleUnauthorized,
 });
 

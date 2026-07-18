@@ -1,21 +1,5 @@
 const { appendQuery, request } = require("../utils/api");
 
-const bixinRegistrationErrorMessages = {
-  BIXIN_ACCOUNT_NO_REQUIRED: "请输入比心 ID",
-  BIXIN_WHITELIST_NOT_AVAILABLE: "未找到对应的待注册白名单，请核对比心 ID 或联系运营",
-  BIXIN_WHITELIST_RESERVED: "该比心 ID 已有注册申请处理中，请勿重复提交",
-  BIXIN_ACCOUNT_ALREADY_BOUND: "该比心 ID 已完成绑定，请返回登录或联系运营",
-};
-
-function mapBixinRegistrationError(error) {
-  const message = bixinRegistrationErrorMessages[error?.code];
-  if (!message) return error;
-  const safeError = new Error(message);
-  safeError.code = error.code;
-  safeError.statusCode = error.statusCode;
-  return safeError;
-}
-
 function getHome(anchorId) {
   return request(appendQuery("/api/miniapp/home", { anchorId }));
 }
@@ -28,10 +12,10 @@ function getPaymentInfo(anchorId) {
   return request(appendQuery("/api/miniapp/payment-info", { anchorId }));
 }
 
-function createPaymentInfo({ anchorId, realName, idCardNo, paymentMobile, bankCardNo }) {
+function createPaymentInfo({ anchorId, realName, idCardNo, paymentMobile, bankCardNo, clientRequestId }) {
   return request("/api/miniapp/payment-info", {
     method: "POST",
-    data: { anchorId, realName, idCardNo, paymentMobile, bankCardNo },
+    data: { anchorId, realName, idCardNo, paymentMobile, bankCardNo, clientRequestId },
   });
 }
 
@@ -48,6 +32,7 @@ function createPaymentInfoChangeRequest({
   voucherContent,
   voucherSizeBytes,
   voucherContentType,
+  clientRequestId,
 }) {
   return request("/api/miniapp/payment-info/change-requests", {
     method: "POST",
@@ -60,6 +45,7 @@ function createPaymentInfoChangeRequest({
       voucherContent,
       voucherSizeBytes,
       voucherContentType,
+      clientRequestId,
     },
   });
 }
@@ -86,10 +72,10 @@ function getProtocols(anchorId, options = {}) {
   return request(appendQuery("/api/miniapp/protocols", { anchorId }), options);
 }
 
-function agreeProtocol({ protocolType, versionNo }) {
+function agreeProtocol({ anchorId, protocolType, versionNo }) {
   return request("/api/miniapp/protocols/agree", {
     method: "POST",
-    data: { protocolType, versionNo },
+    data: { anchorId, protocolType, versionNo },
   });
 }
 
@@ -112,15 +98,11 @@ function createPlatformBindRequest({ anchorId, platform, accountNo, reason }) {
   });
 }
 
-async function createAnchorRegistrationRequest({ anchorId, displayName, mobile, bixinAccountNo, wechatBindToken }) {
-  try {
-    return await request("/api/miniapp/anchor-registration-requests", {
-      method: "POST",
-      data: { anchorId, displayName, mobile, bixinAccountNo, wechatBindToken },
-    });
-  } catch (error) {
-    throw mapBixinRegistrationError(error);
-  }
+function createAnchorRegistrationRequest({ anchorId, displayName, mobile, wechatBindToken }) {
+  return request("/api/miniapp/anchor-registration-requests", {
+    method: "POST",
+    data: { anchorId, displayName, mobile, wechatBindToken },
+  });
 }
 
 function listAnchorRegistrationRequests({ anchorId, mobile, reviewStatus } = {}) {
@@ -147,8 +129,8 @@ function listWithdrawApplies(anchorId) {
   return request(appendQuery("/api/miniapp/withdraw-applies", { anchorId }));
 }
 
-function getWithdrawRules(options = {}) {
-  return request("/api/miniapp/withdraw-rules", options);
+function getWithdrawRules() {
+  return request("/api/miniapp/withdraw-rules");
 }
 
 function getWithdrawApplyDetail({ anchorId, applyId }) {

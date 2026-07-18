@@ -76,7 +76,7 @@ Page({
     records: [],
     recentRecords: [],
     emptyText: "暂无提现记录",
-    rulesExpanded: true,
+    rulesExpanded: false,
     withdrawRuleSummaryItems: [],
   },
 

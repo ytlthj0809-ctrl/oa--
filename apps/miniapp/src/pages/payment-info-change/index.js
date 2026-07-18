@@ -1,4 +1,5 @@
 const {
+  createClientRequestId,
   finishPageLoading,
   handlePageRequestError,
   isAuthRequiredError,
@@ -91,10 +92,12 @@ Page({
       const anchorId = requireAnchorId();
       const form = normalizePaymentInfoChangeForm(this.data.form);
       validatePaymentInfoChangeForm(form);
+      const clientRequestId = createClientRequestId("payment-info-change");
       const result = await createPaymentInfoChangeRequest({
         anchorId,
         patch: form.patch,
         modifyReason: form.modifyReason,
+        clientRequestId,
       });
       markMiniappDataDirty();
       this.setData({
