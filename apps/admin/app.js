@@ -139,6 +139,9 @@ function showLogin() {
   $("#login").hidden = false;
   $("#shell").hidden = true;
 }
+function clearLoginForm() {
+  $("#login-form").reset();
+}
 function showApp() {
   $("#login").hidden = true;
   $("#shell").hidden = false;
@@ -153,6 +156,7 @@ async function logout(callApi = true) {
   state.token = "";
   state.account = null;
   sessionStorage.removeItem("adminToken");
+  clearLoginForm();
   showLogin();
 }
 $("#login-form").addEventListener("submit", async (event) => {
@@ -168,6 +172,7 @@ $("#login-form").addEventListener("submit", async (event) => {
     state.token = result.token;
     state.account = result.account;
     sessionStorage.setItem("adminToken", state.token);
+    clearLoginForm();
     showApp();
     await renderPage();
   } catch (error) {
@@ -597,7 +602,7 @@ async function showAdmins() {
   try {
     const rows = await api("/api/admin/v2/admin-accounts");
     openModal(
-      `<h2>超级管理员</h2><p class="muted">所有账号拥有相同权限。</p><div class="table-wrap"><table><thead><tr><th>用户名</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>${rows.map((row) => `<tr><td>${esc(row.username)}</td><td>${badge(row.status)}</td><td>${dateTime(row.created_at)}</td><td><button class="link" data-admin-toggle="${row.account_id}" data-status="${row.status}">${row.status === "ACTIVE" ? "停用" : "启用"}</button></td></tr>`).join("")}</tbody></table></div><div class="split section"><label class="field">新用户名<input id="new-admin-name"></label><label class="field">初始密码（至少 8 位）<input id="new-admin-password" type="password"></label></div>${actionButtons("关闭", "创建管理员", "admin-create")}`,
+      `<h2>超级管理员</h2><p class="muted">所有账号拥有相同权限。</p><div class="table-wrap"><table><thead><tr><th>用户名</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>${rows.map((row) => `<tr><td>${esc(row.username)}</td><td>${badge(row.status)}</td><td>${dateTime(row.created_at)}</td><td><button class="link" data-admin-toggle="${row.account_id}" data-status="${row.status}">${row.status === "ACTIVE" ? "停用" : "启用"}</button></td></tr>`).join("")}</tbody></table></div><div class="split section"><label class="field">新用户名<input id="new-admin-name" name="new-admin-username" autocomplete="off"></label><label class="field">初始密码（至少 8 位）<input id="new-admin-password" name="new-admin-password" type="password" autocomplete="new-password"></label></div>${actionButtons("关闭", "创建管理员", "admin-create")}`,
     );
     $("#admin-create").onclick = async () => {
       try {
