@@ -5,7 +5,9 @@ const state = {
   importFile: null,
   importPreview: null,
   anchorPage: 1,
+  anchorPageSize: 30,
   anchorQuery: "",
+  anchorSort: "balance_desc",
   withdrawDate: new Date().toLocaleDateString("sv-SE", {
     timeZone: "Asia/Shanghai",
   }),
@@ -427,9 +429,20 @@ function deleteImport(importId) {
 
 async function renderAnchors() {
   const data = await api(
-    `/api/admin/v2/anchors?q=${encodeURIComponent(state.anchorQuery)}&page=${state.anchorPage}&pageSize=30`,
+    `/api/admin/v2/anchors?q=${encodeURIComponent(state.anchorQuery)}&page=${state.anchorPage}&pageSize=${state.anchorPageSize}&sort=${state.anchorSort}`,
   );
-  content.innerHTML = `<section class="card"><div class="section-head"><h2>主播账户</h2><form id="anchor-search" class="toolbar"><input name="q" value="${esc(state.anchorQuery)}" placeholder="搜索比心 ID、原账号、姓名、手机号"><button class="button">搜索</button></form></div>${data.rows.length ? `<div class="table-wrap"><table><thead><tr><th>比心 ID</th><th>主播</th><th>手机号</th><th>余额</th><th>收款信息</th><th>云账户</th><th>操作</th></tr></thead><tbody>${data.rows.map((row) => `<tr><td>${esc(row.bixin_user_id || "—")}</td><td>${esc(row.display_name)}</td><td>${esc(row.mobile)}</td><td class="money">${money(row.balance_cents)}</td><td>${badge(row.payment_status)}</td><td>${badge(row.sign_status)}</td><td class="nowrap"><button class="link" data-anchor-detail="${row.anchor_id}">查看详情</button>　<button class="link" data-adjust="${row.anchor_id}">调余额</button></td></tr>`).join("")}</tbody></table></div><div class="pagination"><button class="button" id="anchor-prev" ${state.anchorPage === 1 ? "disabled" : ""}>上一页</button><span>第 ${state.anchorPage} 页</span><button class="button" id="anchor-next" ${data.rows.length < 30 ? "disabled" : ""}>下一页</button></div>` : '<div class="empty">没有找到主播</div>'}</section>`;
+  state.anchorPage = data.page;
+  state.anchorPageSize = data.pageSize;
+  const pageOptions = Array.from(
+    { length: data.totalPages },
+    (_, index) => `<option value="${index + 1}" ${index + 1 === data.page ? "selected" : ""}>${index + 1}</option>`,
+  ).join("");
+  const pagination = data.total
+    ? `<div class="pagination"><span class="pagination-summary">共 <strong>${data.total.toLocaleString("zh-CN")}</strong> 条</span><div class="pagination-controls"><button class="button" id="anchor-prev" ${data.page <= 1 ? "disabled" : ""}>上一页</button><label class="pagination-picker"><span>第</span><select id="anchor-page" aria-label="选择页码">${pageOptions}</select><span>/ ${data.totalPages.toLocaleString("zh-CN")} 页</span></label><button class="button" id="anchor-next" ${data.page >= data.totalPages ? "disabled" : ""}>下一页</button></div><label class="pagination-size"><span>每页</span><select id="anchor-page-size" aria-label="每页显示条数"><option value="30" ${data.pageSize === 30 ? "selected" : ""}>30</option><option value="50" ${data.pageSize === 50 ? "selected" : ""}>50</option><option value="100" ${data.pageSize === 100 ? "selected" : ""}>100</option></select><span>条</span></label></div>`
+    : "";
+  const balanceDirection = state.anchorSort === "balance_asc" ? "升序" : "降序";
+  const balanceArrow = state.anchorSort === "balance_asc" ? "↑" : "↓";
+  content.innerHTML = `<section class="card"><div class="section-head"><h2>主播账户</h2><form id="anchor-search" class="toolbar"><input name="q" value="${esc(state.anchorQuery)}" placeholder="搜索比心 ID、原账号、姓名、手机号"><button class="button">搜索</button></form></div>${data.rows.length ? `<div class="table-wrap"><table><thead><tr><th>比心 ID</th><th>主播</th><th>手机号</th><th><button class="sort-button active" id="anchor-balance-sort" title="切换余额排序" aria-label="余额${balanceDirection}，点击切换">余额 <span aria-hidden="true">${balanceArrow}</span></button></th><th>收款信息</th><th>云账户</th><th>操作</th></tr></thead><tbody>${data.rows.map((row) => `<tr><td>${esc(row.bixin_user_id || "—")}</td><td>${esc(row.display_name)}</td><td>${esc(row.mobile)}</td><td class="money">${money(row.balance_cents)}</td><td>${badge(row.payment_status)}</td><td>${badge(row.sign_status)}</td><td class="nowrap"><button class="link" data-anchor-detail="${row.anchor_id}">查看详情</button>　<button class="link" data-adjust="${row.anchor_id}">调余额</button></td></tr>`).join("")}</tbody></table></div>${pagination}` : '<div class="empty">没有找到主播</div>'}</section>`;
   $("#anchor-search").onsubmit = (event) => {
     event.preventDefault();
     state.anchorQuery = new FormData(event.currentTarget).get("q");
@@ -438,12 +451,29 @@ async function renderAnchors() {
   };
   $("#anchor-prev") &&
     ($("#anchor-prev").onclick = () => {
-      state.anchorPage--;
+      state.anchorPage = Math.max(1, data.page - 1);
       renderPage();
     });
   $("#anchor-next") &&
     ($("#anchor-next").onclick = () => {
-      state.anchorPage++;
+      state.anchorPage = Math.min(data.totalPages, data.page + 1);
+      renderPage();
+    });
+  $("#anchor-page") &&
+    ($("#anchor-page").onchange = (event) => {
+      state.anchorPage = Number(event.currentTarget.value);
+      renderPage();
+    });
+  $("#anchor-page-size") &&
+    ($("#anchor-page-size").onchange = (event) => {
+      state.anchorPageSize = Number(event.currentTarget.value);
+      state.anchorPage = 1;
+      renderPage();
+    });
+  $("#anchor-balance-sort") &&
+    ($("#anchor-balance-sort").onclick = () => {
+      state.anchorSort = state.anchorSort === "balance_desc" ? "balance_asc" : "balance_desc";
+      state.anchorPage = 1;
       renderPage();
     });
   document

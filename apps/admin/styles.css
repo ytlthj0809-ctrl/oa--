@@ -597,9 +597,53 @@ tbody tr:last-child td {
 .pagination {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 18px;
   padding: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+.pagination-summary {
+  min-width: 100px;
+}
+.pagination-summary strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.pagination-controls,
+.pagination-picker,
+.pagination-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pagination-picker select,
+.pagination-size select {
+  height: 40px;
+  padding: 0 30px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 700;
+}
+.pagination-picker select {
+  min-width: 72px;
+}
+.sort-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: inherit;
+}
+.sort-button.active {
+  color: var(--brand);
+}
+.sort-button span {
+  display: inline-block;
+  margin-left: 3px;
 }
 .link {
   border: 0;

@@ -417,10 +417,19 @@ app.delete("/api/admin/v2/imports/:importId", requireAdmin, asyncRoute(async (re
 
 app.get("/api/admin/v2/anchors", requireAdmin, asyncRoute(async (request, response) => {
   const query = String(request.query.q || "").trim();
-  const page = Math.max(1, Number(request.query.page || 1));
-  const pageSize = Math.min(100, Math.max(10, Number(request.query.pageSize || 30)));
+  const requestedPage = Number.parseInt(request.query.page, 10);
+  const requestedPageSize = Number.parseInt(request.query.pageSize, 10);
+  const pageSize = [30, 50, 100].includes(requestedPageSize) ? requestedPageSize : 30;
+  const sort = ["balance_desc", "balance_asc"].includes(request.query.sort) ? request.query.sort : "balance_desc";
+  const orderBy = sort === "balance_asc"
+    ? "COALESCE(b.balance_cents,0) ASC, a.created_at DESC"
+    : "COALESCE(b.balance_cents,0) DESC, a.created_at DESC";
   const where = query ? "WHERE a.bixin_user_id LIKE ? OR EXISTS (SELECT 1 FROM v2_anchor_bixin_alias m WHERE m.anchor_id=a.anchor_id AND m.bixin_user_id LIKE ?) OR a.legacy_login_account LIKE ? OR a.display_name LIKE ? OR a.mobile LIKE ?" : "";
   const params = query ? [`%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`] : [];
+  const [countRows] = await pool.query(`SELECT COUNT(*) AS total FROM v2_anchor a ${where}`, params);
+  const total = Number(countRows[0]?.total || 0);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1, totalPages);
   const [rows] = await pool.query(
     `SELECT a.anchor_id, a.bixin_user_id, a.legacy_login_account, a.display_name, a.mobile, a.status, a.created_at,
             COALESCE(b.balance_cents,0) AS balance_cents,
@@ -430,10 +439,10 @@ app.get("/api/admin/v2/anchors", requireAdmin, asyncRoute(async (request, respon
      LEFT JOIN v2_balance_account b ON b.anchor_id=a.anchor_id
      LEFT JOIN v2_payment_request p ON p.request_id=(SELECT request_id FROM v2_payment_request WHERE anchor_id=a.anchor_id ORDER BY created_at DESC LIMIT 1)
      LEFT JOIN v2_yzh_contract y ON y.anchor_id=a.anchor_id
-     ${where} ORDER BY a.created_at DESC LIMIT ? OFFSET ?`,
+     ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize],
   );
-  ok(response, { rows, page, pageSize });
+  ok(response, { rows, page, pageSize, total, totalPages, sort });
 }));
 
 app.get("/api/admin/v2/anchors/:anchorId", requireAdmin, asyncRoute(async (request, response) => {
