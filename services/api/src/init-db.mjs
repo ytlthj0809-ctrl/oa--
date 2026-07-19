@@ -27,6 +27,18 @@ await pool.query(
   `INSERT IGNORE INTO v2_anchor_bixin_alias (bixin_user_id, anchor_id, is_primary)
    SELECT bixin_user_id, anchor_id, TRUE FROM v2_anchor WHERE bixin_user_id IS NOT NULL`,
 );
+const [legacyImportHashUniqueIndexes] = await pool.query(
+  "SELECT 1 FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='v2_import_batch' AND index_name='file_hash' AND non_unique=0",
+);
+if (legacyImportHashUniqueIndexes.length) {
+  await pool.query("ALTER TABLE v2_import_batch DROP INDEX file_hash");
+}
+const [importHashIndexes] = await pool.query(
+  "SELECT 1 FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='v2_import_batch' AND index_name='idx_v2_import_file_hash'",
+);
+if (!importHashIndexes.length) {
+  await pool.query("ALTER TABLE v2_import_batch ADD INDEX idx_v2_import_file_hash (file_hash)");
+}
 for (let weekday = 0; weekday <= 6; weekday += 1) {
   await pool.query("INSERT IGNORE INTO v2_withdraw_weekday (weekday, is_open) VALUES (?, TRUE)", [weekday]);
 }

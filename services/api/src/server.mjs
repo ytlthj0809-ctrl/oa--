@@ -312,10 +312,10 @@ app.post("/api/admin/v2/imports/preview", requireAdmin, asyncRoute(async (reques
   const file = parseBase64File(request.body);
   const parsed = await parseDailyFile(file);
   const [duplicateFile, activeDate] = await Promise.all([
-    pool.query("SELECT import_id FROM v2_import_batch WHERE file_hash=? LIMIT 1", [parsed.fileHash]),
+    pool.query("SELECT import_id FROM v2_import_batch WHERE file_hash=? AND status='ACTIVE' LIMIT 1", [parsed.fileHash]),
     pool.query("SELECT import_id, file_name FROM v2_import_batch WHERE business_date=? AND status='ACTIVE' LIMIT 1", [parsed.businessDate]),
   ]);
-  if (duplicateFile[0].length) throw apiError("IMPORT_DUPLICATE_FILE", "该文件已经上传过");
+  if (duplicateFile[0].length) throw apiError("IMPORT_DUPLICATE_FILE", "该文件正在生效，请先整体删除", 409);
   if (activeDate[0].length) throw apiError("IMPORT_DATE_EXISTS", "该日期已有生效文件，请先整体删除", 409, activeDate[0][0]);
   ok(response, { businessDate: parsed.businessDate, fileName: parsed.fileName, fileHash: parsed.fileHash, ...parsed.summary });
 }));
@@ -325,10 +325,10 @@ app.post("/api/admin/v2/imports/confirm", requireAdmin, asyncRoute(async (reques
   const parsed = await parseDailyFile(file);
   if (String(request.body.expectedFileHash || "") !== parsed.fileHash || String(request.body.businessDate || "") !== parsed.businessDate) throw apiError("IMPORT_PREVIEW_STALE", "文件或日期已变化，请重新预览");
   const [duplicateFile, duplicateDate] = await Promise.all([
-    pool.query("SELECT import_id FROM v2_import_batch WHERE file_hash=? LIMIT 1", [parsed.fileHash]),
+    pool.query("SELECT import_id FROM v2_import_batch WHERE file_hash=? AND status='ACTIVE' LIMIT 1", [parsed.fileHash]),
     pool.query("SELECT import_id FROM v2_import_batch WHERE business_date=? AND status='ACTIVE' LIMIT 1", [parsed.businessDate]),
   ]);
-  if (duplicateFile[0].length) throw apiError("IMPORT_DUPLICATE_FILE", "该文件已经上传过", 409);
+  if (duplicateFile[0].length) throw apiError("IMPORT_DUPLICATE_FILE", "该文件正在生效，请先整体删除", 409);
   if (duplicateDate[0].length) throw apiError("IMPORT_DATE_EXISTS", "该日期已有生效文件，请先整体删除", 409);
   const importId = randomId("imp");
   const objectKey = `v2/daily/${parsed.businessDate}/${importId}-${parsed.fileName.replace(/[^\w.\-\u4e00-\u9fa5]/g, "_")}`;

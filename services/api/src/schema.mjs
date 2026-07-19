@@ -100,7 +100,7 @@ export const schemaStatements = [
     import_id VARCHAR(64) PRIMARY KEY,
     business_date DATE NOT NULL,
     file_name VARCHAR(255) NOT NULL,
-    file_hash CHAR(64) NOT NULL UNIQUE,
+    file_hash CHAR(64) NOT NULL,
     object_key VARCHAR(500) NOT NULL DEFAULT '',
     row_count INT NOT NULL,
     positive_count INT NOT NULL,
@@ -112,7 +112,8 @@ export const schemaStatements = [
     created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     deleted_by VARCHAR(64) NULL,
     deleted_at DATETIME(3) NULL,
-    INDEX idx_v2_import_date_status (business_date, status)
+    INDEX idx_v2_import_date_status (business_date, status),
+    INDEX idx_v2_import_file_hash (file_hash)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   `CREATE TABLE IF NOT EXISTS v2_import_row (
     import_id VARCHAR(64) NOT NULL,
