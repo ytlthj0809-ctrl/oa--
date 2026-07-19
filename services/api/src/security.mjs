@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import bcrypt from "bcryptjs";
 
 const KEY_LENGTH = 64;
 
@@ -16,6 +17,9 @@ export async function hashPassword(password) {
 }
 
 export async function verifyPassword(password, stored) {
+  if (/^\$2[aby]\$\d{2}\$/u.test(String(stored || ""))) {
+    return bcrypt.compare(String(password || ""), String(stored));
+  }
   const [algorithm, saltHex, hashHex] = String(stored || "").split(":");
   if (algorithm !== "scrypt" || !saltHex || !hashHex) return false;
   const actual = await scrypt(String(password || ""), Buffer.from(saltHex, "hex"));

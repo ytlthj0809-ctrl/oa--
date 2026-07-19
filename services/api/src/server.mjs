@@ -405,10 +405,10 @@ app.get("/api/admin/v2/anchors", requireAdmin, asyncRoute(async (request, respon
   const query = String(request.query.q || "").trim();
   const page = Math.max(1, Number(request.query.page || 1));
   const pageSize = Math.min(100, Math.max(10, Number(request.query.pageSize || 30)));
-  const where = query ? "WHERE a.bixin_user_id LIKE ? OR a.display_name LIKE ? OR a.mobile LIKE ?" : "";
-  const params = query ? [`%${query}%`, `%${query}%`, `%${query}%`] : [];
+  const where = query ? "WHERE a.bixin_user_id LIKE ? OR a.legacy_login_account LIKE ? OR a.display_name LIKE ? OR a.mobile LIKE ?" : "";
+  const params = query ? [`%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`] : [];
   const [rows] = await pool.query(
-    `SELECT a.anchor_id, a.bixin_user_id, a.display_name, a.mobile, a.status, a.created_at,
+    `SELECT a.anchor_id, a.bixin_user_id, a.legacy_login_account, a.display_name, a.mobile, a.status, a.created_at,
             COALESCE(b.balance_cents,0) AS balance_cents,
             COALESCE(p.review_status,'MISSING') AS payment_status,
             COALESCE(y.sign_status,'UNSIGNED') AS sign_status
@@ -425,7 +425,7 @@ app.get("/api/admin/v2/anchors", requireAdmin, asyncRoute(async (request, respon
 app.get("/api/admin/v2/anchors/:anchorId", requireAdmin, asyncRoute(async (request, response) => {
   const anchorId = String(request.params.anchorId || "");
   const [anchors, payments, flows, withdrawals] = await Promise.all([
-    pool.query(`SELECT a.anchor_id, a.bixin_user_id, a.display_name, a.mobile, a.status, a.created_at,
+    pool.query(`SELECT a.anchor_id, a.bixin_user_id, a.legacy_login_account, a.display_name, a.mobile, a.status, a.created_at,
       COALESCE(b.balance_cents,0) AS balance_cents, COALESCE(y.sign_status,'UNSIGNED') AS sign_status
       FROM v2_anchor a LEFT JOIN v2_balance_account b ON b.anchor_id=a.anchor_id LEFT JOIN v2_yzh_contract y ON y.anchor_id=a.anchor_id WHERE a.anchor_id=?`, [anchorId]),
     pool.query("SELECT request_id, real_name, id_card_no, payment_mobile, bank_card_no, review_status, review_reason, created_at, reviewed_at FROM v2_payment_request WHERE anchor_id=? ORDER BY created_at DESC LIMIT 20", [anchorId]),
@@ -691,7 +691,7 @@ app.get("/api/miniapp/anchor-registration-requests", asyncRoute(async (request, 
 
 app.post("/api/miniapp/auth/login", asyncRoute(async (request, response) => {
   const loginAccount = String(request.body.loginAccount || "").trim();
-  const [rows] = await pool.query("SELECT anchor_id, password_hash FROM v2_anchor WHERE (mobile=? OR anchor_id=?) AND status='ACTIVE' LIMIT 1", [loginAccount, loginAccount]);
+  const [rows] = await pool.query("SELECT anchor_id, password_hash FROM v2_anchor WHERE (mobile=? OR anchor_id=? OR legacy_login_account=?) AND status='ACTIVE' LIMIT 1", [loginAccount, loginAccount, loginAccount]);
   const anchor = rows[0];
   if (!anchor || !anchor.password_hash || !await verifyPassword(String(request.body.password || ""), anchor.password_hash)) throw apiError("LOGIN_FAILED", "账号或密码错误", 401);
   ok(response, await issueMiniappSession(anchor.anchor_id));

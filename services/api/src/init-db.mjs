@@ -4,6 +4,25 @@ import { hashPassword, randomId } from "./security.mjs";
 
 const pool = getPool();
 for (const statement of schemaStatements) await pool.query(statement);
+
+const [legacyLoginColumns] = await pool.query(
+  "SELECT 1 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='v2_anchor' AND column_name='legacy_login_account'",
+);
+if (!legacyLoginColumns.length) {
+  await pool.query("ALTER TABLE v2_anchor ADD COLUMN legacy_login_account VARCHAR(255) NULL AFTER bixin_user_id");
+}
+const [legacyLoginIndexes] = await pool.query(
+  "SELECT 1 FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='v2_anchor' AND index_name='uk_v2_anchor_legacy_login'",
+);
+if (!legacyLoginIndexes.length) {
+  await pool.query("ALTER TABLE v2_anchor ADD UNIQUE KEY uk_v2_anchor_legacy_login (legacy_login_account)");
+}
+const [bixinColumns] = await pool.query(
+  "SELECT is_nullable FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='v2_anchor' AND column_name='bixin_user_id'",
+);
+if (bixinColumns[0]?.is_nullable !== "YES") {
+  await pool.query("ALTER TABLE v2_anchor MODIFY bixin_user_id VARCHAR(20) NULL");
+}
 for (let weekday = 0; weekday <= 6; weekday += 1) {
   await pool.query("INSERT IGNORE INTO v2_withdraw_weekday (weekday, is_open) VALUES (?, TRUE)", [weekday]);
 }

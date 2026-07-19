@@ -25,13 +25,15 @@ export const schemaStatements = [
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   `CREATE TABLE IF NOT EXISTS v2_anchor (
     anchor_id VARCHAR(64) PRIMARY KEY,
-    bixin_user_id VARCHAR(20) NOT NULL UNIQUE,
+    bixin_user_id VARCHAR(20) NULL UNIQUE,
+    legacy_login_account VARCHAR(255) NULL,
     display_name VARCHAR(128) NOT NULL,
     mobile VARCHAR(32) NOT NULL,
     password_hash VARCHAR(255) NULL,
     wechat_openid VARCHAR(128) NULL UNIQUE,
     status ENUM('ACTIVE','DISABLED') NOT NULL DEFAULT 'ACTIVE',
-    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    UNIQUE KEY uk_v2_anchor_legacy_login (legacy_login_account)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   `CREATE TABLE IF NOT EXISTS v2_miniapp_session (
     token_hash CHAR(64) PRIMARY KEY,
