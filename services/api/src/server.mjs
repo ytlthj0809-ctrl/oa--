@@ -197,6 +197,20 @@ async function postPendingIncomeForAnchor(connection, anchorId, bixinUserId) {
   return rows.reduce((sum, row) => sum + Number(row.amount_cents), 0);
 }
 
+async function findAnchorByBixinId(connection, bixinUserId) {
+  const [rows] = await connection.query(
+    `SELECT a.anchor_id
+     FROM v2_anchor_bixin_alias m
+     JOIN v2_anchor a ON a.anchor_id=m.anchor_id
+     WHERE m.bixin_user_id=?
+     LIMIT 1`,
+    [bixinUserId],
+  );
+  if (rows.length) return rows[0];
+  const [legacyRows] = await connection.query("SELECT anchor_id FROM v2_anchor WHERE bixin_user_id=? LIMIT 1", [bixinUserId]);
+  return legacyRows[0] || null;
+}
+
 app.get("/health/live", (request, response) => ok(response, { status: "live", service: "jiayin-withdraw-v2" }));
 app.get("/health/ready", asyncRoute(async (request, response) => {
   await pool.query("SELECT 1");
@@ -333,8 +347,8 @@ app.post("/api/admin/v2/imports/confirm", requireAdmin, asyncRoute(async (reques
         "INSERT IGNORE INTO v2_eligibility (bixin_user_id, nickname, first_seen_date, first_import_id) VALUES (?, ?, ?, ?)",
         [row.bixinUserId, row.nickname, parsed.businessDate, importId],
       );
-      const [anchors] = await connection.query("SELECT anchor_id FROM v2_anchor WHERE bixin_user_id=? LIMIT 1", [row.bixinUserId]);
-      const anchorId = anchors[0]?.anchor_id || null;
+      const anchor = await findAnchorByBixinId(connection, row.bixinUserId);
+      const anchorId = anchor?.anchor_id || null;
       await connection.query(
         "INSERT INTO v2_import_row (import_id, bixin_user_id, nickname, star_value, amount_cents, anchor_id) VALUES (?, ?, ?, ?, ?, ?)",
         [importId, row.bixinUserId, row.nickname, row.starValue, row.amountCents, anchorId],
@@ -405,8 +419,8 @@ app.get("/api/admin/v2/anchors", requireAdmin, asyncRoute(async (request, respon
   const query = String(request.query.q || "").trim();
   const page = Math.max(1, Number(request.query.page || 1));
   const pageSize = Math.min(100, Math.max(10, Number(request.query.pageSize || 30)));
-  const where = query ? "WHERE a.bixin_user_id LIKE ? OR a.legacy_login_account LIKE ? OR a.display_name LIKE ? OR a.mobile LIKE ?" : "";
-  const params = query ? [`%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`] : [];
+  const where = query ? "WHERE a.bixin_user_id LIKE ? OR EXISTS (SELECT 1 FROM v2_anchor_bixin_alias m WHERE m.anchor_id=a.anchor_id AND m.bixin_user_id LIKE ?) OR a.legacy_login_account LIKE ? OR a.display_name LIKE ? OR a.mobile LIKE ?" : "";
+  const params = query ? [`%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`] : [];
   const [rows] = await pool.query(
     `SELECT a.anchor_id, a.bixin_user_id, a.legacy_login_account, a.display_name, a.mobile, a.status, a.created_at,
             COALESCE(b.balance_cents,0) AS balance_cents,
@@ -657,8 +671,8 @@ app.post("/api/miniapp/anchor-registration-requests", asyncRoute(async (request,
   const result = await transaction(async (connection) => {
     const [eligible] = await connection.query("SELECT bixin_user_id FROM v2_eligibility WHERE bixin_user_id=?", [bixinUserId]);
     if (!eligible.length) throw apiError("BIXIN_ID_NOT_ELIGIBLE", "该比心用户 ID 尚未出现在日数据中", 403);
-    const [existing] = await connection.query("SELECT anchor_id FROM v2_anchor WHERE bixin_user_id=?", [bixinUserId]);
-    if (existing.length) throw apiError("BIXIN_ID_ALREADY_BOUND", "该比心用户 ID 已绑定", 409);
+    const existing = await findAnchorByBixinId(connection, bixinUserId);
+    if (existing) throw apiError("BIXIN_ID_ALREADY_BOUND", "该比心用户 ID 已绑定", 409);
     const anchorId = bixinUserId;
     let openid = null;
     const bindToken = String(request.body.wechatBindToken || "");
@@ -668,6 +682,7 @@ app.post("/api/miniapp/anchor-registration-requests", asyncRoute(async (request,
       if (!openid) throw apiError("WECHAT_BIND_TOKEN_INVALID", "微信绑定已失效，请重新登录", 401);
     }
     await connection.query("INSERT INTO v2_anchor (anchor_id, bixin_user_id, display_name, mobile, wechat_openid) VALUES (?, ?, ?, ?, ?)", [anchorId, bixinUserId, displayName, mobile, openid]);
+    await connection.query("INSERT INTO v2_anchor_bixin_alias (bixin_user_id, anchor_id, is_primary) VALUES (?, ?, TRUE)", [bixinUserId, anchorId]);
     const registrationId = randomId("reg");
     await connection.query("INSERT INTO v2_registration_request (registration_id, bixin_user_id, anchor_id, display_name, mobile, review_status) VALUES (?, ?, ?, ?, ?, 'APPROVED')", [registrationId, bixinUserId, anchorId, displayName, mobile]);
     if (bindToken) await connection.query("DELETE FROM v2_wechat_bind_token WHERE token_hash=?", [sha256(bindToken)]);

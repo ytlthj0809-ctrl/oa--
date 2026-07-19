@@ -35,6 +35,13 @@ export const schemaStatements = [
     created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     UNIQUE KEY uk_v2_anchor_legacy_login (legacy_login_account)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  `CREATE TABLE IF NOT EXISTS v2_anchor_bixin_alias (
+    bixin_user_id VARCHAR(20) PRIMARY KEY,
+    anchor_id VARCHAR(64) NOT NULL,
+    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    INDEX idx_v2_anchor_bixin_alias_anchor (anchor_id, is_primary)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   `CREATE TABLE IF NOT EXISTS v2_miniapp_session (
     token_hash CHAR(64) PRIMARY KEY,
     anchor_id VARCHAR(64) NOT NULL,

@@ -23,6 +23,10 @@ const [bixinColumns] = await pool.query(
 if (bixinColumns[0]?.is_nullable !== "YES") {
   await pool.query("ALTER TABLE v2_anchor MODIFY bixin_user_id VARCHAR(20) NULL");
 }
+await pool.query(
+  `INSERT IGNORE INTO v2_anchor_bixin_alias (bixin_user_id, anchor_id, is_primary)
+   SELECT bixin_user_id, anchor_id, TRUE FROM v2_anchor WHERE bixin_user_id IS NOT NULL`,
+);
 for (let weekday = 0; weekday <= 6; weekday += 1) {
   await pool.query("INSERT IGNORE INTO v2_withdraw_weekday (weekday, is_open) VALUES (?, TRUE)", [weekday]);
 }
