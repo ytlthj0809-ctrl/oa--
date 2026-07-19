@@ -40,7 +40,7 @@ if (!importHashIndexes.length) {
   await pool.query("ALTER TABLE v2_import_batch ADD INDEX idx_v2_import_file_hash (file_hash)");
 }
 const [payoutObjectKeyColumns] = await pool.query(
-  "SELECT is_nullable FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='v2_payout_export_file' AND column_name='object_key'",
+  "SELECT is_nullable AS isNullable FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='v2_payout_export_file' AND column_name='object_key'",
 );
 if (!payoutObjectKeyColumns.length) {
   await pool.query("ALTER TABLE v2_payout_export_file ADD COLUMN object_key VARCHAR(500) NULL AFTER file_hash");
@@ -58,9 +58,9 @@ if (legacyPayoutBlobColumns.length) {
   await pool.query("ALTER TABLE v2_payout_export_file DROP COLUMN file_blob");
 }
 const [nullablePayoutObjectKeyColumns] = await pool.query(
-  "SELECT is_nullable FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='v2_payout_export_file' AND column_name='object_key'",
+  "SELECT is_nullable AS isNullable FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='v2_payout_export_file' AND column_name='object_key'",
 );
-if (nullablePayoutObjectKeyColumns[0]?.is_nullable === "YES") {
+if (nullablePayoutObjectKeyColumns[0]?.isNullable === "YES") {
   await pool.query("ALTER TABLE v2_payout_export_file MODIFY object_key VARCHAR(500) NOT NULL");
 }
 for (let weekday = 0; weekday <= 6; weekday += 1) {
