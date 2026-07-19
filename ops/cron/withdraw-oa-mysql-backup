@@ -4,5 +4,5 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # Daily full logical backup: local copy + private COS copy + SHA-256 read-back verification.
 30 2 * * * root /usr/bin/flock -n /run/withdraw-oa-mysql-backup.lock /bin/bash -lc 'cd /opt/withdraw-oa/current && /usr/bin/node ops/mysql-backup.mjs backup' >> /opt/withdraw-oa/logs/mysql-backup.log 2>&1
 
-# Weekly real restore drill into a temporary isolated database, followed by row-count verification and removal.
+# Weekly real restore drill into a disposable MySQL 8.0.30 container, followed by row-count verification and removal.
 30 4 * * 0 root /usr/bin/flock -n /run/withdraw-oa-mysql-backup.lock /bin/bash -lc 'cd /opt/withdraw-oa/current && /usr/bin/node ops/mysql-backup.mjs restore-drill' >> /opt/withdraw-oa/logs/mysql-restore-drill.log 2>&1

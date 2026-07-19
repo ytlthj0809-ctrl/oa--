@@ -78,6 +78,79 @@ async function runCommandWithInput(command, args, readable) {
   await Promise.all([pipeline(readable, child.stdin), exit]);
 }
 
+async function runCommand(command, args, { env = process.env, ignoreStderr = false } = {}) {
+  const child = spawn(command, args, { env, stdio: ["ignore", "pipe", "pipe"] });
+  const stdout = [];
+  const stderr = [];
+  child.stdout.on("data", (chunk) => stdout.push(Buffer.from(chunk)));
+  child.stderr.on("data", (chunk) => stderr.push(Buffer.from(chunk)));
+  return await new Promise((resolve, reject) => {
+    child.on("error", reject);
+    child.on("close", (code) => {
+      const output = Buffer.concat(stdout).toString("utf8");
+      const errorOutput = Buffer.concat(stderr).toString("utf8");
+      if (code === 0) resolve(output);
+      else if (ignoreStderr) reject(Object.assign(new Error(`${command} 退出码 ${code}`), { code }));
+      else reject(new Error(errorOutput || `${command} 退出码 ${code}`));
+    });
+  });
+}
+
+async function waitForIsolatedMysql(containerName, rootPassword) {
+  for (let attempt = 0; attempt < 90; attempt += 1) {
+    try {
+      await runCommand(
+        "/usr/bin/docker",
+        [
+          "exec",
+          "--env",
+          `MYSQL_PWD=${rootPassword}`,
+          containerName,
+          "mysqladmin",
+          "ping",
+          "-h",
+          "127.0.0.1",
+          "-uroot",
+          "--silent",
+        ],
+        { ignoreStderr: true },
+      );
+      return;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+  throw new Error("隔离 MySQL 在 90 秒内未就绪");
+}
+
+async function collectIsolatedCounts(containerName, rootPassword, databaseName) {
+  const statements = [
+    "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE'",
+    ...COUNT_TABLES.map((table) => `SELECT COUNT(*) FROM \`${table}\``),
+  ];
+  const output = await runCommand("/usr/bin/docker", [
+    "exec",
+    "--env",
+    `MYSQL_PWD=${rootPassword}`,
+    containerName,
+    "mysql",
+    "-uroot",
+    "-N",
+    "-B",
+    databaseName,
+    "-e",
+    statements.join(";"),
+  ]);
+  const values = output.trim().split(/\r?\n/).map(Number);
+  if (values.length !== COUNT_TABLES.length + 1 || values.some((value) => !Number.isSafeInteger(value))) {
+    throw new Error("无法解析隔离 MySQL 恢复校验结果");
+  }
+  return {
+    tableCount: values[0],
+    counts: Object.fromEntries(COUNT_TABLES.map((table, index) => [table, values[index + 1]])),
+  };
+}
+
 async function createDump({ defaultsPath, databaseName, archivePath }) {
   const child = spawn(
     "/usr/bin/mysqldump",
@@ -215,26 +288,39 @@ async function latestBackup() {
 }
 
 async function restoreDrill() {
-  const databaseUrl = await configureEnvironment();
+  await configureEnvironment();
   const { directory, manifest, archivePath } = await latestBackup();
   const drillStamp = stamp();
   const drillDatabase = `jiayin_restore_drill_${drillStamp.replace(/[^0-9]/g, "")}`;
   if (!/^jiayin_restore_drill_\d{14}$/.test(drillDatabase)) throw new Error("恢复演练数据库名无效");
-  const temporaryDirectory = await fs.mkdtemp("/tmp/withdraw-mysql-restore-");
-  let connection;
-  let created = false;
+  const containerName = `withdraw-mysql-restore-${drillStamp.toLowerCase()}`;
+  const rootPassword = crypto.randomBytes(32).toString("base64url");
+  const mysqlImage = "mysql:8.0.30";
+  let containerCreated = false;
   let report;
   try {
-    const { defaultsPath } = await writeDefaultsFile(temporaryDirectory, databaseUrl);
-    connection = await mysql.createConnection(databaseUrl);
-    await connection.query(`CREATE DATABASE \`${drillDatabase}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci`);
-    created = true;
+    await runCommand("/usr/bin/docker", [
+      "run",
+      "--detach",
+      "--rm",
+      "--name",
+      containerName,
+      "--env",
+      `MYSQL_ROOT_PASSWORD=${rootPassword}`,
+      "--env",
+      `MYSQL_DATABASE=${drillDatabase}`,
+      mysqlImage,
+      "--character-set-server=utf8mb4",
+      "--collation-server=utf8mb4_0900_ai_ci",
+    ]);
+    containerCreated = true;
+    await waitForIsolatedMysql(containerName, rootPassword);
     await runCommandWithInput(
-      "/usr/bin/mysql",
-      [`--defaults-extra-file=${defaultsPath}`, drillDatabase],
+      "/usr/bin/docker",
+      ["exec", "-i", "--env", `MYSQL_PWD=${rootPassword}`, containerName, "mysql", "-uroot", drillDatabase],
       createReadStream(archivePath).pipe(createGunzip()),
     );
-    const restored = await collectCounts(connection, drillDatabase);
+    const restored = await collectIsolatedCounts(containerName, rootPassword, drillDatabase);
     if (JSON.stringify(restored) !== JSON.stringify(manifest.source)) {
       throw new Error("恢复后的表数量或关键行数与备份清单不一致");
     }
@@ -243,16 +329,16 @@ async function restoreDrill() {
       verifiedAt: new Date().toISOString(),
       sourceArchive: manifest.archiveName,
       sourceArchiveSha256: manifest.archiveSha256,
+      restorationTarget: "isolated-mysql-container",
+      mysqlImage,
       restored,
-      temporaryDatabaseDropped: false,
+      temporaryEnvironmentRemoved: false,
     };
   } finally {
-    if (created && connection) {
-      await connection.query(`DROP DATABASE \`${drillDatabase}\``);
-      if (report) report.temporaryDatabaseDropped = true;
+    if (containerCreated) {
+      await runCommand("/usr/bin/docker", ["rm", "--force", containerName]);
+      if (report) report.temporaryEnvironmentRemoved = true;
     }
-    await connection?.end();
-    await fs.rm(temporaryDirectory, { recursive: true, force: true });
   }
   const reportBody = Buffer.from(`${JSON.stringify(report, null, 2)}\n`);
   const reportPath = path.join(directory, `restore-drill-${drillStamp}.json`);
