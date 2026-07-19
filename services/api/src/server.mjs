@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
+import { createAuthRateLimiter } from "./auth-rate-limit.mjs";
 import { getPool, transaction } from "./db.mjs";
 import {
   MIN_WITHDRAW_CENTS,
@@ -10,9 +11,9 @@ import {
   shanghaiParts,
 } from "./business.mjs";
 import { parseDailyWorkbook } from "./importer.mjs";
-import { buildPayoutFiles } from "./payout.mjs";
+import { buildPayoutFiles, payoutObjectKey } from "./payout.mjs";
 import { bearerToken, hashPassword, randomId, sha256, verifyPassword } from "./security.mjs";
-import { storePrivateFile } from "./storage.mjs";
+import { deletePrivateFile, readPrivateFile, storePrivateFile } from "./storage.mjs";
 import { createYzhPresign, decodeYzhCallback, mapYzhSignStatus, maskYzhIdentity, resolveYzhConfig } from "./yzh-provider.mjs";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -20,7 +21,7 @@ const rootDirectory = path.resolve(currentDirectory, "../../..");
 const adminDirectory = path.join(rootDirectory, "apps/admin");
 const app = express();
 const pool = getPool();
-const loginAttempts = new Map();
+const authRateLimiter = createAuthRateLimiter();
 
 app.disable("x-powered-by");
 app.use(express.json({ limit: "30mb" }));
@@ -37,7 +38,7 @@ app.use((request, response, next) => {
 });
 
 function ipAddress(request) {
-  return String(request.headers["x-forwarded-for"] || request.socket.remoteAddress || "").split(",")[0].trim().slice(0, 64);
+  return String(request.headers["x-real-ip"] || request.socket.remoteAddress || "").trim().slice(0, 64);
 }
 
 function apiError(code, message, status = 400, details) {
@@ -61,6 +62,51 @@ async function audit({ connection = pool, actorType, actorId, action, targetType
     "INSERT INTO v2_audit_log (actor_type, actor_id, action, target_type, target_id, detail_json, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)",
     [actorType, actorId, action, targetType, String(targetId), JSON.stringify(detail), request ? ipAddress(request) : ""],
   );
+}
+
+async function assertLoginAllowed(scope, identity, request) {
+  const ip = ipAddress(request);
+  const state = authRateLimiter.check(scope, ip, identity);
+  if (!state.blocked) return;
+  await audit({
+    actorType: "SYSTEM",
+    actorId: "AUTH_GUARD",
+    action: "AUTH_RATE_LIMIT_BLOCKED",
+    targetType: "LOGIN_SCOPE",
+    targetId: scope,
+    detail: {
+      identityHash: sha256(String(identity || "").toLowerCase()).slice(0, 16),
+      failureCount: state.failureCount,
+      retryAfterSeconds: state.retryAfterSeconds,
+    },
+    request,
+  });
+  throw apiError("LOGIN_RATE_LIMITED", "登录失败次数过多，请稍后再试", 429, {
+    retryAfterSeconds: state.retryAfterSeconds,
+  });
+}
+
+async function recordLoginFailure(scope, identity, request) {
+  const ip = ipAddress(request);
+  const state = authRateLimiter.fail(scope, ip, identity);
+  await audit({
+    actorType: "SYSTEM",
+    actorId: "AUTH_GUARD",
+    action: "AUTH_LOGIN_FAILED",
+    targetType: "LOGIN_SCOPE",
+    targetId: scope,
+    detail: {
+      identityHash: sha256(String(identity || "").toLowerCase()).slice(0, 16),
+      failureCount: state.failureCount,
+      blocked: state.blocked,
+    },
+    request,
+  });
+  return state;
+}
+
+function clearLoginFailures(scope, identity, request) {
+  authRateLimiter.clear(scope, ipAddress(request), identity);
 }
 
 function iso(value) {
@@ -224,17 +270,14 @@ app.get("/health", asyncRoute(async (request, response) => {
 app.post("/api/admin/v2/auth/login", asyncRoute(async (request, response) => {
   const username = String(request.body.username || "").trim();
   const password = String(request.body.password || "");
-  const key = `${ipAddress(request)}:${username}`;
-  const attempt = loginAttempts.get(key) || { count: 0, blockedUntil: 0 };
-  if (attempt.blockedUntil > Date.now()) throw apiError("LOGIN_RATE_LIMITED", "登录失败次数过多，请稍后再试", 429);
+  await assertLoginAllowed("ADMIN_PASSWORD", username, request);
   const [rows] = await pool.query("SELECT account_id, username, password_hash, status FROM v2_admin_account WHERE username=? LIMIT 1", [username]);
   const account = rows[0];
   if (!account || account.status !== "ACTIVE" || !await verifyPassword(password, account.password_hash)) {
-    const count = attempt.count + 1;
-    loginAttempts.set(key, { count, blockedUntil: count >= 5 ? Date.now() + 15 * 60 * 1000 : 0 });
+    await recordLoginFailure("ADMIN_PASSWORD", username, request);
     throw apiError("LOGIN_FAILED", "用户名或密码错误", 401);
   }
-  loginAttempts.delete(key);
+  clearLoginFailures("ADMIN_PASSWORD", username, request);
   const token = randomId("ads");
   const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000);
   const idleExpiresAt = new Date(Date.now() + 30 * 60 * 1000);
@@ -521,6 +564,39 @@ app.get("/api/admin/v2/withdrawals", requireAdmin, asyncRoute(async (request, re
   ok(response, rows);
 }));
 
+async function loadStoredPayoutFiles(exportId) {
+  const [storedFiles] = await pool.query(
+    "SELECT part_no, file_name, file_hash, object_key FROM v2_payout_export_file WHERE export_id=? ORDER BY part_no",
+    [exportId],
+  );
+  if (!storedFiles.length) throw apiError("EXPORT_FILE_MISSING", "原始打款表缺失，请联系技术处理", 500);
+  const files = [];
+  for (const stored of storedFiles) {
+    let buffer;
+    try {
+      buffer = await readPrivateFile({ key: stored.object_key });
+    } catch {
+      throw apiError("EXPORT_FILE_MISSING", "私有存储中的打款表缺失，请联系技术处理", 500);
+    }
+    if (sha256(buffer) !== stored.file_hash) {
+      throw apiError("EXPORT_FILE_HASH_MISMATCH", "打款表完整性校验失败，已阻止下载", 500);
+    }
+    files.push({
+      fileName: stored.file_name,
+      buffer,
+      hash: stored.file_hash,
+      objectKey: stored.object_key,
+    });
+  }
+  return files;
+}
+
+async function cleanupPayoutObjects(files) {
+  await Promise.allSettled(
+    files.map((file) => deletePrivateFile({ key: file.objectKey })),
+  );
+}
+
 app.post("/api/admin/v2/withdrawals/export", requireAdmin, asyncRoute(async (request, response) => {
   const date = String(request.body.businessDate || "");
   const today = shanghaiParts();
@@ -531,9 +607,7 @@ app.post("/api/admin/v2/withdrawals/export", requireAdmin, asyncRoute(async (req
   let files = [];
   const exportId = existing[0]?.export_id || randomId("exp");
   if (existing.length) {
-    const [storedFiles] = await pool.query("SELECT part_no, file_name, file_blob FROM v2_payout_export_file WHERE export_id=? ORDER BY part_no", [exportId]);
-    files = storedFiles.map((file) => ({ fileName: file.file_name, buffer: Buffer.from(file.file_blob) }));
-    if (!files.length) throw apiError("EXPORT_FILE_MISSING", "原始打款表缺失，请联系技术处理", 500);
+    files = await loadStoredPayoutFiles(exportId);
   } else {
     [rows] = await pool.query(
       `SELECT w.*, p.real_name, p.id_card_no, p.payment_mobile, p.bank_card_no
@@ -544,26 +618,57 @@ app.post("/api/admin/v2/withdrawals/export", requireAdmin, asyncRoute(async (req
     );
     if (!rows.length) throw apiError("EXPORT_EMPTY", "该日期没有可导出的提现申请");
     files = await buildPayoutFiles({ businessDate: date, rows });
-  }
-  await transaction(async (connection) => {
-    if (existing.length) {
-      await connection.query("UPDATE v2_payout_export SET download_count=download_count+1, last_downloaded_at=NOW(3) WHERE export_id=?", [exportId]);
-    } else {
-      const aggregateHash = sha256(Buffer.concat(files.map((file) => file.buffer)));
-      await connection.query(
-        "INSERT INTO v2_payout_export (export_id, business_date, file_name, file_hash, row_count, total_amount_cents, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [exportId, date, files[0].fileName, aggregateHash, rows.length, rows.reduce((sum, row) => sum + Number(row.amount_cents), 0), request.admin.accountId],
-      );
-      for (let index = 0; index < files.length; index += 1) {
-        await connection.query(
-          "INSERT INTO v2_payout_export_file (export_id, part_no, file_name, file_hash, file_blob) VALUES (?, ?, ?, ?, ?)",
-          [exportId, index + 1, files[index].fileName, sha256(files[index].buffer), files[index].buffer],
-        );
+    files = files.map((file, index) => ({
+      ...file,
+      objectKey: payoutObjectKey({
+        businessDate: date,
+        exportId,
+        partNo: index + 1,
+        fileName: file.fileName,
+      }),
+    }));
+    const uploadedFiles = [];
+    try {
+      for (const file of files) {
+        await storePrivateFile({
+          key: file.objectKey,
+          body: file.buffer,
+          contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        uploadedFiles.push(file);
       }
-      await connection.query("UPDATE v2_withdraw_apply SET export_id=? WHERE business_date=? AND status='PENDING_PAYOUT'", [exportId, date]);
+    } catch (error) {
+      await cleanupPayoutObjects(uploadedFiles);
+      throw error;
     }
-    await audit({ connection, actorType: "ADMIN", actorId: request.admin.accountId, action: "PAYOUT_EXPORT_DOWNLOAD", targetType: "PAYOUT_EXPORT", targetId: exportId, detail: { businessDate: date, rowCount: Number(existing[0]?.row_count || rows.length), fileCount: files.length }, request });
-  });
+  }
+  try {
+    await transaction(async (connection) => {
+      if (existing.length) {
+        await connection.query(
+          "UPDATE v2_payout_export SET download_count=download_count+1, last_downloaded_at=NOW(3) WHERE export_id=?",
+          [exportId],
+        );
+      } else {
+        const aggregateHash = sha256(Buffer.concat(files.map((file) => file.buffer)));
+        await connection.query(
+          "INSERT INTO v2_payout_export (export_id, business_date, file_name, file_hash, row_count, total_amount_cents, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          [exportId, date, files[0].fileName, aggregateHash, rows.length, rows.reduce((sum, row) => sum + Number(row.amount_cents), 0), request.admin.accountId],
+        );
+        for (let index = 0; index < files.length; index += 1) {
+          await connection.query(
+            "INSERT INTO v2_payout_export_file (export_id, part_no, file_name, file_hash, object_key) VALUES (?, ?, ?, ?, ?)",
+            [exportId, index + 1, files[index].fileName, files[index].hash, files[index].objectKey],
+          );
+        }
+        await connection.query("UPDATE v2_withdraw_apply SET export_id=? WHERE business_date=? AND status='PENDING_PAYOUT'", [exportId, date]);
+      }
+      await audit({ connection, actorType: "ADMIN", actorId: request.admin.accountId, action: "PAYOUT_EXPORT_DOWNLOAD", targetType: "PAYOUT_EXPORT", targetId: exportId, detail: { businessDate: date, rowCount: Number(existing[0]?.row_count || rows.length), fileCount: files.length, storage: "PRIVATE_COS" }, request });
+    });
+  } catch (error) {
+    if (!existing.length) await cleanupPayoutObjects(files);
+    throw error;
+  }
   ok(response, {
     exportId,
     files: files.map((file) => ({ fileName: file.fileName, contentBase64: file.buffer.toString("base64") })),
@@ -715,9 +820,14 @@ app.get("/api/miniapp/anchor-registration-requests", asyncRoute(async (request, 
 
 app.post("/api/miniapp/auth/login", asyncRoute(async (request, response) => {
   const loginAccount = String(request.body.loginAccount || "").trim();
+  await assertLoginAllowed("MINIAPP_PASSWORD", loginAccount, request);
   const [rows] = await pool.query("SELECT anchor_id, password_hash FROM v2_anchor WHERE (mobile=? OR anchor_id=? OR legacy_login_account=?) AND status='ACTIVE' LIMIT 1", [loginAccount, loginAccount, loginAccount]);
   const anchor = rows[0];
-  if (!anchor || !anchor.password_hash || !await verifyPassword(String(request.body.password || ""), anchor.password_hash)) throw apiError("LOGIN_FAILED", "账号或密码错误", 401);
+  if (!anchor || !anchor.password_hash || !await verifyPassword(String(request.body.password || ""), anchor.password_hash)) {
+    await recordLoginFailure("MINIAPP_PASSWORD", loginAccount, request);
+    throw apiError("LOGIN_FAILED", "账号或密码错误", 401);
+  }
+  clearLoginFailures("MINIAPP_PASSWORD", loginAccount, request);
   ok(response, await issueMiniappSession(anchor.anchor_id));
 }));
 

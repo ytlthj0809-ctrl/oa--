@@ -187,7 +187,7 @@ export const schemaStatements = [
     part_no INT NOT NULL,
     file_name VARCHAR(255) NOT NULL,
     file_hash CHAR(64) NOT NULL,
-    file_blob LONGBLOB NOT NULL,
+    object_key VARCHAR(500) NOT NULL,
     PRIMARY KEY (export_id, part_no)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   `CREATE TABLE IF NOT EXISTS v2_protocol_agreement (

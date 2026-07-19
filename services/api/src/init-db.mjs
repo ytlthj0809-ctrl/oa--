@@ -39,6 +39,30 @@ const [importHashIndexes] = await pool.query(
 if (!importHashIndexes.length) {
   await pool.query("ALTER TABLE v2_import_batch ADD INDEX idx_v2_import_file_hash (file_hash)");
 }
+const [payoutObjectKeyColumns] = await pool.query(
+  "SELECT is_nullable FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='v2_payout_export_file' AND column_name='object_key'",
+);
+if (!payoutObjectKeyColumns.length) {
+  await pool.query("ALTER TABLE v2_payout_export_file ADD COLUMN object_key VARCHAR(500) NULL AFTER file_hash");
+}
+const [legacyPayoutBlobColumns] = await pool.query(
+  "SELECT 1 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='v2_payout_export_file' AND column_name='file_blob'",
+);
+if (legacyPayoutBlobColumns.length) {
+  const [unmigratedPayoutFiles] = await pool.query(
+    "SELECT COUNT(*) AS count FROM v2_payout_export_file WHERE object_key IS NULL OR object_key=''",
+  );
+  if (Number(unmigratedPayoutFiles[0].count) > 0) {
+    throw new Error("存在尚未迁移到 COS 的历史打款表，禁止删除数据库文件内容");
+  }
+  await pool.query("ALTER TABLE v2_payout_export_file DROP COLUMN file_blob");
+}
+const [nullablePayoutObjectKeyColumns] = await pool.query(
+  "SELECT is_nullable FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='v2_payout_export_file' AND column_name='object_key'",
+);
+if (nullablePayoutObjectKeyColumns[0]?.is_nullable === "YES") {
+  await pool.query("ALTER TABLE v2_payout_export_file MODIFY object_key VARCHAR(500) NOT NULL");
+}
 for (let weekday = 0; weekday <= 6; weekday += 1) {
   await pool.query("INSERT IGNORE INTO v2_withdraw_weekday (weekday, is_open) VALUES (?, TRUE)", [weekday]);
 }

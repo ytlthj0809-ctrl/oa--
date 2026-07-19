@@ -6,6 +6,14 @@ import { sha256 } from "./security.mjs";
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const templatePath = path.resolve(currentDirectory, "../assets/yzh-payout-template.xlsx");
 
+export function payoutObjectKey({ businessDate, exportId, partNo, fileName }) {
+  const safeName = String(fileName || "payout.xlsx").replace(
+    /[^\w.\-\u4e00-\u9fa5]/g,
+    "_",
+  );
+  return `v2/payouts/${businessDate}/${exportId}/part-${partNo}-${safeName}`;
+}
+
 export async function buildPayoutFiles({ businessDate, rows }) {
   const [, month, day] = businessDate.split("-");
   const chunks = [];
